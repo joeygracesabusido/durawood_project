@@ -22,7 +22,7 @@ from jose import jwt
 
 JWT_SECRET = 'myjwtsecret'
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 300
 
 login_router = APIRouter(include_in_schema=False)
 templates = Jinja2Templates(directory="apps/templates")
@@ -47,40 +47,6 @@ import bcrypt
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-
-# def authenticate_user(username, password):
-   
-#     user = UserViews.get_user_for_login(username=username)
-    
-#     # print(user)
-#     username = user.username
-#     hashed_password = user.hashed_password
-   
-#     # hashed_password = pwd_context.verify(password,user.hashed_password)
-
-    
-
-#     if user:
-#         password_check = pwd_context.verify(password,hashed_password)
-#         return password_check
-
-#     elif user == None:
-#         return False
-#     else :
-#         # False
-#         print("error")
-
-
-#     #  print(hashed_password)
-#     # if user:
-#     #     if hashed_password:
-#     #         return True
-#     #     else:
-#     #         return False
-
-#     # else :
-        
-#     #     return None
 
 
 def authenticate_user(username, password):
@@ -117,41 +83,6 @@ async def api_login(request: Request):
 
 
 
-# @login_router.get('/api-login/')
-# def login(username1: Optional[str],password1:Optional[str],response:Response):
-#     username = username1
-#     password = password1
-
-
-#     user = authenticate_user(username,password)
-
-#     # print(user)
-
-#     if user :
-#         access_token = create_access_token(
-#                 data = {"sub": username,"exp":datetime.utcnow() + timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)}, 
-#                 expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-#                                     )
-
-#         data = {"sub": username,"exp":datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)}
-#         jwt_token = jwt.encode(data,JWT_SECRET,algorithm=ALGORITHM)
-#         response.set_cookie(key="access_token", value=f'Bearer {jwt_token}',httponly=True)
-#         # return response
-        
-#     elif user == False:
-#         raise HTTPException(
-#             status_code=400,
-#             detail= "Username and Password Did not Match",
-#             # headers={"WWW-Authenticate": "Basic"},
-#         )
-
-    
-    
-#     elif user is None:
-#         raise HTTPException(
-#             status_code=401,
-#             detail="Username is not registered",
-#         )
 
 @login_router.get('/api-login/')
 def login(username1: Optional[str], password1: Optional[str], response: Response):

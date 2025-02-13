@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    $('#sign-up-form').on('submit', function(e) {
+    $('#sign_up_form').on('submit', function(e) {
         e.preventDefault();
 
         // Retrieve password values
@@ -14,17 +14,15 @@ $(document).ready(function() {
 
         // Proceed if passwords match
         var formData = {
-            full_name: $('#fullname').val(),
-            username: $('#username').val(),
-            hashed_password: $('#password').val(),
+            fullname: $('#full_name').val(),
+            password: $('#password').val(),
             email_add: $('#email_add').val(),
             role: $('#role').val(),
-            is_active: $('#is_activate').val(),
             date_created: new Date().toISOString() // current datetime in ISO format
         };
 
         $.ajax({
-            url: '/sign-up',
+            url: '/api-sign-up',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(formData),

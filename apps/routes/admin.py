@@ -8,8 +8,8 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta
 
 
-#from  ..database.mongodb import create_mongo_client
-#mydb = create_mongo_client()
+from  ..database.mongodb import create_mongo_client
+mydb = create_mongo_client()
 
 
 from ..authentication.utils import OAuth2PasswordBearerWithCookie
@@ -41,8 +41,24 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 from ..authentication.utils import OAuth2PasswordBearerWithCookie
 from  ..authentication.authenticate_user import get_current_user
 
-from apps.views.sign_up_views import UserViews
-from apps.base_model.user_bm import UserBM, UpdateUserBM
+#from apps.views.sign_up_views import UserViews
+#from apps.base_model.user_bm import UserBM, UpdateUserBM
+
+
+
+class SignUpModel(BaseModel):
+    fullname: str
+    email_add: str
+    password: str
+    created: Union[datetime, None] = None
+    status: Optional[str] = None
+    role: Optional[str] = None
+
+
+
+class UpdateUser(BaseModel):
+    status: str
+    role: Optional[str] = None
 
 
 
@@ -50,25 +66,33 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
+  
+
+password1 = ""
 def authenticate_user(username, password):
-    # user = mydb.login.find({"username":username})
-    user = UserViews.get_user_for_login(username=username)
     
-    # print(user)
-    username = user.username
-    hashed_password = user.hashed_password
-
-    if user:
-        password_check = pwd_context.verify(password,hashed_password)
-        return password_check
-
-    elif user == None:
-        return{'Not Autherized'}
-    else :
-        # False
-        print("error")
-
+    user = mydb.login.find({
+                            '$and':
+                            [{"username":username}
+                            ]})
+    
+    
+    for i in user:
+       
+        username = i['username']
+        password1 = i['password']
+        
    
+        if user:
+            
+            password_check = pwd_context.verify(password,password1)
+            
+            return password_check
+
+            
+        else :
+            False
+
 
 
 
@@ -109,45 +133,56 @@ def login(response:Response,form_data: OAuth2PasswordRequestForm = Depends()):
     # return(access_token)
 
 
-@api.post('/sign-up')
-def sign_up(data: UserBM):
-    """API endpoint to insert a new user."""
-    try:
-        UserViews.insert_user(data,get_password_hash(data.hashed_password))
-        return ("New User Has been Saved")
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+ # @api.get("/users/", response_model=List[UserBM])
+# def get_all_users():
+#     """API endpoint to get a list of all users."""
+#     try:
+#         users = UserViews.get_user()
+#         if not users:
+#             raise HTTPException(status_code=404, detail="No users found.")
+#         return users
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+#
+#
+#
+# @api.put("/api-update-user-status/{update_username}")
+# async def api_update_user_status(update_username: str,
+#                                  item: UpdateUserBM,
+#                                  username: str = Depends(get_current_user)):
+#     """API endpoint to update a user's status."""
+#     try:
+#         update_success = UserViews.update_user(update_username, item.is_active)
+#         if update_success:
+#             return {"detail": "User status updated successfully."}
+#         else:
+#             raise HTTPException(status_code=404, detail="User not found.")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+#
+
+
+
+@api.post('/api-sign-up')
+def sign_up(data: SignUpModel):
+    """This function is for inserting """
+    #,token: str = Depends(oauth_scheme)
+
+    login_collection = mydb['login']
+    login_collection.create_index("email_add", unique=True)
+    login_collection.create_index("fullname", unique=True)
+
+
+    dataInsert = {
+        "fullname": data.fullname,
+        "email_add": data.email_add,
+        "password": get_password_hash(data.password),
+        "status": data.status,
+        "created": data.created
+    }
+    mydb.login.insert_one(dataInsert)
+    return {"message": "User has been saved"}
 
 
    
-@api.get("/users/", response_model=List[UserBM])
-def get_all_users():
-    """API endpoint to get a list of all users."""
-    try:
-        users = UserViews.get_user()
-        if not users:
-            raise HTTPException(status_code=404, detail="No users found.")
-        return users
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-
-@api.put("/api-update-user-status/{update_username}")
-async def api_update_user_status(update_username: str,
-                                 item: UpdateUserBM,
-                                 username: str = Depends(get_current_user)):
-    """API endpoint to update a user's status."""
-    try:
-        update_success = UserViews.update_user(update_username, item.is_active)
-        if update_success:
-            return {"detail": "User status updated successfully."}
-        else:
-            raise HTTPException(status_code=404, detail="User not found.")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-  
-
-
-
 
