@@ -1,0 +1,106 @@
+{% extends 'dashboard.html' %} {% block content %}
+
+<div id="main" class="main">
+  <div class="pagetitle">
+    <h1>Branch</h1>
+    <!-- <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a >Home</a></li>
+          <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+      </nav> -->
+  </div>
+  <!-- End Page Title -->
+
+  <section class="section">
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Branch Form</h5>
+
+            <!-- General Form Elements -->
+            <form>
+              <div class="row mb-3">
+               
+                <div class="col-sm-9">
+                  <input type="text" id="id" class="form-control" hidden />
+                </div>
+              </div>
+
+
+              <div class="row mb-3">
+                <label for="inputText" class="col-sm-3 col-form-label"
+                  >Branch Name</label
+                >
+                <div class="col-sm-9">
+                  <input type="text" id="branchName" class="form-control" />
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="inputPassword" class="col-sm-3 col-form-label"
+                  >Address</label
+                >
+                <div class="col-sm-9">
+                  <textarea
+                    class="form-control"
+                    id="branchAddress"
+                    style="height: 100px"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div class="text-center">
+                <button
+                  type="button"
+                  id="btn_save_branch"
+                  class="btn btn-primary"
+                >
+                  Add
+                </button>
+                <button
+                  type="button"
+                  id="btn_update_branch"
+                  class="btn btn-danger"
+                  style="display: none;"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+            <!-- End General Form Elements -->
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Branch List</h5>
+
+            <!-- General Form Elements -->
+            <table
+              id="table_branch"
+              class="table table-bordered"
+              style="text-align: center"
+            >
+              <thead class="table-dark">
+                <tr>
+                  <td>#</td>
+                  <td>Branch Name</td>
+                  <td>Branch Address</td>
+                </tr>
+              </thead>
+              <tbody id="table_branch_list"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script src="/static/accounting/branch.js"></script>
+</div>
+<!-- End #main -->
+
+{% endblock %}

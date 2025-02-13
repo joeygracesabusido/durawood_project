@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css"
+    />
+
+    <!-- <link rel="stylesheet" type="text/css" href="/static/style.css"> -->
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+
+    <!-- Favicons -->
+    <link href="/static/assets/img/logo.png" rel="icon" />
+    <link
+      href="/static/assets/img/apple-touch-icon.png"
+      rel="apple-touch-icon"
+    />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+      rel="stylesheet"
+    />
+
+    <!-- Vendor CSS Files -->
+    <link
+      href="/static/assets/vendor/bootstrap/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="/static/assets/vendor/bootstrap-icons/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      href="/static/assets/vendor/boxicons/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+    <link href="/static/assets/vendor/quill/quill.snow.css" rel="stylesheet" />
+    <link
+      href="/static/assets/vendor/quill/quill.bubble.css"
+      rel="stylesheet"
+    />
+    <link
+      href="/static/assets/vendor/remixicon/remixicon.css"
+      rel="stylesheet"
+    />
+    <link
+      href="/static/assets/vendor/simple-datatables/style.css"
+      rel="stylesheet"
+    />
+
+    <!-- Template Main CSS File -->
+    <link href="/static/assets/css/style.css" rel="stylesheet" />
+
+    <!-- Vendor JS Files -->
+    <script src="/static/assets/vendor/apexcharts/apexcharts.min.js"></script>
+    <script src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/assets/vendor/chart.js/chart.umd.js"></script>
+    <script src="/static/assets/vendor/echarts/echarts.min.js"></script>
+    <script src="/static/assets/vendor/quill/quill.js"></script>
+    <script src="/static/assets/vendor/simple-datatables/simple-datatables.js"></script>
+    <script src="/static/assets/vendor/tinymce/tinymce.min.js"></script>
+    <script src="/static/assets/vendor/php-email-form/validate.js"></script>
+    <title>AMS</title>
+  </head>
+
+  <style>
+    #user_company {
+      margin-left: 100px;
+      font-size: 26px;
+      font-weight: 700;
+      color: #012970;
+      font-family: "Nunito", sans-serif;
+    }
+  </style>
+
+  <body>
+    <!-- <div class="container-fluid">
+        <a class="navbar-brand" href="#">Dashboard</a>
+        <button class="btn btn-outline-light" onclick="window.location.href='/profile/'">Profile</button>
+        <button class="btn btn-outline-light" onclick="window.location.href='/settings/'">Settings</button>
+        <a class="btn btn-outline-light" href="/">Logout</a>
+    </div> -->
+    <!-- <nav class="navbar navbar-dark bg-primary" >
+        
+        <span class="open-slide">
+            <a href="#" onclick="openSlideMenu()">
+                <svg width="25" height="50">
+                    <path d="M0,5 30,5" stroke="#000" stroke-width="8"/>
+                    <path d="M0,14 30,14" stroke="#000" stroke-width="8"/>
+                    <path d="M0,23 30,23" stroke="#000" stroke-width="8"/>
+
+                </svg> -->
+
+    <!-- <a class="navbar-brand" href="/inventory-list/">Inventory</a> -->
+
+    <!-- </a> -->
+
+    <!-- </span> -->
+    <!-- <a class="navbar-brand" href="/employee-list/">Employee</a>
+        <a class="navbar-brand" href="/inventory-list/">Inventory</a> -->
+    <!-- <a class="navbar-brand" href="/">Logout</a> -->
+
+    <!-- </nav> -->
+    <!-- <div id="side-menu" class="side-nav">
+        <a href="#" class="btn-close" onclick="closeSideMune()">&times;</a>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="avatar"></div>
+            </div>
+            
+        </div>
+        
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle">Accounting</a>
+            <ul class="dropdown-menu">
+              <li><a href="/api-chart-of-account-temp/">Chart of Account</a></li>
+              <li><a href="/api-accounting-temp/">Insert Journal Entry</a></li>
+              <li><a href="/api-journal-entry-list-temp/">Journal Entry List</a></li>
+              
+            </ul>
+        </li>
+
+        
+
+
+        
+
+
+        
+
+        
+        
+        
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle">Payroll</a>
+            <ul class="dropdown-menu">
+                <li><a href="/api-payroll-temp/">Add Employee</a></li>
+                <li><a href="/api-payroll-computation/">Payroll Computation</a></li>
+                <li><a href="/api-payroll-comp2/">Payroll Computation 2</a></li>
+            </ul>
+        </li>
+
+
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle">Reports</a>
+            <ul class="dropdown-menu">
+              <li><a href="/api-trial-balance-temp/">Trial Balance</a></li>
+            
+              
+            </ul>
+        </li>
+
+        
+
+
+        <a href="/logs/">Logs</a>
+    </div> -->
+    <!-- ======= Header ======= -->
+    <header id="header" class="header fixed-top d-flex align-items-center">
+      <div class="d-flex align-items-center justify-content-between">
+        <a class="logo d-flex align-items-center">
+          <img
+            src="/static/assets/img/logo.png"
+            alt=""
+            width="35"
+            height="35"
+          />
+          <span class="d-none d-lg-block">AMS</span>
+        </a>
+        <i class="bi bi-list toggle-sidebar-btn"></i>
+
+        <span class="d-none d-lg-block company" id="user_company">AMS</span>
+      </div>
+      <!-- End Logo -->
+
+      <nav class="header-nav ms-auto">
+        <ul class="d-flex align-items-center">
+          <li class="nav-item dropdown pe-3">
+            <a
+              class="nav-link nav-profile d-flex align-items-center pe-0"
+              href="#"
+              data-bs-toggle="dropdown"
+            >
+              <img
+                src="/static/assets/img/profile-img.jpg"
+                alt="Profile"
+                class="rounded-circle"
+              />
+              <span
+                id="user_name_span"
+                class="d-none d-md-block dropdown-toggle ps-2"
+              ></span> </a
+            ><!-- End Profile Iamge Icon -->
+
+            <ul
+              class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile"
+            >
+              <li class="dropdown-header">
+                <h6 id="user_name_h6">Jerome Sabusido</h6>
+                <span id="user_role">Accountant</span>
+              </li>
+              <li>
+                <hr class="dropdown-divider" />
+              </li>
+
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="/">
+                  <i class="bi bi-box-arrow-right"></i>
+                  <span>Sign Out</span>
+                </a>
+              </li>
+            </ul>
+            <!-- End Profile Dropdown Items -->
+          </li>
+          <!-- End Profile Nav -->
+        </ul>
+      </nav>
+      <!-- End Icons Navigation -->
+    </header>
+    <!-- End Header -->
+
+    <!-- ======= Sidebar ======= -->
+    <aside id="sidebar" class="sidebar">
+      <ul class="sidebar-nav" id="sidebar-nav">
+        <li class="nav-item">
+          <a class="nav-link main-link" href="/dashboard/">
+            <i class="bi bi-grid"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <!-- End Dashboard Nav -->
+
+        <li class="nav-item">
+          <a
+            class="nav-link main-link"
+            data-bs-target="#components-nav"
+            data-bs-toggle="collapse"
+            href="#"
+          >
+            <i class="bi bi-journal-text"></i><span>Accounting</span
+            ><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul
+            id="components-nav"
+            class="nav-content collapse"
+            data-bs-parent="#sidebar-nav"
+          >
+            <li>
+              <a href="/api-chart-of-account-temp/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Chart of Account</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="/purchase/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Purchase Transactions</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="/sales/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Sales Transactions</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="/api-accounting-temp/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Insert Journal Entry</span>
+              </a>
+            </li>
+            <li>
+              <a href="/api-journal-entry-list-temp/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Journal Entry List</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+        <!-- End Components Nav -->
+
+        <li class="nav-item">
+          <a
+            class="nav-link main-link"
+            data-bs-target="#forms-nav"
+            data-bs-toggle="collapse"
+            href="#"
+          >
+            <i class="bi bi-calendar-check" class="bi bi-journal-text"></i
+            ><span>Payroll</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul
+            id="forms-nav"
+            class="nav-content collapse"
+            data-bs-parent="#sidebar-nav"
+          >
+            <li>
+              <a href="/api-payroll-temp/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Add Employee</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="/api-payroll-list/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Payroll List</span>
+              </a>
+            </li>
+            
+            <li>
+              <a href="/api-payroll-computation/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Payroll Computation</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="/api-payroll-1604-report/">
+                <i class="bi bi-circle"></i><span>1604 Report</span>
+              </a>
+          </li>
+
+            <li>
+                <a href="/api-payroll-1601c-computation/">
+                  <i class="bi bi-circle"></i><span>1601c Report</span>
+                </a>
+            </li>
+
+            <li>
+              <a href="/api-13th-month/">
+                <i class="bi bi-circle"></i><span>13th Month</span>
+              </a>
+          </li>
+
+          </ul>
+        </li>
+        <!-- End Forms Nav -->
+
+        <li class="nav-item">
+          <a
+            class="nav-link main-link"
+            data-bs-target="#tables-nav"
+            data-bs-toggle="collapse"
+            href="#"
+          >
+            <i class="bi bi-graph-up"></i><span>Reports</span
+            ><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul
+            id="tables-nav"
+            class="nav-content collapse"
+            data-bs-parent="#sidebar-nav"
+          >
+            <li>
+              <a href="/api-trial-balance-temp/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Trial Balance</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="/api-sales-report/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Sales Report</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="/api-purchase-report/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Purchases</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="/balance-sheet/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Balance Sheet</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="/income-statement/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Income Statement</span>
+              </a>
+            </li>
+
+
+            <li>
+              <a href="/api-beg-bal/" class="sub-link">
+                <i class="bi bi-circle"></i><span>Insert Beg. Balance</span>
+              </a>
+            </li>
+
+
+          
+            <!-- <li>
+                <a href="tables-data.html">
+                  <i class="bi bi-circle"></i><span>Data Tables</span>
+                </a>
+              </li> -->
+          </ul>
+        </li>
+        :
+        <li class="nav-item">
+          <a class="nav-link main-link" href="/customer_profile/">
+            <i class="bi bi-person"></i>
+            <span>Supplier & Customer</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link main-link" href="/company_profile/">
+            <i class="bi bi-building"></i>
+            <span>Company Profile</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link main-link" href="/branch/">
+            <i class="bx bx-git-branch"></i>
+            <span>Branch</span>
+          </a>
+        </li>
+        <!-- End Dashboard Nav -->
+
+        <!-- End Tables Nav -->
+
+        <!-- <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+              <i class="bi bi-bar-chart"></i><span>Charts</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="charts-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+              <li>
+                <a href="charts-chartjs.html">
+                  <i class="bi bi-circle"></i><span>Chart.js</span>
+                </a>
+              </li>
+              <li>
+                <a href="charts-apexcharts.html">
+                  <i class="bi bi-circle"></i><span>ApexCharts</span>
+                </a>
+              </li>
+              <li>
+                <a href="charts-echarts.html">
+                  <i class="bi bi-circle"></i><span>ECharts</span>
+                </a>
+              </li>
+            </ul>
+          </li> -->
+        <!-- End Charts Nav -->
+        <!-- 
+          <li class="nav-item">
+            <a class="nav-link collapsed" data-bs-target="#icons-nav" data-bs-toggle="collapse" href="#">
+              <i class="bi bi-gem"></i><span>Icons</span><i class="bi bi-chevron-down ms-auto"></i>
+            </a>
+            <ul id="icons-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+              <li>
+                <a href="icons-bootstrap.html">
+                  <i class="bi bi-circle"></i><span>Bootstrap Icons</span>
+                </a>
+              </li>
+              <li>
+                <a href="icons-remix.html">
+                  <i class="bi bi-circle"></i><span>Remix Icons</span>
+                </a>
+              </li>
+              <li>
+                <a href="icons-boxicons.html">
+                  <i class="bi bi-circle"></i><span>Boxicons</span>
+                </a>
+              </li>
+            </ul>
+          </li> -->
+        <!-- End Icons Nav -->
+
+        <!-- <li class="nav-heading">Pages</li> -->
+
+        <!-- <li class="nav-item">
+            <a class="nav-link collapsed" href="users-profile.html">
+              <i class="bi bi-person"></i>
+              <span>Profile</span>
+            </a>
+          </li> -->
+        <!-- End Profile Page Nav -->
+
+        <!-- <li class="nav-item">
+            <a class="nav-link collapsed" href="pages-faq.html">
+              <i class="bi bi-question-circle"></i>
+              <span>F.A.Q</span>
+            </a>
+          </li> -->
+        <!-- End F.A.Q Page Nav -->
+
+        <!-- <li class="nav-item">
+            <a class="nav-link collapsed" href="pages-contact.html">
+              <i class="bi bi-envelope"></i>
+              <span>Contact</span>
+            </a>
+          </li> -->
+        <!-- End Contact Page Nav -->
+
+        <!-- <li class="nav-item">
+            <a class="nav-link collapsed" href="pages-register.html">
+              <i class="bi bi-card-list"></i>
+              <span>Register</span>
+            </a>
+          </li> -->
+        <!-- End Register Page Nav -->
+
+        <!-- <li class="nav-item">
+            <a class="nav-link collapsed" href="pages-login.html">
+              <i class="bi bi-box-arrow-in-right"></i>
+              <span>Login</span>
+            </a>
+          </li> -->
+        <!-- End Login Page Nav -->
+
+        <!-- <li class="nav-item">
+            <a class="nav-link collapsed" href="pages-error-404.html">
+              <i class="bi bi-dash-circle"></i>
+              <span>Error 404</span>
+            </a>
+          </li> -->
+        <!-- End Error 404 Page Nav -->
+
+        <!-- <li class="nav-item">
+            <a class="nav-link collapsed" href="pages-blank.html">
+              <i class="bi bi-file-earmark"></i>
+              <span>Blank</span>
+            </a>
+          </li> -->
+        <!-- End Blank Page Nav -->
+      </ul>
+    </aside>
+    <!-- End Sidebar-->
+
+    <!-- <div id="main" class="main">
+       
+    </div> -->
+
+    <!-- Vendor JS Files -->
+    <script src="/static/assets/vendor/apexcharts/apexcharts.min.js"></script>
+    <script src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/assets/vendor/chart.js/chart.umd.js"></script>
+    <script src="/static/assets/vendor/echarts/echarts.min.js"></script>
+    <script src="/static/assets/vendor/quill/quill.js"></script>
+    <script src="/static/assets/vendor/simple-datatables/simple-datatables.js"></script>
+    <script src="/static/assets/vendor/tinymce/tinymce.min.js"></script>
+    <script src="/static/assets/vendor/php-email-form/validate.js"></script>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+      integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <script>
+      const userString = localStorage.getItem("user");
+      const user = JSON.parse(userString);
+      function displayUserDetails() {
+        document.getElementById("user_name_span").innerText = user.full_name;
+        document.getElementById("user_name_h6").innerText = user.full_name;
+        document.getElementById("user_role").innerText = user.role;
+        document.getElementById("user_company").innerText =
+          "    " + user.company_name;
+      }
+
+      displayUserDetails();
+      document.addEventListener("DOMContentLoaded", function () {
+        const mainLinks = document.querySelectorAll(".main-link");
+        const subLinks = document.querySelectorAll(".sub-link");
+
+        // Handle main nav-links
+        mainLinks.forEach(function (mainLink) {
+          const hrefValue = mainLink.getAttribute("href");
+
+          // Add 'collapsed' class if the href value is included in the current path
+          if (window.location.pathname.includes(hrefValue)) {
+            mainLink.classList.remove("collapsed");
+          } else {
+            mainLink.classList.add("collapsed");
+          }
+        });
+
+        // Handle sub nav-links
+        subLinks.forEach(function (subLink) {
+          const hrefValue = subLink.getAttribute("href");
+          console.log(window.location.pathname);
+          // Add 'active' class if the href value is included in the current path
+          if (window.location.pathname.includes(hrefValue)) {
+            // Navigate to the closest `ul` (nav-content) and find its previous sibling (the main-link)
+            const p = subLink.closest("ul.nav-content");
+            p.classList.add("show");
+            const m = p.previousElementSibling;
+            // Get the parent <li> of the main link
+            m.classList.remove("collapsed");
+            m.setAttribute("aria-expanded", "true");
+            subLink.classList.add("active");
+          } else {
+            // subLink.classList.remove('active');
+          }
+        });
+      });
+
+      function openSlideMenu() {
+        document.getElementById("side-menu").style.width = "220px";
+        document.getElementById("main").style.marginLeft = "150px";
+        document.querySelectorAll(".side-nav a").forEach(function (element) {
+          element.style.fontSize = "18px"; // Adjust the font size for sidebar links when opened
+        });
+      }
+
+      function closeSideMune() {
+        document.getElementById("side-menu").style.width = "0";
+        document.getElementById("main").style.marginLeft = "0";
+        window.location.assign("/dashboard/");
+      }
+    </script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+    <!-- Template Main JS File -->
+    <script src="/static/assets/js/main.js"></script>
+    <script>
+      $(document).ready(function () {
+        $(".dropdown-toggle").click(function () {
+          $(this).next(".dropdown-menu").slideToggle(100);
+        });
+      });
+    </script>
+  </body>
+</html>
+
+{% block content %} {% endblock %}

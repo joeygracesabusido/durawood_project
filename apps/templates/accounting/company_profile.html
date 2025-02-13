@@ -1,0 +1,305 @@
+{% extends 'dashboard.html' %} {% block content %}
+
+<div id="main" class="main">
+  <div class="pagetitle">
+    <h1>Company Profile</h1>
+    <!-- <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a >Home</a></li>
+          <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+      </nav> -->
+  </div>
+  <!-- End Page Title -->
+
+  <section class="section">
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">About Company</h5>
+
+            <!-- General Form Elements -->
+            <form id="myForm">
+              <div class="row mb-3">
+                <label for="inputText" class="col-sm-3 col-form-label"
+                  ></label
+                >
+
+                <div class="col-sm-9">
+                  <input
+                    id="id"
+                    type="text"
+                    class="form-control"
+                    value="{{ profiles[0].id }}"
+                    readonly hidden
+                  />
+                </div>
+            </div>
+
+              <div class="row mb-3">
+                <label for="inputText" class="col-sm-3 col-form-label"
+                  >Company Name</label
+                >
+                <div class="col-sm-9">
+                  <input
+                    id="company_name"
+                    type="text"
+                    class="form-control"
+                    value="{{ profiles[0].company_name }}"
+                    readonly
+                  />
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="inputText" class="col-sm-3 col-form-label"
+                  >Tin</label
+                >
+                <div class="col-sm-9">
+                  <input
+                    id="tin"
+                    type="text"
+                    class="form-control"
+                    value="{{ profiles[0].tin}}"
+                    readonly
+                  />
+                </div>
+              </div>
+
+
+              <div class="row mb-3">
+                <label for="inputText" class="col-sm-3 col-form-label"
+                  >Business Type</label
+                >
+                <div class="col-sm-9">
+                  <input
+                    id="company_business_type"
+                    type="text"
+                    class="form-control"
+                    value="{{ profiles[0].type_of_bussiness }}"
+                    readonly
+                  />
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label for="inputText" class="col-sm-3 col-form-label"
+                  >Financial Year End</label
+                >
+                <div class="col-sm-9">
+                  <input
+                    id="company_financial_year_end"
+                    type="text"
+                    class="form-control"
+                    value="{{ profiles[0].financial_year_end }}"
+                    readonly
+                  />
+                </div>
+              </div>
+              
+              <div class="row mb-3">
+                <label for="inputText" class="col-sm-3 col-form-label"
+                  >RDO</label
+                >
+                <div class="col-sm-9">
+                  <input
+                    id="company_rdo"
+                    type="text"
+                    class="form-control"
+                    value="{{ profiles[0].rdo }}"
+                    readonly
+                  />
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label for="inputPassword" class="col-sm-3 col-form-label"
+                  >Address</label
+                >
+                <div class="col-sm-9">
+                  <textarea
+                    id="company_address"
+                    class="form-control"
+                    style="height: 80px"
+                     readonly
+                  > {{ profiles[0].address }}
+                  </textarea
+                  >
+                </div>
+              </div>
+
+              <!-- <fieldset class="row mb-3">
+                  <legend class="col-form-label col-sm-2 pt-0">Radios</legend>
+                  <div class="col-sm-10">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios1" value="option1" checked="">
+                      <label class="form-check-label" for="gridRadios1">
+                        First radio
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios2" value="option2">
+                      <label class="form-check-label" for="gridRadios2">
+                        Second radio
+                      </label>
+                    </div>
+                    <div class="form-check disabled">
+                      <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios" value="option" disabled="">
+                      <label class="form-check-label" for="gridRadios3">
+                        Third disabled radio
+                      </label>
+                    </div>
+                  </div>
+                </fieldset>
+                <div class="row mb-3">
+                  <legend class="col-form-label col-sm-2 pt-0">Checkboxes</legend>
+                  <div class="col-sm-10">
+
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="gridCheck1">
+                      <label class="form-check-label" for="gridCheck1">
+                        Example checkbox
+                      </label>
+                    </div>
+
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="gridCheck2" checked="">
+                      <label class="form-check-label" for="gridCheck2">
+                        Example checkbox 2
+                      </label>
+                    </div>
+
+                  </div>
+                </div> -->
+
+              <!-- <div class="row mb-3">
+                  <label class="col-sm-2 col-form-label">Disabled</label>
+                  <div class="col-sm-10">
+                    <input type="text" class="form-control" value="Read only / Disabled" disabled="">
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+                  <label class="col-sm-2 col-form-label">Select</label>
+                  <div class="col-sm-10">
+                    <select class="form-select" aria-label="Default select example">
+                      <option selected="">Open this select menu</option>
+                      <option value="1">One</option>
+                      <option value="2">Two</option>
+                      <option value="3">Three</option>
+                    </select>
+                  </div>
+                </div> -->
+
+              <!-- <div class="row mb-3">
+                  <label class="col-sm-2 col-form-label">Multi Select</label>
+                  <div class="col-sm-10">
+                    <select class="form-select" multiple="" aria-label="multiple select example">
+                      <option selected="">Open this select menu</option>
+                      <option value="1">One</option>
+                      <option value="2">Two</option>
+                      <option value="3">Three</option>
+                    </select>
+                  </div>
+                </div> -->
+
+              <div class="text-center">
+                
+                <button
+                  type="button"
+                  id="updateButton"
+                  class="btn btn-primary"
+                >
+                  Update
+                </button>
+              </div>
+            </form>
+            <!-- End General Form Elements -->
+            <script>
+            let isEditting = false;
+                      
+                      const profile_id_input = document.getElementById("id");
+                      const company_name = document.getElementById("company_name");
+                      const tin =  document.getElementById("tin");
+                      const company_business_type = document.getElementById("company_business_type");
+                      const company_financial_year_end = document.getElementById("company_financial_year_end");
+                      const company_rdo = document.getElementById("company_rdo");
+                      const company_address = document.getElementById("company_address");
+
+                      const updateButton = document.getElementById("updateButton");
+                      const fields = document.querySelectorAll("#myForm input[type='text'], #myForm textarea");
+
+                      updateButton.addEventListener("click", () => {
+                        fields.forEach((field) => {
+                          field.readOnly = !field.readOnly; // Toggle the readonly attribute
+                        });
+
+                        if (fields[0].readOnly) {
+                          updateButton.textContent = "Update"; // When fields are readonly
+                        } else {
+                          updateButton.textContent = "Save"; // When fields are editable
+                        }
+
+                        // Check if the button is now in the "Save" state, indicating fields are editable
+                        if (updateButton.textContent === "Save") {
+                          isEditting = true;
+                        } else if (isEditting) {
+                          // If in the "Save" state, send the update request
+                          updateCompanyProfile();
+                          isEditting = false;
+                        }
+                      });
+
+                      async function updateCompanyProfile() {
+                        // Gather data from input fields
+                        const profileData = {
+                          tin: tin.value,
+                          company_name: company_name.value,
+                          address: company_address.value,
+                          rdo: company_rdo.value,
+                          type_of_bussiness: company_business_type.value,
+                          financial_year_end: company_financial_year_end.value,
+                          user: "current_user" // Replace this with the current user if needed
+                        };
+
+                        const profile_id = parseInt(profile_id_input.value); // Ensure profile_id is correctly parsed as an integer
+
+                        if (isNaN(profile_id)) {
+                          alert("Invalid Profile ID");
+                          return;
+                        }
+
+                     
+
+                        try {
+                          // Send PUT request to update the company profile
+                          const response = await fetch(`/api-update-company_profile/?profile_id=${profile_id}`, {
+                            method: "PUT",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify(profileData),
+                          });
+
+                          if (response.ok) {
+                            const result = await response.json();
+                            alert(result.message); // Show success message
+                          } else {
+                            const error = await response.json();
+                            alert(`Error: ${error.detail}`); // Show error message
+                          }
+                        } catch (error) {
+                          console.error("An error occurred:", error);
+                          alert("An error occurred while updating the profile.");
+                        }
+                      }
+
+            </script>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<!-- End #main -->
+
+{% endblock %}

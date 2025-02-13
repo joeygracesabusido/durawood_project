@@ -1,0 +1,408 @@
+{% extends 'dashboard.html' %}
+
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
+<!-- <link rel="stylesheet" type="text/css" href="/static/style.css"> -->
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+
+<!-- <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+
+<link href="https://cdn.datatables.net/v/dt/dt-2.0.7/b-3.0.2/b-html5-3.0.2/date-1.5.2/datatables.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.min.css" rel="stylesheet">
+ -->
+
+<!-- <link rel="stylesheet" type="text/css" href="/static/style.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script> -->
+
+<style>
+    table {
+        width: 100%; /* Ensure the table takes up the full width */
+        table-layout: fixed; /* Fixed table layout to control column widths */
+        }
+
+    th {
+        height: 70px;
+        text-align: Center;
+    }
+
+    tr {
+        text-align: Center;
+    }
+
+    td {
+        height: 10px;
+        padding: 0; /* Removes default padding from table cells */
+        margin: 0; /* Removes default margin from table cells */
+    }
+
+    /* input {
+        width: 450px;
+        height: 40px;
+        margin: 0;
+
+    } */
+
+    /* account_no */
+
+    input[name^="account_code"] {
+    width: 200px; /* Adjusted to fit within the table cell */
+    height: 40px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+   
+
+    /* Set the debit and credit input widths */
+    input[name^="chart_of_account_id"] {
+        width: 150px; /* Fixed width to ensure alignment without overlap */
+        height: 40px;
+        border: 1px solid #ccc;
+        padding: 5px;
+        margin: 0;
+        box-sizing: border-box;
+        display: inline-block; /* Ensure inputs are inline without additional spacing */
+        text-align: right; /* Align the text inside the input fields to the right */
+    }
+
+   /* Set the account title input width */
+    input[name^="accountTitle"] {
+        width: 520px; /* Adjusted to fit within the table cell */
+        height: 40px;
+        border: 1px solid #ccc;
+        padding: 5px;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    /* Set the id input widths */
+    input[name^="chart_of_account_id"] {
+        width: 150px; /* Fixed width to ensure alignment without overlap */
+        height: 40px;
+        border: 1px solid #ccc;
+        padding: 5px;
+        margin: 0;
+        box-sizing: border-box;
+        display: inline-block; /* Ensure inputs are inline without additional spacing */
+        text-align: right; /* Align the text inside the input fields to the right */
+    }
+
+
+
+    /* Set the debit and credit input widths */
+    input[name^="amount"], input[name^="credit_amount"] {
+        width: 150px; /* Fixed width to ensure alignment without overlap */
+        height: 40px;
+        border: 1px solid #ccc;
+        padding: 5px;
+        margin: 0;
+        box-sizing: border-box;
+        display: inline-block; /* Ensure inputs are inline without additional spacing */
+        text-align: right; /* Align the text inside the input fields to the right */
+    }
+
+    /* Optionally, set the widths of table columns to match your inputs */
+    td:nth-child(2) { /* Assuming this is the column for accountTitle */
+        width: 400px; /* Match the width of the accountTitle input */
+    }
+
+    td:nth-child(3), /* Assuming these are the columns for debit and credit */
+    td:nth-child(4){
+        width: 150px; /* Match the width of the number inputs */
+    }
+
+    /* Optionally add this to ensure inputs align with each other */
+    input[type="number"] {
+        display: inline-block; /* Ensure inputs are inline without additional spacing */
+    }
+    
+    
+ 
+</style>
+<div  id="main" class="main">
+    <div class="pagetitle">
+        <h1>Insert Journal Entry</h1> 
+      
+        <!-- <nav>
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item active">Journal Entry</li>
+          </ol>
+        </nav> -->
+      </div><!-- End Page Title -->
+    <form method="POST">
+
+                <div class="container mt-3">
+                    {% for messege in messeges %}
+                    <div class="alert alert-danger" role="alert">
+                    {{ messege }}
+                    </div>
+                    {% endfor %}
+                </div>
+
+
+
+                <div class="container1">
+                    <div class="row mb-3">
+                        <label for="Branch" class="col-sm-3 col-form-label">Branches</label>
+                        <div class="col-sm-9">
+                            <input
+                            type="text"
+                            name="branch_name"
+                            id="branch_name"
+                            class="form-control"
+                            >
+                        </input> 
+    
+                        </div>
+
+                        
+                </div>
+                
+                
+                <div class="container1">
+                    
+                        <input
+                            type="text"
+                            name="branch_id"
+                            id="branch_id"
+							hidden                            
+                           >
+                        </input> 
+
+                        
+                </div>
+ 
+
+
+
+                <div class="container1">
+                    <div class="row mb-3">
+                        <label for="TransactionDate"class="col-sm-3 col-form-label">Date</label>
+                        <div class="col-sm-9">
+                            <input type="date" name="trans_date" 
+                            id="trans_date"
+                            class="form-control">
+                        </div>
+                        
+    
+                    </div>
+
+                        
+                </div>
+                
+                <div class="container1">
+                    <div class="row mb-3">
+                        <label for="Journal"class="col-sm-3 col-form-label" >Journal</label>
+                        <div class="col-sm-9">
+                            <select name="journal_type" id="journal_type"class="filter-selectbox"
+                                required
+                                >
+                            <option value="General Ledger">General Ledger</option>
+                            <option value="Journal Voucher">Journal Voucher</option>
+                            <option value="Payment">Payments</option>
+                            <option value="Receipts">Receipts</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Purchases">Purchases</option>
+                            
+
+                    
+                        </select>  
+
+                        </div>
+                    </div>
+                    
+                    
+                </div>
+                
+
+                  <div class="container1">
+                    <div class="row mb-3" >
+                        <label class="col-sm-3 col-form-label">Reference</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="reference" 
+                            id="reference"  class="form-control">
+    
+                        </div>
+                    </div>
+
+                </div>
+                
+                <div class="container1">
+
+                    <div class="row mb-3" >
+                        <label class="col-sm-3 col-form-label">Journal Memo</label>
+                        <div class="col-sm-9">
+                            <textarea name="description" id="description" class="form-control" required>
+                                
+                            </textarea>
+                        </div>
+                    </div>
+                    
+
+                </div>
+                     
+                    
+                    
+                
+            
+            
+                <div class="container mt-3">
+                    <table class="table table-borderless">
+                        <thead class="border-bottom font-weight-bold">
+                            <tr>
+                                <td>Account Code</td>
+                                <td>AccounTitle</td>
+                                <td>Debit</td>
+                                <td>Credit</td>
+                                <td></td>
+                                <td>Action</td>
+                                
+                                
+                            
+                                <!-- <td>
+                                    <button type="button"  id="add_button" class="btn btn-primary"><i class="fas fa-database">
+                                    </i>Add</button>
+                                </td> -->
+
+                            
+                            </tr>
+                        </thead>
+                        <tbody id="addrow">
+                            
+                            
+                        </tbody>
+                    </table>
+
+                    
+                
+                
+
+                <div class="container mt-3">
+                    <button type="button"  id="add_button" class="btn btn-primary"><i class="fas fa-database">
+                    </i>Add line</button>
+
+                    <button type="submit" name='submit' id='submiBTN' class="btn btn-success" disabled>
+                    <i class="fas fa-database"> 
+                    </i>Save</button>
+                </div>
+
+
+
+                        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+                        <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+                        
+<script>
+   
+
+</script>
+
+        
+ 
+        
+                        <script type="text/javascript">
+                     
+
+
+                            // function myFunction2() {
+                            // document.querySelector("#submiBTN").disabled = true;
+                            //     var total = 0.0;
+                            //     // let debitList = document.querySelector('input.amount');
+                            //     let debitList = document.getElementsByClassName('amount');
+                            //     let debitsum = 0;
+                               
+                                
+                            //     for (let i of debitList){
+                            //         // console.log(i.value)
+                            //         let debitValue = parseFloat(i.value);
+                                    
+                            //         debitsum += debitValue;
+                            //         debitsum2 = parseFloat(debitsum).toFixed(2)
+                            //     }
+                                
+
+
+                            //     let creditList = document.getElementsByClassName('credit_amount');
+                            //     let creditsum = 0;
+                                
+
+                            //     for (let i of creditList){
+                            //         let creditValue = parseFloat(i.value);
+                            //         creditsum += creditValue;
+                            //         creditsum2 = parseFloat(creditsum).toFixed(2)
+                            //     }
+                               
+                            //     total = parseFloat(debitsum2) - parseFloat(creditsum2)
+
+                            //     if (total === 0){
+                            //         document.getElementById("submiBTN").disabled = false;
+                            //     }else{
+                            //         document.getElementById("submiBTN").disabled = true;
+                            //     }
+                            
+                            // }
+                                
+                        
+                        </script>
+
+
+                      
+
+                        <script>
+
+                            // $( function() {
+                                
+                            //     $("#account_no").autocomplete({
+                            //     source: "/api-autocomplete-chart-of-account/"
+                            //     });
+                            // } );
+
+
+                        </script>
+
+
+                        
+
+                       
+
+                </div>
+</form>                
+                
+</div>
+      
+         
+    
+                 
+                
+        
+    
+    <!-- Add Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    
+    
+    
+    <script src="/static/accounting/insert_journal_entry2.js"></script>
+    
+    
+    
+   
+    
+
+    <script>
+      
+     
+    </script>
+    
+    
+   
+
+{% endblock %}

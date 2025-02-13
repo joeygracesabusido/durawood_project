@@ -1,0 +1,150 @@
+{% extends 'dashboard.html' %} {% block content %}
+
+<div id="main" class="main">
+  <div class="pagetitle">
+    <h1>Customer Profile</h1>
+    <!-- <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a >Home</a></li>
+          <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+      </nav> -->
+  </div>
+  <!-- End Page Title -->
+
+  <section class="section">
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Insert Customer</h5>
+
+            <!-- General Form Elements -->
+            <form id="myForm">
+              <div class="row mb-3">
+                <label for="inputText" class="col-sm-3 col-form-label"
+                  >Bussiness Name</label
+                >
+                <div class="col-sm-9">
+                  <input
+                    id="bussiness_name"
+                    type="text"
+                    class="form-control"
+                    value=""
+                  />
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="inputText" class="col-sm-3 col-form-label"
+                  >Name of TAX Payer</label
+                >
+                <div class="col-sm-9">
+                  <input
+                    id="name_of_tax_payer"
+                    type="text"
+                    class="form-control"
+                    value=""
+                  />
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="inputText" class="col-sm-3 col-form-label"
+                  >TIN</label
+                >
+                <div class="col-sm-9">
+                  <input id="tin" type="text" class="form-control" value="" />
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label for="inputText" class="col-sm-3 col-form-label"
+                  >RDO</label
+                >
+                <div class="col-sm-9">
+                  <input id="rdo" type="text" class="form-control" value="" />
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <label for="inputPassword" class="col-sm-3 col-form-label"
+                  >Address</label
+                >
+                <div class="col-sm-9">
+                  <textarea
+                    id="address"
+                    class="form-control"
+                    style="height: 80px"
+                  >
+                  </textarea>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label class="col-sm-3 col-form-label">Tax Type</label>
+                <div class="col-sm-9">
+                  <select
+                    id="tax_type"
+                    class="form-select"
+                    aria-label="Vatable"
+                  >
+                    <option value="Vatable ">Vatable</option>
+                    <option value="Non-Vatable ">Non-Vatable</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <label class="col-sm-3 col-form-label">Description</label>
+                <div class="col-sm-9">
+                  <select
+                    id="description"
+                    class="form-select"
+                    aria-label="Customer"
+                  >
+                    <option value="Customer">Customer</option>
+                    <option value="Vendor">Vendor</option>
+                    s
+                  </select>
+                </div>
+              </div>
+
+              <div class="text-center">
+                <button id="btn_save_branch" type="button" class="btn btn-primary">Add</button>
+                
+              </div>
+            </form>
+            <!-- End General Form Elements -->
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Customer List</h5>
+
+            <!-- General Form Elements -->
+            <table
+              id="table_customer"
+              class="table table-bordered"
+              style="text-align: center"
+            >
+              <thead class="table-dark">
+                <tr>
+                  <td>#</td>
+                  <td>Business Name</td>
+                  <td>Tax Type</td>
+                  <td>Description</td>
+                </tr>
+              </thead>
+              <tbody id="table_customer_list"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <script src="/static/accounting/customer.js"></script>
+</div>
+
+<!-- End #main -->
+
+{% endblock %}

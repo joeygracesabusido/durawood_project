@@ -1,0 +1,196 @@
+
+{% extends 'dashboard.html' %}
+
+{% block content %}
+
+
+
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- jQuery UI CSS -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    
+    <!-- jQuery UI JavaScript -->
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<div id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Sales Transaction</h1>
+	
+   <div class="container mt-3">
+                    {% for messege in messeges %}
+                    <div class="alert alert-danger" role="alert">
+                    {{ messege }}
+                    </div>
+                    {% endfor %}
+   </div>
+
+
+      <!-- <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a >Home</a></li>
+          <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+      </nav> -->
+    </div><!-- End Page Title -->
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-15">
+	
+			
+
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Sales Entry</h5>
+
+              <!-- General Form Elements -->
+              <form method="POST">
+				
+
+                <div class="row mb-3">
+                  <label for="inputText" class="col-sm-3 col-form-label"></label>
+                  <div class="col-sm-9">
+                    <input type="text" id="id" name="branch_id" class="form-control" hidden required>
+                  
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+                  <label for="inputText" class="col-sm-3 col-form-label">Branch</label>
+                  <div class="col-sm-9">
+                    <input type="text" id="branch_name" name="branch_name" class="form-control" required>
+                  </div>
+                </div>
+
+
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">Customer</label>
+                  <div class="col-sm-9">
+                    <input type="text" id="supplier" name="supplier" class="form-control" required>
+                  </div>
+                </div>
+
+
+
+			     <div class="row mb-3">
+					
+                  <div class="col-sm-9">
+                    <input type="text" id="supplier_id" name="supplier_id" class="form-control" hidden  required>
+                  </div>
+                </div>
+
+
+
+
+
+			   <div class="row mb-3">
+                  <label for="inputText" class="col-sm-3 col-form-label">Date</label>
+                  <div class="col-sm-9">
+                    <input type="date" id="trans_date" name="trans_date" class="form-control">
+                  </div>
+                </div>
+
+			
+              
+                <div class="row mb-3">
+                  <label for="inputText" class="col-sm-3 col-form-label">Journal</label>
+                  <div class="col-sm-9">
+                     <select name="journal_type" id="journal_type" name="journal_type" class="form-control">
+                      <option value="Sales">Sales</option>
+                     </select>
+                  </div>																										
+                  </div>
+              
+
+
+                <div class="row mb-3">
+                  <label for="inputText" class="col-sm-3 col-form-label">Reference</label>
+                  <div class="col-sm-9">
+                    <input type="text" id="reference" name="reference" class="form-control">
+                  </div>
+                </div>
+
+			    	
+			
+                <div class="row mb-3">
+
+
+                  <label for="inputPassword" class="col-sm-3 col-form-label">Description</label>
+                  <div class="col-sm-9">
+                    <textarea class="form-control" id="description" name="description" style="height: 100px"></textarea>
+                  </div>
+                </div>
+
+
+                <div class="row mb-3">
+
+
+                  <label for="inputPassword" class="col-sm-3 col-form-label">Amount</label>
+                  <div class="col-sm-9">
+                    <input type="text"  class="form-control" id="invoice_amount" name="invoice_amount"></input>
+                  </div>
+                </div>
+				
+
+
+
+                <div class="row mb-3">
+
+			      <table class="table table-borderless">
+                        <thead class="border-bottom font-weight-bold">
+                            <tr>
+                                <td>Account Code</td>
+                                <td>AccounTitle</td>
+                                <td>Witholding Tax %</td>
+                                <td>Debit</td>
+                                <td>Credit</td>
+                                <td></td>
+                                <td>Action</td>
+                                
+                                
+                       
+                            
+                            </tr>
+                        </thead>
+                        <tbody id="addrow">
+                            
+                            
+                        </tbody>
+                    </table>
+               
+                <div class="text-center">
+					      <button type="button"  id="add_button" class="btn btn-primary"><i class="fas fa-database">
+                    </i>Add line</button>
+
+                    <button type="submit" name='submit' id='submiBTN' class="btn btn-success">
+                    <i class="fas fa-database"> 
+                    </i>Save</button>
+
+          
+				</div>
+				</div>
+              </form><!-- End General Form Elements -->
+
+            </div>
+          </div>
+
+        </div>
+
+        
+      </div>
+    </section>
+
+
+	<script src="/static/accounting/sales.js"></script>
+
+</div><!-- End #main -->
+
+{% endblock %}
+

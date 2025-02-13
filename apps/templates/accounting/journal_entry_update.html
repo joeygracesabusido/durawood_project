@@ -1,0 +1,319 @@
+{% extends 'dashboard.html' %}
+
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
+<!-- <link rel="stylesheet" type="text/css" href="/static/style.css"> -->
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+
+<style>
+    table {
+        width: 100%; /* Ensure the table takes up the full width */
+        table-layout: fixed; /* Fixed table layout to control column widths */
+        }
+
+    th {
+        height: 70px;
+        text-align: Center;
+    }
+
+    tr {
+        text-align: Center;
+    }
+
+    td {
+        height: 10px;
+        padding: 0; /* Removes default padding from table cells */
+        margin: 0; /* Removes default margin from table cells */
+    }
+
+    /* input {
+        width: 450px;
+        height: 40px;
+        margin: 0;
+
+    } */
+
+    /* account_no */
+
+    input[name^="account_code"] {
+    width: 280px; /* Adjusted to fit within the table cell */
+    height: 40px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+   
+
+    /* Set the debit and credit input widths */
+    input[name^="chart_of_account_id"] {
+        width: 150px; /* Fixed width to ensure alignment without overlap */
+        height: 40px;
+        border: 1px solid #ccc;
+        padding: 5px;
+        margin: 0;
+        box-sizing: border-box;
+        display: inline-block; /* Ensure inputs are inline without additional spacing */
+        text-align: right; /* Align the text inside the input fields to the right */
+    }
+
+   /* Set the account title input width */
+    input[name^="accountTitle"] {
+        width: 300px; /* Adjusted to fit within the table cell */
+        height: 40px;
+        border: 1px solid #ccc;
+        padding: 5px;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    /* Set the id input widths */
+    input[name^="account_code_id"] {
+        width: 150px; /* Fixed width to ensure alignment without overlap */
+        height: 40px;
+        border: 1px solid #ccc;
+        padding: 5px;
+        margin: 0;
+        box-sizing: border-box;
+        display: inline-block; /* Ensure inputs are inline without additional spacing */
+        text-align: right; /* Align the text inside the input fields to the right */
+    }
+
+
+
+    /* Set the debit and credit input widths */
+    input[name^="amount"], input[name^="credit_amount"] {
+        width: 130px; /* Fixed width to ensure alignment without overlap */
+        height: 40px;
+        border: 1px solid #ccc;
+        padding: 5px;
+        margin: 0;
+        box-sizing: border-box;
+        display: inline-block; /* Ensure inputs are inline without additional spacing */
+        text-align: right; /* Align the text inside the input fields to the right */
+    }
+
+    /* Optionally, set the widths of table columns to match your inputs */
+    td:nth-child(2) { /* Assuming this is the column for accountTitle */
+        width: 400px; /* Match the width of the accountTitle input */
+    }
+
+    td:nth-child(3), /* Assuming these are the columns for debit and credit */
+    td:nth-child(4){
+        width: 150px; /* Match the width of the number inputs */
+    }
+
+    /* Optionally add this to ensure inputs align with each other */
+    input[type="number"] {
+        display: inline-block; /* Ensure inputs are inline without additional spacing */
+    }
+    
+    
+ 
+</style>
+
+
+
+<div  id="main" class="main">
+
+    <div class="card" style="width: auto">
+        
+        <div class="card-body">
+          <h5 class="card-title">Update Journal Entry</h5>
+
+          <form method="POST">
+
+            <div class="container mt-3">
+                {% for message in messages %}
+                <div class="alert alert-danger" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+        
+            <div class="container1">
+                <div class="row mb-3">
+                    <label for="Branch" class="col-sm-3 col-form-label">Branches</label>
+                    <div class="col-sm-9">
+                        <input
+                        type="text"
+                        name="branch_name"
+                        id="branch_name"
+                        class="form-control"
+                        >
+                    </input> 
+
+                    </div>
+                    
+
+                </div>
+               
+        
+                    
+            </div>
+        
+        
+            <div class="container1">
+                <div class="row mb-3">
+                    
+                    <input
+                    type="text"
+                    name="branch_id"
+                    id="branch_id"
+                    value="{{ journal_data[0].branch_id }}"
+                    hidden                     
+                >
+                </input> 
+
+                </div>           
+                   
+        
+                    
+            </div>
+        
+        
+            <div class="container1">
+                <div class="row mb-3">
+                    <label for="TransactionDate"class="col-sm-3 col-form-label">Date</label>
+                    <div class="col-sm-9">
+                        <input type="text" name="trans_date" 
+                        id="trans_date" value="{{ journal_data[0].transdate }}"
+                        class="form-control">
+                    </div>
+                    
+
+                </div>
+               
+        
+                <!-- <label for="TransactionDate">Date</label>
+                <input type="text" name="trans_date" id="trans_date" value="{{ journal_data[0].transdate|tojson|safe }}"> -->
+            </div>
+        
+            <div class="container1">
+                <div class="row mb-3" >
+                    <label for="Journal" class="col-sm-3 col-form-label">Journal</label>
+                    <div class="col-sm-9">
+                        <select name="journal_type" id="journal_type" class="filter-selectbox"  required>
+                            <option value="General Ledger" {% if journal_data[0].journal_type == "General Ledger" %}selected{% endif %}>General Ledger</option>
+                            <option value="Journal Voucher" {% if journal_data[0].journal_type == "Journal Voucher" %}selected{% endif %}>Journal Voucher</option>
+                            <option value="Payment" {% if journal_data[0].journal_type == "Payment" %}selected{% endif %}>Payments</option>
+                            <option value="Receipts" {% if journal_data[0].journal_type == "Receipts" %}selected{% endif %}>Receipts</option>
+                            <option value="Sales" {% if journal_data[0].journal_type == "Sales" %}selected{% endif %}>Sales</option>
+                            <option value="Purchases" {% if journal_data[0].journal_type == "Purchases" %}selected{% endif %}>Purchases</option>
+                            
+                        </select>
+
+                    </div>
+
+                    
+                </div>
+                
+                
+            </div>
+        
+            <div class="container1">
+                <div class="row mb-3" >
+                    <label class="col-sm-3 col-form-label">Reference</label>
+                    <div class="col-sm-9">
+                        <input type="text" name="reference" 
+                        id="reference" value="{{ journal_data[0].reference }}" class="form-control">
+
+                    </div>
+                </div>
+               
+                
+            </div>
+        
+            <div class="container1">
+                <div class="row mb-3" >
+                    <label class="col-sm-3 col-form-label">Journal Memo</label>
+                    <div class="col-sm-9">
+                        <textarea name="description" id="description" class="form-control" required>{{ journal_data[0].description }}
+                            
+                        </textarea>
+                    </div>
+                </div>
+                
+               
+            </div>
+        
+            <div class="container mt-3">
+                <table class="table table-borderless"style="width: 100%;">
+                    <thead class="border-bottom font-weight-bold", style="width: fit-content;">
+                        <tr>
+                            <th style="width: 10%;">Code</th>
+                            <th style="width: 40%;">Account Title</th>
+                            <th style="width: 15%;">Debit</th>
+                            <th style="width: 15%;">Credit</th>
+                            <th style="width: 2%;"></th>
+                            <th style="width: 15%;">Action</th>
+                        </tr>
+                    </thead>
+                   
+                    
+                    <tbody id="addrow">
+                        {% for entry in journal_data %}
+                        <tr>
+                            <td>
+                                <input type="text" name="account_code{{ loop.index }}" id="account_code{{ loop.index }}" value="{{ entry.chart_of_account_code  }}">
+                            </td>
+                            <td>
+                                <input type="text" name="accountTitle{{ loop.index }}" id="accountTitle{{ loop.index }}" value="{{ entry.chart_of_account }}">
+                            </td>
+                            <td>
+                                <input type="number" name="amount{{ loop.index }}" id="amount{{ loop.index }}" class="amount" step="any" onchange="myFunction2()" value="{{ entry.debit }}">
+                            </td>
+                            <td>
+                                <input type="number" name="credit_amount{{ loop.index }}" id="credit_amount{{ loop.index }}" class="credit_amount" step="any" onchange="myFunction2()" value="{{ entry.credit }}">
+                            </td>
+                            <td>
+                                <input type="text" name="chart_of_account_id{{ loop.index }}" id="chart_of_account_id{{ loop.index }}" class="chart_of_account_id" value="{{ entry.account_code_id }}" hidden>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-danger remove-row">Remove</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    
+                    
+        
+        
+                    </table>
+        
+            </div>
+        
+            <div class="container mt-3">
+                <button type="button" id="add_button" class="btn btn-primary"><i class="fas fa-database"></i> Add line</button>
+                <button type="submit" name='submit' id='submiBTN' class="btn btn-success">
+                    <i class="fas fa-database"></i> Save
+                </button>
+            </div>
+        
+        </form>
+          <br>
+          <!-- <a href="#" class="btn btn-primary">Go somewhere</a> -->
+        </div>
+      </div>
+
+<script>
+    
+</script>
+
+
+
+</div>
+  <!-- Add Bootstrap JS and Popper.js -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    
+
+<script src="/static/accounting/update_journal_entry.js"></script>
+
+{% endblock %}

@@ -1,0 +1,282 @@
+
+{% extends 'dashboard.html' %}
+
+{% block content %}
+
+
+
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- jQuery UI CSS -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    
+    <!-- jQuery UI JavaScript -->
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<div id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Update Employee Transaction</h1>
+	
+  
+
+
+      <!-- <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a >Home</a></li>
+          <li class="breadcrumb-item active">Dashboard</li>
+        </ol>
+      </nav> -->
+    </div><!-- End Page Title -->
+
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-15">
+	
+			
+
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Update Employee</h5>
+
+              <!-- General Form Elements -->
+              <form method="POST">
+				
+
+                <div class="row mb-3">
+                  <label for="inputText" class="col-sm-3 col-form-label"></label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                        id="trans_id" 
+                        name="trans_id" 
+                        class="form-control" 
+                    
+                        value="{{ employee_list_data.id }}"
+                        hidden
+                    >
+                  
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+                  <label for="inputText" class="col-sm-3 col-form-label">Company</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                        id="Company" 
+                        name="Company" 
+                        class="form-control" 
+                        value="{{ employee_list_data.Company }}">
+                  </div>
+                </div>
+
+
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">Employee ID</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="EmployeeID" 
+                    name="EmployeeID" 
+                    class="form-control"
+                    value="{{ employee_list_data.EmployeeID }}">
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">LastName</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="LastName" 
+                    name="LastName" 
+                    class="form-control"
+                    value="{{ employee_list_data.LastName }}">
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">First name</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="FirstName" 
+                    name="FirstName" 
+                    class="form-control"
+                    value="{{ employee_list_data.FirstName }}">
+                  </div>
+                </div>
+
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">Middle Name</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="MiddleName" 
+                    name="MiddleName" 
+                    class="form-control"
+                    value="{{ employee_list_data.MiddleName }}">
+                  </div>
+                </div>
+
+
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">Gender</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="Position" 
+                    name="Position" 
+                    class="form-control"
+                    value="{{ employee_list_data.Position }}">
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">Psoition</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="Position" 
+                    name="Position" 
+                    class="form-control"
+                    value="{{ employee_list_data.Position }}">
+                  </div>
+                </div>
+
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">Gender</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="Gender" 
+                    name="Gender" 
+                    class="form-control"
+                    value="{{ employee_list_data.Gender }}">
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">Salary Rate</label>
+                  <div class="col-sm-9">
+                    <input type="number" 
+                    id="Salaryrate" 
+                    name="Salaryrate" 
+                    class="form-control"
+                    value="{{ employee_list_data.Salaryrate }}">
+                  </div>
+                </div>
+
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">Tax Code</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="TaxCode" 
+                    name="TaxCode" 
+                    class="form-control"
+                    value="{{ employee_list_data.TaxCode }}">
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">TIN</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="TIN" 
+                    name="TIN" 
+                    class="form-control"
+                    value="{{ employee_list_data.TIN }}">
+                  </div>
+                </div>
+
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">SSS No.</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="SSSN" 
+                    name="SSSN" 
+                    class="form-control"
+                    value="{{ employee_list_data.SSSN }}">
+                  </div>
+                </div>
+
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">PHIC No.</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="PHICN" 
+                    name="PHICN" 
+                    class="form-control"
+                    value="{{ employee_list_data.PHICN }}">
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">HDMF No.</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="HDMFN" 
+                    name="HDMFN" 
+                    class="form-control"
+                    value="{{ employee_list_data.HDMFN }}">
+                  </div>
+                </div>
+
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">Allowance</label>
+                  <div class="col-sm-9">
+                    <input type="number" 
+                    id="Allowance" 
+                    name="Allowance" 
+                    class="form-control"
+                    value="{{ employee_list_data.Allowance }}">
+                  </div>
+                </div>
+
+
+                <div class="row mb-3">
+					<label for="inputText" class="col-sm-3 col-form-label">Date Hired</label>
+                  <div class="col-sm-9">
+                    <input type="text" 
+                    id="Date_hired" 
+                    name="Date_hired" 
+                    class="form-control"
+                    value="{{ employee_list_data.Date_hired }}">
+                  </div>
+                </div>
+
+			  
+               
+               
+                <div class="text-center">
+					   
+
+                    <button type="button" name='Btn_save' id='Btn_save' class="btn btn-success">
+                    <i class="fas fa-database"> 
+                    </i>Update</button>
+
+          
+				</div>
+				
+              </form><!-- End General Form Elements -->
+
+            </div>
+          </div>
+
+        </div>
+
+        
+      </div>
+    </section>
+
+
+	<script src="/static/payroll/update_payroll.js"></script>
+
+</div><!-- End #main -->
+
+{% endblock %}
+
