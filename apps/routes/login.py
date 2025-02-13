@@ -15,7 +15,7 @@ from apps.authentication.authenticate_user import get_current_user
 
 
 from ..authentication.utils import OAuth2PasswordBearerWithCookie
-from apps.views.sign_up_views import UserViews
+#from apps.views.sign_up_views import UserViews
 
 
 from jose import jwt
@@ -173,7 +173,12 @@ def login(username1: Optional[str], password1: Optional[str], response: Response
     else:  # Incorrect password
         raise HTTPException(status_code=400, detail="Username and Password did not match")
   
-   
+@login_router.get("/temp-sign-up/", response_class=HTMLResponse)
+async def api_sign_up(request: Request,):
+
+    return templates.TemplateResponse("sign_up.html", {"request": request})
+
+  
 
 
 @login_router.get("/dashboard/", response_class=HTMLResponse)

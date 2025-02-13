@@ -5,11 +5,11 @@ from datetime import datetime, date , timedelta
 from fastapi import APIRouter, Body, HTTPException, Depends, Request, Response, status
 from jose import jwt
 
-#from  ..database.mongodb import create_mongo_client
-#mydb = create_mongo_client()
+from  ..database.mongodb import create_mongo_client
+mydb = create_mongo_client()
 
 
-from apps.views.sign_up_views import UserViews
+#from apps.views.sign_up_views import UserViews
 
 
 JWT_SECRET = 'myjwtsecret'
@@ -44,8 +44,8 @@ def get_current_user(request:Request):
 
             else:
 
-                # user = mydb.login.find_one({"username": username})
-                user = UserViews.get_user_for_login(username=username)
+                user = mydb.login.find_one({"username": username})
+                #user = UserViews.get_user_for_login(username=username)
 
                 if user == [] :
                     raise HTTPException(
@@ -94,8 +94,8 @@ def get_current_user_details(request:Request):
 
             else:
 
-                # user = mydb.login.find_one({"username": username})
-                user = UserViews.get_user_for_login(username=username)
+                user = mydb.login.find_one({"username": username})
+                #user = UserViews.get_user_for_login(username=username)
 
                 if user == [] :
                     raise HTTPException(
