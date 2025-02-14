@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 from apps.authentication.authenticate_user import get_current_user
 
 
-#from  ..database.mongodb import create_mongo_client
-#mydb = create_mongo_client()
+from  ..database.mongodb import create_mongo_client
+mydb = create_mongo_client()
 
 
 from ..authentication.utils import OAuth2PasswordBearerWithCookie
@@ -22,7 +22,7 @@ from jose import jwt
 
 JWT_SECRET = 'myjwtsecret'
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 300
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 login_router = APIRouter(include_in_schema=False)
 templates = Jinja2Templates(directory="apps/templates")
@@ -50,14 +50,24 @@ def get_password_hash(password):
 
 
 def authenticate_user(username, password):
-    user = UserViews.get_user_for_login(username=username)
+    user = mydb.login.find_one({
+        '$and': [
+            {"email_add": username},
+            {"status": "Approved"}
+        ]
 
-    if not user:  # User not found
-        return None
+    })
 
-    hashed_password = user.hashed_password
-    password_check = pwd_context.verify(password, hashed_password)
-    return password_check if password_check else False
+     
+    if user:
+
+        hashed_password = user['password']
+        if pwd_context.verify(password, hashed_password):
+            #return {'username': user['email_add']}
+            user = {"username": "joey","email":"joey@gmail.com"}
+            return user
+    return False
+
 
 
 
@@ -78,7 +88,7 @@ async def api_login(request: Request):
     return templates.TemplateResponse("login.html", {"request":request}) 
 
 @login_router.get("/-temp-sign-up", response_class=HTMLResponse)
-async def api_login(request: Request):
+async def api_sign_up_temp(request: Request):
     return templates.TemplateResponse("sign_up.html", {"request":request}) 
 
 
@@ -93,7 +103,7 @@ def login(username1: Optional[str], password1: Optional[str], response: Response
             data={"sub": username1, "exp": datetime.utcnow() + timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)}, 
             expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         )
-        user_details = UserViews.get_user_details(username1)
+        user_details = mydb.login.find({"email_add": username1}) 
         jwt_token = jwt.encode({"sub": username1, "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)}, JWT_SECRET, algorithm=ALGORITHM)
         response.set_cookie(key="access_token", value=f'Bearer {jwt_token}', httponly=True)
         return {"message": "Login successful", "user":user_details}

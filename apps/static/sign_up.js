@@ -28,7 +28,7 @@ $(document).ready(function() {
             data: JSON.stringify(formData),
             success: function(response) {
                 $('#message').html('<div class="alert alert-success">' + response.message + '</div>');
-                $('#sign-up-form')[0].reset();
+                $('#sign_up_form')[0].reset();
 
                 window.location.assign("/")
             },

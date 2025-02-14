@@ -29,8 +29,8 @@ app.add_middleware(
 
 
 app.include_router(login_router,tags=['Login'])
-app.include_router(api)
-#app.include_router(api, tags=["admin"])
+
+app.include_router(api, tags=['Admin'])
 
 
 # Mount Strawberry's GraphQL app onto FastAPI

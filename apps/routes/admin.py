@@ -3,7 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from typing import Union, List, Optional
 from pydantic import BaseModel
-#from bson import ObjectId
+from bson import ObjectId
 
 from datetime import datetime, timedelta
 
@@ -50,9 +50,9 @@ class SignUpModel(BaseModel):
     fullname: str
     email_add: str
     password: str
-    created: Union[datetime, None] = None
+    created: datetime = datetime.utcnow()
     status: Optional[str] = None
-    role: Optional[str] = None
+    role: str
 
 
 
@@ -73,13 +73,13 @@ def authenticate_user(username, password):
     
     user = mydb.login.find({
                             '$and':
-                            [{"username":username}
+                            [{"email_add":username}
                             ]})
     
     
     for i in user:
        
-        username = i['username']
+        username = i['email_add']
         password1 = i['password']
         
    
@@ -133,33 +133,6 @@ def login(response:Response,form_data: OAuth2PasswordRequestForm = Depends()):
     # return(access_token)
 
 
- # @api.get("/users/", response_model=List[UserBM])
-# def get_all_users():
-#     """API endpoint to get a list of all users."""
-#     try:
-#         users = UserViews.get_user()
-#         if not users:
-#             raise HTTPException(status_code=404, detail="No users found.")
-#         return users
-#     except Exception as e:
-#         raise HTTPException(status_code=400, detail=str(e))
-#
-#
-#
-# @api.put("/api-update-user-status/{update_username}")
-# async def api_update_user_status(update_username: str,
-#                                  item: UpdateUserBM,
-#                                  username: str = Depends(get_current_user)):
-#     """API endpoint to update a user's status."""
-#     try:
-#         update_success = UserViews.update_user(update_username, item.is_active)
-#         if update_success:
-#             return {"detail": "User status updated successfully."}
-#         else:
-#             raise HTTPException(status_code=404, detail="User not found.")
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-#
 
 
 
@@ -178,11 +151,63 @@ def sign_up(data: SignUpModel):
         "email_add": data.email_add,
         "password": get_password_hash(data.password),
         "status": data.status,
+        "role": data.role,
         "created": data.created
     }
     mydb.login.insert_one(dataInsert)
     return {"message": "User has been saved"}
 
+@api.get('/users-list/')
+async def get_user_list(token: str = Depends(oauth_scheme)):
+    try:
+        print(token)
+        result = mydb.login.find().sort("fullname", -1)
+        
 
-   
+        user_data = [
+                {
+                "id": str(items['_id']),   
+                "fullname": items['fullname'],
+                "email_add": items['email_add'],
+                "status": items['status'],
+                "role": items['role'],
+                "created": items['created']
+                               }
+                for items in result
+            ]
+        #print(user_data)
+
+        return user_data
+
+        
+       
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api.put("/api-update-user/{id}")
+async def api_update_employee(id: str,
+                               data: UpdateUser,
+                               username: str = Depends(oauth_scheme)):
+    
+    try:
+    
+
+            obj_id = ObjectId(id)
+
+            update_data = {
+
+                "status": data.status,
+                "role": data.role
+                
+                
+            }
+
+            result = mydb.login.update_one({'_id': obj_id}, {'$set': update_data})
+
+            return ('Data has been Update')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+  
 

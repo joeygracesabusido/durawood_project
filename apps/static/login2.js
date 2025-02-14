@@ -1,54 +1,53 @@
-document.addEventListener('DOMContentLoaded', function() {
-    
-    console.log("DOM fully loaded and parsed");
+document.addEventListener('DOMContentLoaded', function () {
+  console.log("DOM fully loaded and parsed");
 
-    const login = async () => {
-        var username = document.querySelector('#username').value;
-        var password = document.querySelector('#password').value;
+  const login = async () => {
+    const username = document.querySelector('#username').value;
+    const password = document.querySelector('#password').value;
 
-        const search_url = `/api-login/?username1=${username}&password1=${password}`;
+    if (!username || !password) {
+      document.querySelector('#alert').innerHTML = 'Please fill out all fields.';
+      return;
+    }
 
-        try {
-            const response = await fetch(search_url);
-            const data = await response.json();
+    const search_url = `/api-login/?username1=${username}&password1=${password}`;
+    console.log(`Fetching from URL: ${search_url}`);
 
-            console.log(data);
+    try {
+      const response = await fetch(search_url);
+      const data = await response.json();
 
-            if (response.ok) {
-                // console.log(data.user);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                window.location.assign("/dashboard/");
-            } else if (response.status === 400) {
-                // Incorrect password or username
-                document.querySelector('#alert').innerHTML = 'Password & Username did not match';
-            } else if (response.status === 401) {
-                // Username not registered
-                document.querySelector('#alert').innerHTML = 'Username is not registered';
-            } else if (response.status === 500) {
-                // Server error
-                document.querySelector('#alert').innerHTML = 'Server error. Please try again later.';
-            } else {
-                // Other errors
-                document.querySelector('#alert').innerHTML = 'Error: ' + response.statusText;
-            }
-        } catch (error) {
-            // Network or fetch error
-            console.error('Error:', error);
-            document.querySelector('#alert').innerHTML = 'Network or Fetch Error';
-        }
-    };
+      console.log(data);
 
-    var loginCredential = document.querySelector('#BtnLogin');
-    loginCredential.addEventListener("click", function () {
-        console.log("Login button clicked");
-        login();
+      if (response.ok) {
+        console.log("Login successful:", data.user);
+        // Uncomment the following lines for actual login redirection
+        // localStorage.setItem('user', JSON.stringify(data.user));
+        // window.location.assign("/dashboard/");
+      } else if (response.status === 400) {
+        document.querySelector('#alert').innerHTML = 'Password & Username did not match';
+      } else if (response.status === 401) {
+        document.querySelector('#alert').innerHTML = 'Username is not registered';
+      } else if (response.status === 500) {
+        document.querySelector('#alert').innerHTML = 'Server error. Please try again later.';
+      } else {
+        document.querySelector('#alert').innerHTML = 'Error: ' + response.statusText;
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      document.querySelector('#alert').innerHTML = 'Network or Fetch Error';
+    }
+  };
+
+  const loginForm = document.querySelector('#loginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', function (event) {
+      event.preventDefault();  // Prevent the form from submitting
+      console.log("Login form submitted");
+      login();
     });
-
-    document.querySelector('#password').addEventListener("keydown", function(event) {
-        console.log("Key pressed: " + event.key);
-        if (event.key === "Enter") {
-            console.log("Enter key pressed");
-            login();
-        }
-    });
+  } else {
+    console.error("Form with id 'loginForm' not found.");
+  }
 });
+
