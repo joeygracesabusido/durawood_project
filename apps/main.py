@@ -11,6 +11,8 @@ from starlette.responses import PlainTextResponse
 from apps.routes.graphql import graphql_app
 from apps.routes.login import login_router
 from apps.routes.admin import api
+from apps.routes.accounting.customer_profile_temp import api_customer_profile_temp
+
 
 
 from fastapi.staticfiles import StaticFiles
@@ -31,6 +33,7 @@ app.add_middleware(
 app.include_router(login_router,tags=['Login'])
 
 app.include_router(api, tags=['Admin'])
+app.include_router(api_customer_profile_temp)
 
 
 # Mount Strawberry's GraphQL app onto FastAPI

@@ -22,7 +22,7 @@ from jose import jwt
 
 JWT_SECRET = 'myjwtsecret'
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 300
 
 login_router = APIRouter(include_in_schema=False)
 templates = Jinja2Templates(directory="apps/templates")
@@ -63,9 +63,9 @@ def authenticate_user(username, password):
 
         hashed_password = user['password']
         if pwd_context.verify(password, hashed_password):
-            #return {'username': user['email_add']}
-            user = {"username": "joey","email":"joey@gmail.com"}
-            return user
+            return {'username': user['email_add']}
+            
+            
     return False
 
 
@@ -103,10 +103,18 @@ def login(username1: Optional[str], password1: Optional[str], response: Response
             data={"sub": username1, "exp": datetime.utcnow() + timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)}, 
             expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         )
-        user_details = mydb.login.find({"email_add": username1}) 
+        user_details = mydb.login.find_one({"email_add": username1})
+
+        user1 = {
+            "full_name": user_details['fullname'],
+            "username": user_details['email_add'],
+            "role": user_details['role']
+        }
+
+        print(user1)
         jwt_token = jwt.encode({"sub": username1, "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)}, JWT_SECRET, algorithm=ALGORITHM)
         response.set_cookie(key="access_token", value=f'Bearer {jwt_token}', httponly=True)
-        return {"message": "Login successful", "user":user_details}
+        return {"message": "Login successful", "user": user1}
 
     elif user is None:  # User not found
         raise HTTPException(status_code=401, detail="Username is not registered")

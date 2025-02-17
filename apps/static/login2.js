@@ -4,9 +4,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const login = async () => {
     const username = document.querySelector('#username').value;
     const password = document.querySelector('#password').value;
+    const errorMessage = document.querySelector('#error-message');
 
     if (!username || !password) {
-      document.querySelector('#alert').innerHTML = 'Please fill out all fields.';
+      errorMessage.innerText = 'Please fill out all fields.';
+			errorMessage.style.display = 'block'
       return;
     }
 
@@ -22,20 +24,15 @@ document.addEventListener('DOMContentLoaded', function () {
       if (response.ok) {
         console.log("Login successful:", data.user);
         // Uncomment the following lines for actual login redirection
-        // localStorage.setItem('user', JSON.stringify(data.user));
-        // window.location.assign("/dashboard/");
-      } else if (response.status === 400) {
-        document.querySelector('#alert').innerHTML = 'Password & Username did not match';
-      } else if (response.status === 401) {
-        document.querySelector('#alert').innerHTML = 'Username is not registered';
-      } else if (response.status === 500) {
-        document.querySelector('#alert').innerHTML = 'Server error. Please try again later.';
+         localStorage.setItem('user', JSON.stringify(data.user));
+         window.location.assign("/dashboard/");
       } else {
-        document.querySelector('#alert').innerHTML = 'Error: ' + response.statusText;
-      }
+      errorMessage.innerText = "Invalid Credential";
+			errorMessage.style.display = 'block';}
+
     } catch (error) {
       console.error('Error:', error);
-      document.querySelector('#alert').innerHTML = 'Network or Fetch Error';
+      document.querySelector('#error-message').innerHTML = 'Network or Fetch Error';
     }
   };
 
@@ -50,4 +47,3 @@ document.addEventListener('DOMContentLoaded', function () {
     console.error("Form with id 'loginForm' not found.");
   }
 });
-

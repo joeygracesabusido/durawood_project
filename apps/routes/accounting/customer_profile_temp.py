@@ -11,8 +11,8 @@ from pydantic import BaseModel
 
 from datetime import datetime, timedelta, date
 from apps.authentication.authenticate_user import get_current_user
-from apps.base_model.customer_profile_bm import CustomerProfileBM
-from apps.views.accounting.customer_profile_views import CustomerProfileViews
+#from apps.base_model.customer_profile_bm import CustomerProfileBM
+#from apps.views.accounting.customer_profile_views import CustomerProfileViews
 
 
 
