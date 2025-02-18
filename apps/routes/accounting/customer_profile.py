@@ -3,9 +3,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from typing import Union, List, Optional, Dict
 from pydantic import BaseModel
-#from bson import ObjectId
+from bson import ObjectId
 
-
+from  apps.database.mongodb import create_mongo_client
+mydb = create_mongo_client()
 
 
 
@@ -26,52 +27,101 @@ class CustomerProfileBM(BaseModel):
     tax_type: str
     description: str
     user: Optional[str] = None
-    date_updated: datetime.utcnow()
-    date_created:  datetime.utcnow()
+    date_updated: datetime =  datetime.utcnow()
+    date_created:  datetime = datetime.utcnow()
 
 
 
 api_customer_profile = APIRouter()
 templates = Jinja2Templates(directory="apps/templates")
 
-# @api_customer_profile.get("/customer_profile/", response_class=HTMLResponse)
-# async def api_chart_of_account_template(request: Request,
-#                                         username: str = Depends(get_current_user)):
- 
-#     return templates.TemplateResponse("accounting/company_profile.html", 
-#                                       {"request": request})
-
-
 @api_customer_profile.post("/api-insert-customer_profile/", response_model=None)
-async def create_customer_profile(item: CustomerProfileBM, username: str = Depends(get_current_user)):
+async def create_customer_profile(data: CustomerProfileBM, username: str = Depends(get_current_user)):
     try:
-        CustomerProfileViews.insert_customer_profile(item, user=username)
+        customer_collection = mydb['customer_vendor_profile']
+        customer_collection.create_index("customer_vendor_id", unique=True)
+        dataInsert = {
+
+            "customer_vendor_id": data.customer_vendor_id,
+            "bussiness_name": data.bussiness_name,
+            "name_of_tax_payer": data.name_of_tax_payer,
+            "tin": data.tin,
+            "rdo": data.rdo,
+            "address": data.address,
+            "tax_type": data.tax_type,
+            "description": data.description,
+            "user": username,
+            "date_updated": data.date_updated,
+            "date_created": data.date_created,
+
+
+        }
+        mydb.customer_vendor_profile.insert_one(dataInsert)
+
         return {"message": "Company profile created successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error creating profile: {e}")
 
-@api_customer_profile.get("/api-get-customer-profiles/", response_model=List[CustomerProfileBM])
-async def get_company_profiles(username: str = Depends(get_current_user)):
+@api_customer_profile.get("/api-get-customer-profiles/")
+async def get_customer(username: str = Depends(get_current_user)):
     try:
-        profiles = CustomerProfileViews.customer_profile()
-        return profiles
+        result = mydb.customer_vendor_profile.find().sort('bussiness_name', -1)
+
+        customerData = [{
+            
+            "id": str(data['_id']),
+            "customer_vendor_id": data['customer_vendor_id'] ,
+            "bussiness_name": data['bussiness_name'],
+            "name_of_tax_payer": data['name_of_tax_payer'],
+            "tin": data['tin'],
+            "rdo": data['rdo'],
+            "address": data['address'],
+            "tax_type": data['tax_type'],
+            "description": data['description'],
+            "user": username,
+            "date_updated": data['date_updated'],
+            "date_created": data['date_created'],
+
+
+        } for data in result
+
+    ]
+        return customerData
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
 @api_customer_profile.put("/api-update-customer-profile/", response_model=None)
-async def update_customer_profile_api(profile_id: int, item: CustomerProfileBM,username: str = Depends(get_current_user)):
-    item.id = profile_id
-    updated_profile = CustomerProfileViews.update_customer_profile(item, user=username)
-    if updated_profile:
-        return {"message": "Company profile updated successfully"}
-    else:
-        raise HTTPException(status_code=404, detail="Profile not found")
+async def update_customer_profile_api(profile_id: str, data: CustomerProfileBM,username: str = Depends(get_current_user)):
+    obj_id = ObjectId(profile_id)
+    try:
+
+        updateData = {
+            
+                "customer_vendor_id": data.customer_vendor_id,
+                "bussiness_name": data.bussiness_name,
+                "name_of_tax_payer": data.name_of_tax_payer,
+                "tin": data.tin,
+                "rdo": data.rdo,
+                "address": data.address,
+                "tax_type": data.tax_type,
+                "description": data.description,
+                "user": username,
+                "date_updated": data.date_created,
+
+            }
+        result = mydb.customer_vendor_profile.update_one({'_id': obj_id},{'$set': updateData})
+        return {"message":"Custome has been Updated"} 
+    except Exception as e:
+
+        raise HTTPException(status_code=500, detail=str(e))
+  
+
 
 @api_customer_profile.get("/api-autocomplete-vendor-customer/")
 async def autocomplete_contact(term: Optional[str] = None, username: str = Depends(get_current_user)):
     try:
         
-        contact = CustomerProfileViews.customer_profile()
+        contact = get_customer()
         
         # Filter chart of accounts based on the search term
         if term:

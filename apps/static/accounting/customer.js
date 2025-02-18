@@ -3,6 +3,7 @@ let isUpdating = false;
 let customer_list = {};
 let selectedCustomer = null;
 let clickTimer = null;
+let customer_vendor_id ="";
 let bussiness_name = "";
 let name_of_tax_payer = "";
 let tin = "";
@@ -12,6 +13,7 @@ let tax_type = "Vatable";
 let description = "Customer";
 let table_customer_list = $("#table_customer_list");
 
+const customer_vendor_id_el = $("#customer_vendor_id");
 const bussiness_name_el = $("#bussiness_name");
 const name_of_tax_payer_el = $("#name_of_tax_payer");
 const tin_el = $("#tin");
@@ -30,6 +32,8 @@ async function getCustomer() {
         "Content-Type": "application/json",
       },
     });
+
+    
 
     if (response.ok) {
       customer_list = await response.json();
@@ -50,10 +54,11 @@ async function getCustomer() {
 }
 
 function makeBranchRow(index, data) {
-  return `<tr id='${"customer_row_" + index}' onClick="openToEdit(${index},'${
+  return `<tr id1='${"customer_row_" + index}' onClick="openToEdit(${index},'${
     "customer_row_" + index
   }')">
-  <td>${data.id}</td>
+  <td>${data.id}</td> 
+  <td>${data.customer_vendor_id}</td>
   <td>${data.bussiness_name}</td>
   <td>${data.tax_type}</td>
   <td>${data.description}</td>
@@ -79,9 +84,11 @@ function openToEdit(index, customer_row_id) {
     isUpdating = true;
     $("#btn_save_branch").text("Update");
     $("#table_customer_list tr").removeClass("table-primary");
-    console.log(`#${customer_row_id}`);
+    //console.log(`#${customer_row_id}`);
     // Load selected branch data into form fields
     let data = customer_list[index];
+
+    customer_vendor_id_el.val(data.customer_vendor_id);
     bussiness_name_el.val(data.bussiness_name);
     name_of_tax_payer_el.val(data.name_of_tax_payer);
     tin_el.val(data.tin);
@@ -90,7 +97,7 @@ function openToEdit(index, customer_row_id) {
     tax_type_el.val(data.tax_type);
     description_el.val(data.description);
     selectedCustomer = data;
-    console.log(selectedCustomer.id);
+    
     $(`#${customer_row_id}`).addClass("table-primary");
   }
 }
@@ -98,6 +105,7 @@ function openToEdit(index, customer_row_id) {
 async function saveOrUpdateCustomer() {
   // const branchName = $("#branchName").val();
   // const branchAddress = $("#branchAddress").val();
+  const customer_vendor_id = customer_vendor_id_el.val();
   const bussiness_name= bussiness_name_el.val();
   const name_of_tax_payer= name_of_tax_payer_el.val();
   const tin= tin_el.val(); // Replace with actual user if needed
@@ -105,14 +113,18 @@ async function saveOrUpdateCustomer() {
   const address=address_el.val();
   const tax_type=tax_type_el.val();
   const description=description_el.val();
+
+  console.log(customer_vendor_id,bussiness_name,name_of_tax_payer,
+                tin,rdo,address,tax_type,description)
   // Validate inputs
-  if (!bussiness_name || !name_of_tax_payer||!tin || !rdo||!address || !tax_type||!description ) {
+  if (!bussiness_name || !name_of_tax_payer||!tin || !rdo||!address || !tax_type||!description || !customer_vendor_id) {
     alert("Please fill in all fields.");
     return;
   }
 
   // Create data object to send to the API
   const customerData = {
+    customer_vendor_id: customer_vendor_id,
     bussiness_name: bussiness_name,
     name_of_tax_payer: name_of_tax_payer,
     tin: tin, // Replace with actual user if needed
@@ -130,7 +142,7 @@ async function saveOrUpdateCustomer() {
       contentType: "application/json",
       data: JSON.stringify(customerData),
       success: function (response) {
-        alert(response.message);
+        alert(response?.message|| "Customer save Succesfully");
         window.location.href = "/customer_profile/";
        
         getCustomer();  // Refresh branch list
