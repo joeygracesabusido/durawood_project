@@ -1,389 +1,11 @@
-// this function is to identify for debit or credit amount
-function isDebit(account_title) {
-    if (account_title.toLowerCase().includes('ACCOUNTS RECEIVABLE')|| account_title.toLowerCase().includes('CASH') || account_title.includes('With Holding') ) {
-         return true;
-    } else {
-         return false;
-    }
- }
-
- function calculateAR(account_title,invoice_amount,ewt){
-    if (account_title.toLowerCase().includes('ACCOUNTS RECEIVABLE')|| account_title.toLowerCase().includes('Cash') ) {
-       
-        ewt_value = invoice_amount / 1.12 * ewt / 100;
-        product = parseFloat(invoice_amount) - parseFloat(ewt_value);
-    
-        return product.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    
-   } 
-   else if(account_title.toLowerCase().includes('withheld')){
-        product = invoice_amount / 1.12 * ewt/100;
-
-        return product.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-
-   } else if(account_title.toLowerCase().includes('vat output')){
-
-        
-        product = invoice_amount / 1.12 * .12
-        return product.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-
-   }else if(account_title.toLowerCase().includes('sales')){
-        if (ewt == '0'){
-            product = invoice_amount 
-            return product.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-
-        }
-        else if ((ewt == '')){
-            product = invoice_amount 
-            return product.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-
-        }
-
-        product = invoice_amount / 1.12 
-        return product.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-}
-
-       
-       
- }
-
-
-
-$(document).ready(function () {
-    var maxField = 10; // Input fields increment limitation
-    var addButton = $('#add_button'); // Add button selector
-    var wrapper = $('#addrow'); // Input field wrapper
-    var amount = $('#invoice_amount'); // Input field wrapper
-    var x = 0; // Initial field counter
-
-    // Function to format number with thousand separator
-    function formatNumberWithSeparator(value) {
-        return parseFloat(value).toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    }
-
-    // Function to remove thousand separators and convert back to a number
-    function parseFormattedNumber(value) {
-        return value.replace(/,/g, '');
-    }
-
-    // Once add button is clicked
-    $(addButton).click(function () {
-        // Check maximum number of input fields
-        x++; // Increment field counter
-        var fieldHTML = `
-            <tr>
-
-                
-
-                <td style="padding: 0; margin: 0;">
-                    <input type="text" 
-                    name="account_code${x}" 
-                    id="account_code${x}"
-                    class="account_code"
-                    
-                    step="0.01"
-                    style="width: 100px;" 
-                     />
-                </td>
-                <td style="padding: 0; margin: 0;">
-                    <input
-                        type="text"
-                        name="accountTitle${x}"
-                        id="accountTitle${x}"
-                        
-                         style="width: 350px;" 
-                    />
-                </td>
-
-                <td style="padding: 0; margin: 0;">
-                    <input
-                        type="text"
-                        name="ewt${x}"
-                        id="ewt${x}"
-                        max="100"
-                        style="width: 120px;" 
-                    />
-                </td>
-
-                <td style="padding: 0; margin: 0;">
-                    <input
-                        type="text"
-                        name="amount${x}"
-                        id="amount${x}"
-                        class="amount"
-                        step="0.01"
-                        onchange="myFunction2()"
-                        style="width: 150px; text-align: right;""
-                    />
-                </td>
-                <td style="padding: 0; margin: 0;">
-                    <input
-                        type="text"
-                        name="credit_amount${x}"
-                        id="credit_amount${x}"
-                        class="credit_amount"
-                        step="0.01"
-                        onchange="myFunction2()"
-                        style="width: 150px; text-align: right;"" 
-                    />
-                </td>
-
-                 <td style="padding: 0; margin: 0;">
-                    <input
-                        type="text"
-                        name="chart_of_account_id${x}"
-                        id="chart_of_account_id${x}"
-                        class="chart_of_account_id"
-                        step="0.01"
-
-                        hidden
-                    />
-                </td>
-                
-                
-                <td style="padding: 0; margin: 0;">
-                    <button type="button" id="remove_button" class="btn btn-danger">
-                        <i class="fas fa-database"></i> Remove
-                    </button>
-                </td>
-
-               
-
-                
-
-                
-            </tr>`; // New input field HTML
-
-        $(wrapper).append(fieldHTML); // Add field HTML
-
-        var inputFieldForAccountTitle = $(`#accountTitle${x}`); //account code field
-        var inputFieldForCredit = $(`#credit_amount${x}`); //credit field
-        var inputFieldForDebit = $(`#amount${x}`); // debit field
-        var witholding = $(`#ewt${x}`); // debit field
-
-        //here is the on change detector for witholding tax field
-        witholding.on('input', function() {
-            populateDebitOrCreditField($(this).val());
-        });
-        //here is the onchange detector for change of sales amount
-        amount.on('input',function(){
-            populateDebitOrCreditField($(this).val());
-        });
-
-        function populateDebitOrCreditField() {
-            // console.log('Withholding value changed to:', witholding.val());
-            // console.log(inputFieldForAccountTitle.val());
-            // console.log (isDebit(inputFieldForAccountTitle.val()))
-            // Check if the account title is for debit
-            if (isDebit(inputFieldForAccountTitle.val())) {
-                // Set the debit field value (replace with your formula as needed)
-                inputFieldForDebit.val(calculateAR(inputFieldForAccountTitle.val(),
-                amount.val(),witholding.val()));
-                myFunction2();
-            } else {
-                // Set the credit field value (replace with your formula as needed)
-                inputFieldForCredit.val(calculateAR(inputFieldForAccountTitle.val(),
-                amount.val(),witholding.val()));
-                myFunction2();
-            }
-        }
-        
-    });
-
-
-
- 
-
-
-
-    // Event delegation for input blur to handle formatting
-    $(document).on('blur', 'input[name^="amount"], input[name^="credit_amount"]', function () {
-        let input = $(this);
-        let inputValue = input.val().trim();
-        if (inputValue !== '' && !isNaN(inputValue)) {
-            input.val(formatNumberWithSeparator(parseFormattedNumber(inputValue)));
-        }
-        myFunction2();
-    });
-
-    // Event delegation for input focus to handle formatting
-    $(document).on('focus', 'input[name^="amount"], input[name^="credit_amount"]', function () {
-        let input = $(this);
-        let inputValue = input.val().trim();
-        input.val(parseFormattedNumber(inputValue)); // Remove formatting for editing
-        myFunction2();
-    });
-
-    // Once remove button is clicked
-    $(wrapper).on('click', '#remove_button', function (e) {
-        e.preventDefault();
-        $(this).closest('tr').remove(); // Remove field HTML 
-        myFunction2();
-        x--; // Decrement field counter
-    });
-
-    // Autocomplete for accountTitle
-
-    
-
-    
-
-
-});
-// this function is to check that debit and credit balance balance is equal 
-
-function myFunction2() {
-    document.querySelector("#submiBTN").disabled = true;
-    
-    var total = 0.0;
-    let debitsum = 0;
-    let creditsum = 0;
-
-    // Process amount fields
-    let debitList = document.getElementsByClassName('amount');
-    for (let i of debitList) {
-        let debitValue = parseFloat(parseFormattedNumber(i.value));
-        if (!isNaN(debitValue)) {
-            debitsum += debitValue;
-        }
-    }
-    let debitsum2 = parseFloat(debitsum).toFixed(2);
-    
-    // Process credit_amount fields
-    let creditList = document.getElementsByClassName('credit_amount');
-    for (let i of creditList) {
-        let creditValue = parseFloat(parseFormattedNumber(i.value));
-        if (!isNaN(creditValue)) {
-            creditsum += creditValue;
-        }
-    }
-    let creditsum2 = parseFloat(creditsum).toFixed(2);
-
-    // Calculate total
-    total = parseFloat(debitsum2) - parseFloat(creditsum2);
-
-    // Enable or disable the submit button based on the total
-    if (total === 0) {
-        document.getElementById("submiBTN").disabled = false;
-    } else {
-        document.getElementById("submiBTN").disabled = true;
-    }
-}
-
-
-// Function to format number with thousand separator
-function formatNumberWithSeparator(value) {
-    return parseFloat(value).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-}
-
-// Function to remove thousand separators and convert back to a number
-function parseFormattedNumber(value) {
-    return value.replace(/,/g, '');
-}
-
-
-
-
-jQuery.noConflict();
-jQuery(document).ready(function($) {
-    $(document).on('focus', '[id^="accountTitle"]', function() {
-        $(this).autocomplete({
-            source: function(request, response) {
-                $.ajax({
-                    url: "/api-autocomplete-chart-of-account/", // Replace with your actual endpoint
-                    data: { term: request.term },
-                    dataType: "json",
-                    success: function(data) {
-                        response(data);
-                    },
-                    error: function(err) {
-                        console.error("Error fetching autocomplete data:", err);
-                    }
-                });
-            },
-            minLength: 0,
-            select: function(event, ui) {
-                $(this).val(ui.item.value);
-                // Ensure you set the correct account_no field related to the focused accountTitle
-                $(this).closest('tr').find('[id^="account_code"]').val(ui.item.chart_of_account_code);
-                $(this).closest('tr').find('[id^="chart_of_account_id"]').val(ui.item.id);
-                return false;
-            }
-        });
-    });
-});
-
-
-
 
 // Use jQuery in noConflict mode
 jQuery.noConflict();
 
 jQuery(document).ready(function($) {
     // Initialize autocomplete on the element with ID "branch_name"
-    $(document).on('focus', '#branch_name', function() {
-        $("#branch_name").autocomplete({
-            source: function(request, response) {
-                // AJAX call to fetch data for the autocomplete suggestions
-                $.ajax({
-                    url: "/api-autocomplete-branch/",  // Your endpoint for fetching data
-                    data: { term: request.term },     // Send the user's input term to the server
-                    dataType: "json",                 // Expect a JSON response from the server
-                    success: function(data) {
-                        response(data);               // Pass the data to autocomplete
-                    },
-                    error: function(err) {
-                        console.error("Error fetching autocomplete data:", err);  // Log errors
-                        // Optionally, provide user feedback about the error
-                    }
-                });
-            },
-            minLength: 0,  // Minimum input length before triggering autocomplete
-            select: function(event, ui) {
-                // Set the selected value in the input field
-                $("#branch_name").val(ui.item.value);
-                // Set the related field based on the selected item
-                $("#id").val(ui.item.id);
-
-                return false; // Prevent the default select action
-            }
-        });
-    });
-});
-
-
-
-// Use jQuery in noConflict mode
-jQuery.noConflict();
-
-jQuery(document).ready(function($) {
-    // Initialize autocomplete on the element with ID "branch_name"
-    $(document).on('focus', '#supplier', function() {
-        $("#supplier").autocomplete({
+    $(document).on('focus', '#customer', function() {
+        $("#customer").autocomplete({
             source: function(request, response) {
                 // AJAX call to fetch data for the autocomplete suggestions
                 $.ajax({
@@ -402,9 +24,9 @@ jQuery(document).ready(function($) {
             minLength: 0,  // Minimum input length before triggering autocomplete
             select: function(event, ui) {
                 // Set the selected value in the input field
-                $("#supplier").val(ui.item.value);
+                $("#customer").val(ui.item.value);
                 // Set the related field based on the selected item
-                $("#supplier_id").val(ui.item.id);
+                $("#customer_id").val(ui.item.customer_vendor_id);
 
                 return false; // Prevent the default select action
             }
@@ -412,25 +34,219 @@ jQuery(document).ready(function($) {
     });
 });
 
+$(document).ready(function() {
+    $("#terms").on("change", function() {
+        var transDate = $("#trans_date").val(); // Get the transaction date
+        var terms = $(this).val(); // Get the selected term
 
-//====================================This is for  ==================================== -->
-                                    
-// $(document).ready(function() {
-//     // Use event delegation to handle 'input' events for dynamically added fields
-//     // $(document).on('input', 'input[name^="ewt"]','input[name^="accountTitle"]', function()
-//     $(document).on('input', 'input[name^="ewt"]','input[name^="accountTitle"]', function() {
-//         console.log($(this)); // Log the current element
-//         // calculatelgl1();
-//         // Get the value of the related 'accountTitle' input field in the same row
-//         var chart_of_account = $(this).closest('tr').find('input[name^="accountTitle"]').val();
+        if (transDate) {
+            var daysToAdd = parseInt(terms) || 0; // Convert terms to number, default to 0 if COD
 
-//         if (chart_of_account === 'Account Receivable' ||chart_of_account === 'Cash in Bank' ) 
-//             {
-//                 calculatelgl1();
-//         } else if (chart_of_account === 'Creditable With Holding Tax') {
-//             calculateCWT()
-//         } else {
-//             $('input[name^="amount"]').val(0);
-//         }
-//     });
-// });
+            var transDateObj = new Date(transDate); // Convert to Date object
+            transDateObj.setDate(transDateObj.getDate() + daysToAdd); // Add days
+
+            // Format the date to YYYY-MM-DD
+            var dueDateFormatted = transDateObj.toISOString().split("T")[0];
+
+            $("#due_date").val(dueDateFormatted); // Set the due date in input field
+        } else {
+            alert("Please select a Transaction Date first.");
+            $("#terms").val(""); // Reset the select field if no trans_date is selected
+        }
+    });
+});
+
+//this function is for inserting Data and isUpdating
+//
+
+getSales();
+let isUpdating = false;
+let sales_list = {};
+let selectedCustomer = null;
+let clickTimer = null;
+let trans_date ="";
+let customer = "";
+let customer_id = "";
+let invoice_no = "";
+let terms = "";
+let due_date = "";
+let tax_type = "Vatable";
+let amount = "";
+let table_sales_list = $("#table_sales_list");
+
+const trans_date_el = $("#trans_date");
+const customer_el = $("#customer");
+const customer_id_el = $("customer_id");
+const invoice_no_el = $("#invoice_no");
+const terms_el = $("#terms");
+const due_date_el = $("#due_date");
+const tax_type_el = $("#tax_type");
+const amount_el = $("#amount");
+
+
+
+async function getSales() {
+  try {
+    const response = await fetch(`/api-get-sales/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    
+
+    if (response.ok) {
+      sales_list = await response.json();
+      table_sales_list.empty(); // Clear the table before appending rows
+      let i = 0;
+      sales_list.forEach((element) => {
+        console.log(element);
+        table_sales_list.append(makeBranchRow(i++, element));
+      });
+    } else {
+      const error = await response.json();
+      alert(`Error: ${error.detail}`);
+    }
+  } catch (error) {
+    console.error("An error occurred:", error);
+    alert("An error occurred while fetching the customers.");
+  }
+}
+
+function makeBranchRow(index, data) {
+  return `<tr id1='${"customer_row_" + index}' onClick="openToEdit(${index},'${
+    "customer_row_" + index
+  }')">
+  <td>${data.id}</td>
+  <td>${data.trans_date}</td>
+  <td>${data.customer}</td>
+  <td>${data.custome_id}</td>
+  <td>${data.invoice_no}</td>
+  <td>${data.terms}</td>
+  <td>${data.due_date}</td>
+  <td>${data.tax_type}</td>
+  <td>${data.amount}</td>
+</tr>`;
+}
+
+function isDoubleClick() {
+  if (clickTimer) {
+    clearTimeout(clickTimer);
+    clickTimer = null;
+    return true;
+  } else {
+    clickTimer = setTimeout(() => {
+      clickTimer = null;
+    }, 250); // Delay to detect double-click
+    return false;
+  }
+}
+
+
+function openToEdit(index, customer_row_id) {
+  if (isDoubleClick() === true) {
+    isUpdating = true;
+    $("#btn_save_branch").text("Update");
+    $("#table_sales_list tr").removeClass("table-primary");
+    //console.log(`#${customer_row_id}`);
+    // Load selected branch data into form fields
+    let data = sales_list[index];
+
+    trans_date_el.val(data.trans_date);
+    customer_el.val(data.customer);
+    name_of_tax_payer_el.val(data.name_of_tax_payer);
+    tin_el.val(data.tin);
+    rdo_el.val(data.rdo);
+    address_el.val(data.address);
+    tax_type_el.val(data.tax_type);
+    description_el.val(data.description);
+    selectedCustomer = data;
+    
+    $(`#${customer_row_id}`).addClass("table-primary");
+  }
+}
+
+async function saveOrUpdateCustomer() {
+  // const branchName = $("#branchName").val();
+  // const branchAddress = $("#branchAddress").val();
+  const customer_vendor_id = customer_vendor_id_el.val();
+  const bussiness_name= bussiness_name_el.val();
+  const name_of_tax_payer= name_of_tax_payer_el.val();
+  const tin= tin_el.val(); // Replace with actual user if needed
+  const  rdo=rdo_el.val();
+  const address=address_el.val();
+  const tax_type=tax_type_el.val();
+  const description=description_el.val();
+
+  console.log(customer_vendor_id,bussiness_name,name_of_tax_payer,
+                tin,rdo,address,tax_type,description)
+  // Validate inputs
+  if (!bussiness_name || !name_of_tax_payer||!tin || !rdo||!address || !tax_type||!description || !customer_vendor_id) {
+    alert("Please fill in all fields.");
+    return;
+  }
+
+  // Create data object to send to the API
+  const customerData = {
+    customer_vendor_id: customer_vendor_id,
+    bussiness_name: bussiness_name,
+    name_of_tax_payer: name_of_tax_payer,
+    tin: tin, // Replace with actual user if needed
+    rdo:rdo,
+    address:address,
+    tax_type:tax_type,
+    description:description,
+  };
+
+  if (!isUpdating) {
+    // Add new branch (POST)
+    $.ajax({
+      url: "/api-insert-customer_profile/",
+      type: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(customerData),
+      success: function (response) {
+        alert(response?.message|| "Customer save Succesfully");
+        window.location.href = "/customer_profile/";
+       
+        getSales();  // Refresh branch list
+
+      },
+      error: function (xhr) {
+        const errorDetail = xhr.responseJSON?.detail || "An error occurred";
+        alert(`Error: ${errorDetail}`);
+      },
+    });
+  } else {
+    // Update existing branch (PUT)
+    customerData.id = selectedCustomer.id;  // Get the ID of the branch being updated
+    
+    $.ajax({
+      url: `/api-update-customer-profile/?profile_id=${customerData.id}`,
+      type: "PUT",
+      contentType: "application/json",
+      data: JSON.stringify(customerData),
+      success: function (response) {
+        alert(response.message);
+        window.location.href = "/customer_profile/";
+        isUpdating = false;
+        $("#btn_save_branch").text('Add');
+        getSales();  // Refresh branch list
+      },
+      error: function (xhr) {
+        const errorDetail = xhr.responseJSON?.detail || "An error occurred";
+        alert(`Error: ${errorDetail}`);
+      },
+    });
+  }
+}
+
+$(document).ready(function () {
+  // Initial fetch of branch data
+  getSales();
+
+  // // Handle save (add or update) button click
+  $("#btn_save_branch").click(saveOrUpdateCustomer);
+
+});

@@ -26,6 +26,8 @@ class SalesBM(BaseModel):
     customer: str 
     customer_id: str 
     invoice_no: str
+    terms: str
+    due_date: datetime
     tax_type: str
     amount: str
     user: Optional[str] = None
@@ -51,6 +53,8 @@ async def create_customer_profile(data: SalesBM, username: str = Depends(get_cur
             "customer": data.customer,
             "customer_id": data.customer_id,
             "invoice_no": data.invoice_no,
+            "terms": data.terms,
+            "due_date": data.due_date,
             "tax_type": data.tax_type,
             "amount": data.amount,
             "user": username,
@@ -76,6 +80,8 @@ async def get_sales(username: str = Depends(get_current_user)):
             "date": data['date'] ,
             "customer": data['customer'],
             "customer_id": data['customer_id'],
+            "terms": data['terms'],
+            "due_date": data['due_date'],
             "invocie_no": data['invoice_no'],
             "tax_type": data['tax_type'],
             "amount": data['amount'],
@@ -101,6 +107,8 @@ async def update_customer_profile_api(profile_id: str, data: SalesBM,username: s
             "date": data.date,
             "customer": data.customer,
             "customer_id": data.customer_id,
+            "terms": data.terms,
+            "due_date": data. due_date,
             "invoice_no": data.invoice_no,
             "tax_type": data.tax_type,
             "amount": data.amount,

@@ -1,5 +1,18 @@
 {% extends 'dashboard.html' %} {% block content %}
 
+<!-- jQuery (Make sure it's loaded before jQuery UI) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- jQuery UI CSS (for styling the autocomplete dropdown) -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+
+<!-- jQuery UI JavaScript -->
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+
+
+
+
 <div id="main" class="main">
   <div class="pagetitle">
     <h1>Sales Transaction</h1>
@@ -79,6 +92,26 @@
                 </div>
               </div>
 
+              <div class="row mb-4">
+                <label class="col-sm-5 col-form-label">Terms</label>
+                <div class="col-sm-7">
+                  <select
+                    id="terms"
+                    class="form-select"
+                    aria-label="terms"
+                  >
+                    <option value="COD">COD</option>
+                    <option value="15 days">15 days</option>
+                    <option value="30 days">30 days</option>
+                    <option value="60 days">60 days</option>
+                    <option value="90 days">90 days</option>
+                    <option value="120 days">120 days</option>
+                    <option value="180 days">180 days</option>
+
+                  </select>
+                </div>
+              </div>
+
 
                <div class="row mb-4">
                 <label for="inputText" class="col-sm-5 col-form-label"
@@ -95,6 +128,9 @@
               </div>
 
 
+          
+
+              
 
               <div class="row mb-4">
                 <label class="col-sm-5 col-form-label">Tax Type</label>
@@ -148,11 +184,14 @@
               <thead class="table-dark">
                 <tr>
                   <td>Trans ID</td>
-                  <td>Customer Name</<td>Customer ID</>>
+                  <td>Date</>
+                  <td>Customer Name</>
                   <td>Customer ID</>
-                  <td>Business Name</td>
+                  <td>Invoice</>
+                  <td>Terms</>
+                  <td>Due Date</>
                   <td>Tax Type</td>
-                  <td>Description</td>
+                  <td>Amount</td>
                 </tr>
               </thead>
               <tbody id="table_sales_list"></tbody>
@@ -162,7 +201,7 @@
       </div>
     </div>
   </section>
-  <!-- <script src="/static/accounting/customer.js"></script> -->
+  <script src="/static/accounting/sales.js"></script> 
 </div>
 
 <!-- End #main -->
