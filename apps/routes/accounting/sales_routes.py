@@ -10,16 +10,29 @@ from pydantic import BaseModel
 
 from datetime import datetime, timedelta, date
 from apps.authentication.authenticate_user import get_current_user
-from apps.base_model.sales_bm import SalesBM
-from apps.views.accounting.sales_views import SalesViews
-
-from apps.views.accounting.journal_entry_views import JournalEntryViews
 
 
-from apps.views.accounting.sales_views import SalesViews
+from  apps.database.mongodb import create_mongo_client
+mydb = create_mongo_client()
+
 
 api_sales = APIRouter()
 templates = Jinja2Templates(directory="apps/templates")
+
+
+class SalesBM(BaseModel):
+
+    date: datetime
+    customer: str 
+    customer_id: str 
+    invoice_no: str
+    tax_type: str
+    amount: str
+    user: Optional[str] = None
+    date_updated: datetime =  datetime.utcnow()
+    date_created:  datetime = datetime.utcnow()
+
+
 
 @api_sales.get("/sales/", response_class=HTMLResponse)
 async def api_chart_of_account_template(request: Request,
@@ -28,146 +41,80 @@ async def api_chart_of_account_template(request: Request,
     return templates.TemplateResponse("accounting/sales.html", 
                                       {"request": request})
 
-
-@api_sales.post("/sales/", response_class=HTMLResponse)
-async def api_sales_transaction(request: Request,
-                                        username: str = Depends(get_current_user)):
-    """This function is for posting accounting entries."""
-    form = await request.form()
-
-    # Get the current year
-    current_year = datetime.now().year
-    trans_date = form.get('trans_date')
-    journal_type = form.get('journal_type')
-    reference = form.get('reference')
-    description = form.get('description')
-    branch_id = form.get('branch_id')
-
-    
-    
-    # this is for selecting General Ledger
-    if journal_type == 'Sales':
-         
-         reference_no = JournalEntryViews.get_journal_entry_by_journal_type(journal_type=journal_type)
-
-         if reference_no:
-             # Extract the last number from the reference
-            #  ref_no = reference_no.reference  # Access the 'reference' field from the object
-            #  last_number = int(ref_no.split('-')[-1])  # Extract the last number and convert to int
-
-            ref_no = reference_no.reference  # Example: 'Sales-2024-10'
-            parts = ref_no.split('-')
-            last_number = int(parts[-1])  # Extract the last number part
-            reference = f"Sales-{current_year}-{last_number + 1}"  # Increment the number
-            
-             # Generate the new reference number by incrementing the last number
-            #  reference = f" Sales-{current_year}-{last_number + 1}"
-         else:
-             # If no reference exists, start with '1'
-             reference = f"Sales-{current_year}-1"
-    
-            
-
-    account_title = []
-    debitAmount = []
-    creditAmount = []
-    account_code_id = []
-    account_code = []
-    index = 1
-
-    while form.get(f'accountTitle{index}') is not None:
-        account_title.append(form.get(f'accountTitle{index}'))
-        debitAmount.append(form.get(f'amount{index}'))
-        creditAmount.append(form.get(f'credit_amount{index}'))
-        account_code_id.append(form.get(f'chart_of_account_id{index}'))
-        account_code.append(form.get(f'account_code{index}'))
-        index += 1
-
-    # Prepare the data for insertion
-    totalD = 0
-    totalC = 0
-    result = []
-
-    for i in range(len(account_title)):
-        debit2 = float(debitAmount[i].replace(',', '')) if debitAmount[i] else 0
-        credit2 = float(creditAmount[i].replace(',', '')) if creditAmount[i] else 0
-        totalD += debit2
-        totalC += credit2
-        result.append({
-            "transdate": trans_date, 
-            "journal_type": journal_type,
-            "reference": reference,
-            "description": description, 
-            "user": username,
-            "chart_of_account": account_title[i],
-            "account_code_id": account_code_id[i],
-            "chart_of_account_code": account_code[i],
-            "branch_id": int(branch_id),
-            "debit": debit2,
-            "credit": credit2,
-            
-            
-          
-        })
-
-    totalAmount = totalD - totalC
-
-
-    # print(result)
-    messeges = []
-
-    print(result)
-
-    if totalAmount == 0:
-        for entry in result:
-            item = form.get('supplier_id')
-
-            
-            
-            SalesViews.insert_sales_from_journal(customer_id=item,**entry)
-         
-        messeges = ["Data Has been Save"]
-        return templates.TemplateResponse("accounting/sales.html", 
-                                                 {"request": request, "messeges": messeges})
-
-
-    else:
-        messeges = ["Debit and Credit Not Balanced"]
-
-    return templates.TemplateResponse("accounting/sales.html", 
-                                      {"request": request, "messeges": messeges})
-
-
-
-
-
-@api_sales.post("/api-create-sales/", response_model=None)
-async def create_sales(item: SalesBM, username: str = Depends(get_current_user)):
+@api_sales.post("/api-insert-sales/", response_model=None)
+async def create_customer_profile(data: SalesBM, username: str = Depends(get_current_user)):
     try:
-        SalesViews.insert_sales(item, user=username)
+        customer_collection = mydb['sales']
+        dataInsert = {
+
+            "date": data.date,
+            "customer": data.customer,
+            "customer_id": data.customer_id,
+            "invoice_no": data.invoice_no,
+            "tax_type": data.tax_type,
+            "amount": data.amount,
+            "user": username,
+            "date_updated": data.date_updated,
+            "date_created": data.date_created,
+
+
+        }
+        mydb.sales.insert_one(dataInsert)
+
         return {"message": "Sales Transaction created successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error creating profile: {e}")
 
-@api_sales.get("/api-get-sales-list/", response_model=List[SalesBM])
+@api_sales.get("/api-get-sales/")
 async def get_sales(username: str = Depends(get_current_user)):
     try:
-        profiles = SalesViews.sales_list()
-        return profiles
-    
+        result = mydb.sales.find().sort('bussiness_name', -1)
+
+        SalesData = [{
+            
+            "id": str(data['_id']),
+            "date": data['date'] ,
+            "customer": data['customer'],
+            "customer_id": data['customer_id'],
+            "invocie_no": data['invoice_no'],
+            "tax_type": data['tax_type'],
+            "amount": data['amount'],
+            "user": username,
+            "date_updated": data['date_updated'],
+            "date_created": data['date_created'],
+
+
+        } for data in result
+
+    ]
+        return SalesData
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
-@api_sales.put("/api-update-sales-transaction/", response_model=None)
-async def update_sales_trans(profile_id: int, item: SalesBM,username: str = Depends(get_current_user)):
-    item.id = profile_id
-    updated_profile = SalesViews.update_sales(item, user=username,date_update=datetime.now)
-    if updated_profile:
-        return {"message": "Sales Transaction updated successfully"}
-    else:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
+@api_sales.put("/api-update-sales/", response_model=None)
+async def update_customer_profile_api(profile_id: str, data: SalesBM,username: str = Depends(get_current_user)):
+    obj_id = ObjectId(profile_id)
+    try:
+
+        updateData = {
+
+            "date": data.date,
+            "customer": data.customer,
+            "customer_id": data.customer_id,
+            "invoice_no": data.invoice_no,
+            "tax_type": data.tax_type,
+            "amount": data.amount,
+            "user": username,
+            "date_updated": data.date_updated,
+            "date_created": data.date_created,
 
 
+            
+              
+            }
+        result = mydb.customer_vendor_profile.update_one({'_id': obj_id},{'$set': updateData})
+        return {"message":"Custome has been Updated"} 
+    except Exception as e:
 
+        raise HTTPException(status_code=500, detail=str(e))
 
