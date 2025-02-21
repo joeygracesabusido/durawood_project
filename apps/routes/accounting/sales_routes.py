@@ -81,7 +81,7 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
 @api_sales.get("/api-get-sales/")
 async def get_sales(username: str = Depends(get_current_user)):
     try:
-        result = mydb.sales.find().sort('bussiness_name', -1)
+        result = mydb.sales.find().sort('date', -1)
 
         SalesData = [{
             
