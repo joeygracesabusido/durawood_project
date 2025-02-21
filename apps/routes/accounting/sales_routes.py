@@ -3,7 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from typing import Union, List, Optional, Dict
 from pydantic import BaseModel
-#from bson import ObjectId
+from bson import ObjectId
 
 
 
@@ -32,7 +32,7 @@ class SalesBM(BaseModel):
     amount: str
     user: Optional[str] = None
     date_updated: datetime =  datetime.utcnow()
-    date_created:  datetime = datetime.utcnow()
+    date_created: Optional[datetime] = datetime.utcnow()
 
 
 
@@ -43,31 +43,40 @@ async def api_chart_of_account_template(request: Request,
     return templates.TemplateResponse("accounting/sales.html", 
                                       {"request": request})
 
-@api_sales.post("/api-insert-sales/", response_model=None)
-async def create_customer_profile(data: SalesBM, username: str = Depends(get_current_user)):
-    try:
-        customer_collection = mydb['sales']
-        dataInsert = {
 
+@api_sales.post("/api-insert-sales/", response_model=None)
+async def create_sales_transaction(data: SalesBM, username: str = Depends(get_current_user)):
+    try:
+        # Convert date and due_date to full datetime format
+        #date_datetime = datetime.strptime(str(data.date), "%Y-%m-%d")
+        #due_date_datetime = datetime.strptime(str(data.due_date), "%Y-%m-%d")
+
+        # Ensure date_updated and date_created use current UTC timestamp
+        insertData = {
+           
             "date": data.date,
             "customer": data.customer,
             "customer_id": data.customer_id,
-            "invoice_no": data.invoice_no,
             "terms": data.terms,
-            "due_date": data.due_date,
+            "invoice_no": data.invoice_no,
+			"due_date": data.due_date,
+
             "tax_type": data.tax_type,
             "amount": data.amount,
             "user": username,
-            "date_updated": data.date_updated,
-            "date_created": data.date_created,
-
-
+            "date_updated": datetime.utcnow(),
+            "date_created": datetime.utcnow(),
         }
-        mydb.sales.insert_one(dataInsert)
 
-        return {"message": "Sales Transaction created successfully"}
+        # Correct MongoDB insert operation
+        mydb.sales.insert_one(insertData)
+
+        return {"message": "Sales has been inserted successfully"}
+
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error creating profile: {e}")
+        raise HTTPException(status_code=400, detail=f"Error inserting sales: {e}")
+
+
 
 @api_sales.get("/api-get-sales/")
 async def get_sales(username: str = Depends(get_current_user)):
@@ -77,12 +86,12 @@ async def get_sales(username: str = Depends(get_current_user)):
         SalesData = [{
             
             "id": str(data['_id']),
-            "date": data['date'] ,
+            "date": data['date'].strftime('%Y-%m-%d') if isinstance(data['date'], datetime) else data['date'],
             "customer": data['customer'],
             "customer_id": data['customer_id'],
             "terms": data['terms'],
-            "due_date": data['due_date'],
-            "invocie_no": data['invoice_no'],
+            "due_date": data['due_date'].strftime('%Y-%m-%d') if isinstance(data['due_date'], datetime) else data['due_date'],
+            "invoice_no": data['invoice_no'],
             "tax_type": data['tax_type'],
             "amount": data['amount'],
             "user": username,
@@ -114,14 +123,14 @@ async def update_customer_profile_api(profile_id: str, data: SalesBM,username: s
             "amount": data.amount,
             "user": username,
             "date_updated": data.date_updated,
-            "date_created": data.date_created,
+            
 
 
             
               
             }
-        result = mydb.customer_vendor_profile.update_one({'_id': obj_id},{'$set': updateData})
-        return {"message":"Custome has been Updated"} 
+        result = mydb.sales.update_one({'_id': obj_id},{'$set': updateData})
+        return {"message":"Sales Data Has been Updated"} 
     except Exception as e:
 
         raise HTTPException(status_code=500, detail=str(e))

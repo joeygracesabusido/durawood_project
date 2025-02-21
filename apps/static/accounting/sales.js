@@ -9,11 +9,11 @@ jQuery(document).ready(function($) {
             source: function(request, response) {
                 // AJAX call to fetch data for the autocomplete suggestions
                 $.ajax({
-                    url: "/api-autocomplete-vendor-customer/",  // Your endpoint for fetching data
-                    data: { term: request.term },     // Send the user's input term to the server
-                    dataType: "json",                 // Expect a JSON response from the server
+                    url: "/api-autocomplete-vendor-customer/", 
+                    data: { term: request.term }, 
+                    dataType: "json",               
                     success: function(data) {
-                        response(data);               // Pass the data to autocomplete
+                        response(data);             
                     },
                     error: function(err) {
                         console.error("Error fetching autocomplete data:", err);  // Log errors
@@ -43,15 +43,15 @@ $(document).ready(function() {
             var daysToAdd = parseInt(terms) || 0; // Convert terms to number, default to 0 if COD
 
             var transDateObj = new Date(transDate); // Convert to Date object
-            transDateObj.setDate(transDateObj.getDate() + daysToAdd); // Add days
+            transDateObj.setDate(transDateObj.getDate() + daysToAdd); 
 
             // Format the date to YYYY-MM-DD
             var dueDateFormatted = transDateObj.toISOString().split("T")[0];
 
-            $("#due_date").val(dueDateFormatted); // Set the due date in input field
+            $("#due_date").val(dueDateFormatted); 
         } else {
             alert("Please select a Transaction Date first.");
-            $("#terms").val(""); // Reset the select field if no trans_date is selected
+            $("#terms").val(""); 
         }
     });
 });
@@ -76,7 +76,7 @@ let table_sales_list = $("#table_sales_list");
 
 const trans_date_el = $("#trans_date");
 const customer_el = $("#customer");
-const customer_id_el = $("customer_id");
+const customer_id_el = $("#customer_id");
 const invoice_no_el = $("#invoice_no");
 const terms_el = $("#terms");
 const due_date_el = $("#due_date");
@@ -104,13 +104,16 @@ async function getSales() {
         console.log(element);
         table_sales_list.append(makeBranchRow(i++, element));
       });
+
+			initializeDataTable()
     } else {
       const error = await response.json();
+
       alert(`Error: ${error.detail}`);
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    alert("An error occurred while fetching the customers.");
+    
   }
 }
 
@@ -119,15 +122,16 @@ function makeBranchRow(index, data) {
     "customer_row_" + index
   }')">
   <td>${data.id}</td>
-  <td>${data.trans_date}</td>
+  <td>${data.date.split("T")[0]}</td>
   <td>${data.customer}</td>
-  <td>${data.custome_id}</td>
+  <td>${data.customer_id}</td>
   <td>${data.invoice_no}</td>
   <td>${data.terms}</td>
   <td>${data.due_date}</td>
   <td>${data.tax_type}</td>
   <td>${data.amount}</td>
 </tr>`;
+    
 }
 
 function isDoubleClick() {
@@ -153,14 +157,14 @@ function openToEdit(index, customer_row_id) {
     // Load selected branch data into form fields
     let data = sales_list[index];
 
-    trans_date_el.val(data.trans_date);
+    trans_date_el.val(data.date);
     customer_el.val(data.customer);
-    name_of_tax_payer_el.val(data.name_of_tax_payer);
-    tin_el.val(data.tin);
-    rdo_el.val(data.rdo);
-    address_el.val(data.address);
+    customer_id_el.val(data.customer_id);
+    invoice_no_el.val(data.invoice_no);
+    terms_el.val(data.terms);
+    due_date_el.val(data.due_date);
     tax_type_el.val(data.tax_type);
-    description_el.val(data.description);
+    amount_el.val(data.amount);
     selectedCustomer = data;
     
     $(`#${customer_row_id}`).addClass("table-primary");
@@ -170,45 +174,45 @@ function openToEdit(index, customer_row_id) {
 async function saveOrUpdateCustomer() {
   // const branchName = $("#branchName").val();
   // const branchAddress = $("#branchAddress").val();
-  const customer_vendor_id = customer_vendor_id_el.val();
-  const bussiness_name= bussiness_name_el.val();
-  const name_of_tax_payer= name_of_tax_payer_el.val();
-  const tin= tin_el.val(); // Replace with actual user if needed
-  const  rdo=rdo_el.val();
-  const address=address_el.val();
+  const trans_date = trans_date_el.val();
+  const customer= customer_el.val();
+  const customer_id= customer_id_el.val();
+  const invoice_no= invoice_no_el.val(); // Replace with actual user if n
+  const terms=terms_el.val();
+  const due_date=due_date_el.val();
   const tax_type=tax_type_el.val();
-  const description=description_el.val();
+  const amount=amount_el.val();
 
-  console.log(customer_vendor_id,bussiness_name,name_of_tax_payer,
-                tin,rdo,address,tax_type,description)
+  console.log(trans_date,customer,customer_id,invoice_no,
+                terms,due_date,tax_type)
   // Validate inputs
-  if (!bussiness_name || !name_of_tax_payer||!tin || !rdo||!address || !tax_type||!description || !customer_vendor_id) {
+  if (!trans_date || !customer||!customer_id || !invoice_no||!terms || !due_date||!tax_type || !amount) {
     alert("Please fill in all fields.");
     return;
   }
 
   // Create data object to send to the API
   const customerData = {
-    customer_vendor_id: customer_vendor_id,
-    bussiness_name: bussiness_name,
-    name_of_tax_payer: name_of_tax_payer,
-    tin: tin, // Replace with actual user if needed
-    rdo:rdo,
-    address:address,
+    date: trans_date,
+    customer: customer ,
+    customer_id: customer_id,
+    invoice_no: invoice_no,
+    terms: terms, // Replace with actual user if needed
+    due_date: due_date,
     tax_type:tax_type,
-    description:description,
+    amount:amount,
   };
 
   if (!isUpdating) {
     // Add new branch (POST)
     $.ajax({
-      url: "/api-insert-customer_profile/",
+      url: "/api-insert-sales/",
       type: "POST",
       contentType: "application/json",
       data: JSON.stringify(customerData),
       success: function (response) {
-        alert(response?.message|| "Customer save Succesfully");
-        window.location.href = "/customer_profile/";
+        alert(response?.message|| "Sales Transaction save Succesfully");
+        window.location.href = "/sales/";
        
         getSales();  // Refresh branch list
 
@@ -223,13 +227,13 @@ async function saveOrUpdateCustomer() {
     customerData.id = selectedCustomer.id;  // Get the ID of the branch being updated
     
     $.ajax({
-      url: `/api-update-customer-profile/?profile_id=${customerData.id}`,
+      url: `/api-update-sales/?profile_id=${customerData.id}`,
       type: "PUT",
       contentType: "application/json",
       data: JSON.stringify(customerData),
       success: function (response) {
         alert(response.message);
-        window.location.href = "/customer_profile/";
+        window.location.href = "/sales/";
         isUpdating = false;
         $("#btn_save_branch").text('Add');
         getSales();  // Refresh branch list
@@ -250,3 +254,36 @@ $(document).ready(function () {
   $("#btn_save_branch").click(saveOrUpdateCustomer);
 
 });
+
+
+
+// this is for DataTable
+const initializeDataTable = () => {
+
+    new DataTable('#table_sales', {
+        layout: {
+            topStart: 'buttons'
+        },
+        buttons: ['copy',  {
+            extend: 'csv',
+            filename: 'Sales Transasction', // Cust wom name for the exported CSV file
+            title: 'Sales Transaction' // Optional: Title for the CSV file's content
+        }],
+        perPage: 10,
+        searchable: true,
+        sortable: true,
+
+        responsive: true,
+        scrollX: true,          // Enable horizontal scrolling if needed
+        autoWidth: false,       // Disable fixed width
+        scrollY: '450px',       // Set a specific height
+        scrollCollapse: true,
+        destroy: true // Destroy any existing DataTable instance
+
+
+    });
+
+    };
+
+
+
