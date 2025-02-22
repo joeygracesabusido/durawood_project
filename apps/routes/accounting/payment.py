@@ -127,56 +127,79 @@ async def update_customer_profile_api(profile_id: str, data: paymentBM,username:
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
+
 @api_payment.get("/api-autocomplete-customer-payment/")
 async def autocomplete_payment_balance(term: Optional[str] = None,username: str = Depends(get_current_user)):
-	
+    try:
+	     
+        pipeline = [
+                        {
+                    "$lookup": {
+                        "from": "payments",  # The payments collection
+                        "localField": "invoice_no",  # Field in sales
+                        "foreignField": "invoice_no",  # Field in payments
+                        "as": "payment_info"
+                        }
+                    },
+                    {
+                        "$unwind": { "path": "$payment_info", "preserveNullAndEmptyArrays": True }
+                    },
+                    {
+                        "$addFields": {
+                            "cash_amount": { "$ifNull": ["$payment_info.cash_amount", 0] },
+                            "amount_2307": { "$ifNull": ["$payment_info.amount_2307", 0] }
+                        }
+                    },
+                    {
+                        "$addFields": {
+                            "balance": {
+                                "$subtract": [
+                                    "$amount",
+                                    { "$add": ["$cash_amount", "$amount_2307"] }
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "$project": {
+                            "_id": 0,
+                            "customer": 1,
+							"customer_id": 1,
+                            "invoice_no": 1,
+                            "balance": 1
+                        }
+                    }
+                ]
 
-			
-        
-	pipeline = [
-					{
-				"$lookup": {
-					"from": "payments",  # The payments collection
-					"localField": "invoice_no",  # Field in sales
-					"foreignField": "invoice_no",  # Field in payments
-					"as": "payment_info"
-					}
-				},
-				{
-					"$unwind": { "path": "$payment_info", "preserveNullAndEmptyArrays": True }
-				},
-				{
-					"$addFields": {
-						"cash_amount": { "$ifNull": ["$payment_info.cash_amount", 0] },
-						"amount_2307": { "$ifNull": ["$payment_info.amount_2307", 0] }
-					}
-				},
-				{
-					"$addFields": {
-						"balance": {
-							"$subtract": [
-								"$amount",
-								{ "$add": ["$cash_amount", "$amount_2307"] }
-							]
-						}
-					}
-				},
-				{
-					"$project": {
-						"_id": 0,
-						"customer": 1,
-                        "invoice_no": 1,
-						"balance": 1
-					}
-				}
-			]
+    
 
-	result = list(mydb.sales.aggregate(pipeline))
+        result = list(mydb.sales.aggregate(pipeline))
+        print(result)
+        # Ensure 'customer' field exists before filtering
+        if term:
+            filtered_contact = [
+                item for item in result
+                if term.lower() in item.get('customer', '').lower() or term.lower() in item.get('invoice_no', '').lower()
+            ]
+        else:
+            filtered_contact = result  # If no term is provided, return all
 
-    return result
+        suggestions = [
+            {
+                "value": f"{item.get('customer', 'Unknown')} - Invoice: {item.get('invoice_no')} - Balance: {item.get('balance', 0):,.2f}",  # Avoid KeyError
+			    "customer": item.get('customer'),
+				"customer_id": item.get('customer_id'),
+				"invoice_no": item.get('invoice_no'),
+                "balance": item.get('balance', 0)  # Ensure balance is present
+            }
+            for item in filtered_contact
+        ]
 
-	
+        return suggestions
 
+
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
     
   
    
