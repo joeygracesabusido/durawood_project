@@ -20,7 +20,7 @@ $(document).ready(function () {
                             <td>${sale.terms}</td>
                             <td>${sale.due_date}</td>
 
-                            <td ${statusColor}>${sale.status !== null ? sale.status + "                               days overdue" : "N/A"}</td>
+                            <td ${statusColor}>${sale.status !== null ? sale.status + " days overdue" : "N/A"}</td>
 
                             <td>${sale.tax_type}</td>
                             <td>${formatCurrency(sale.amount)}</td>
