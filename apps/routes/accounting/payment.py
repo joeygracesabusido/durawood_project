@@ -131,48 +131,115 @@ async def update_customer_profile_api(profile_id: str, data: paymentBM,username:
 @api_payment.get("/api-autocomplete-customer-payment/")
 async def autocomplete_payment_balance(term: Optional[str] = None,username: str = Depends(get_current_user)):
     try:
-	     
+
+
+        # pipeline = [
+        #         {
+        #             "$lookup": {
+        #                 "from": "payment",
+        #                 "let": { "invoice_no": "$invoice_no" },
+        #                 "pipeline": [
+        #                     {
+        #                         "$match": {
+        #                             "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
+        #                         }
+        #                     },
+        #                     {
+        #                         "$group": {
+        #                             "_id": "$invoice_no",
+        #                             "total_cash": { "$sum": "$cash_amount" },
+        #                             "total_2307": { "$sum": "$amount_2307" }
+        #                         }
+        #                     }
+        #                 ],
+        #                 "as": "payment_info"
+        #             }
+        #         },
+        #         {
+        #             "$addFields": {
+        #                 "total_cash": {
+        #                     "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+        #                 },
+        #                 "total_2307": {
+        #                     "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+        #                 }
+        #             }
+        #         },
+        #         {
+        #             "$addFields": {
+        #                 "balance": {
+        #                     "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+        #                 }
+        #             }
+        #         },
+        #         {
+        #             "$project": {
+        #                 "_id": 0,
+        #                 "customer": 1,
+        #                 "customer_id": 1,
+        #                 "invoice_no": 1,
+        #                 "balance": 1
+        #             }
+        #         }
+        #     ]
+        #
+
         pipeline = [
-                        {
+                {
                     "$lookup": {
-                        "from": "payments",  # The payments collection
-                        "localField": "invoice_no",  # Field in sales
-                        "foreignField": "invoice_no",  # Field in payments
-                        "as": "payment_info"
-                        }
-                    },
-                    {
-                        "$unwind": { "path": "$payment_info", "preserveNullAndEmptyArrays": True }
-                    },
-                    {
-                        "$addFields": {
-                            "cash_amount": { "$ifNull": ["$payment_info.cash_amount", 0] },
-                            "amount_2307": { "$ifNull": ["$payment_info.amount_2307", 0] }
-                        }
-                    },
-                    {
-                        "$addFields": {
-                            "balance": {
-                                "$subtract": [
-                                    "$amount",
-                                    { "$add": ["$cash_amount", "$amount_2307"] }
-                                ]
+                        "from": "payment",
+                        "let": { "invoice_no": "$invoice_no" },
+                        "pipeline": [
+                            {
+                                "$match": {
+                                    "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
+                                }
+                            },
+                            {
+                                "$group": {
+                                    "_id": "$invoice_no",
+                                    "total_cash": { "$sum": "$cash_amount" },
+                                    "total_2307": { "$sum": "$amount_2307" }
+                                }
                             }
-                        }
-                    },
-                    {
-                        "$project": {
-                            "_id": 0,
-                            "customer": 1,
-							"customer_id": 1,
-                            "invoice_no": 1,
-                            "balance": 1
+                        ],
+                        "as": "payment_info"
+                    }
+                },
+                {
+                    "$addFields": {
+                        "total_cash": {
+                            "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+                        },
+                        "total_2307": {
+                            "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
                         }
                     }
-                ]
+                },
+                {
+                    "$addFields": {
+                        "balance": {
+                            "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+                        }
+                    }
+                },
+                {
+                    "$match": {
+                        "balance": { "$gt": 0 }  # 🔥 This filters out invoices with a balance of 0 or less
+                    }
+                },
+                {
+                    "$project": {
+                        "_id": 0,
+                        "customer": 1,
+                        "customer_id": 1,
+                        "invoice_no": 1,
+                        "balance": 1
+                    }
+                }
+            ]
 
-    
-
+	     
         result = list(mydb.sales.aggregate(pipeline))
         print(result)
         # Ensure 'customer' field exists before filtering
