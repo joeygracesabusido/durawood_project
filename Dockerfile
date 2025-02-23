@@ -28,8 +28,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose the application port
-EXPOSE 9000
+EXPOSE 1000
 
 # Command to run the application
-CMD ["uvicorn", "apps.main:app", "--host", "0.0.0.0", "--port", "9000", "--reload"]
-#CMD ["uvicorn", "apps.main:app",  "--port", "7000", "--reload"]
+CMD ["uvicorn", "apps.main:app", "--host", "0.0.0.0", "--port", "1000", "--reload"]
+#CMD ["uvicorn", "apps.main:app:",  "--port", "7000", "--reload"]

@@ -19,10 +19,10 @@ services:
     container_name: durawood_project
   
 
-    command: uvicorn apps.main:app --host 0.0.0.0 --port 9000 --reload
+    command: uvicorn apps.main:app --host 0.0.0.0 --port 1000 --reload
     # command: uvicorn apps.main:app --host 172.26.14.250 --port 7000 --reload
     ports:
-      - "9000:9000"
+      - "1000:1000"
     dns:
       - 8.8.8.8
       - 8.8.4.4
