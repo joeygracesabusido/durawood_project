@@ -26,8 +26,9 @@ class paymentBM(BaseModel):
     date: datetime
     customer: str 
     customer_id: str 
-    cash_amount: float
     invoice_no: str
+    cr_no: str
+    cash_amount: float
     amount_2307: Optional[float] = None
     remarks: Optional[str]
     user: Optional[str] = None
@@ -44,6 +45,16 @@ async def api_payment_template(request: Request,
                                       {"request": request})
 
 
+@api_payment.get("/collection-list/", response_class=HTMLResponse)
+async def api_collection_list_template(request: Request,
+                                        username: str = Depends(get_current_user)):
+ 
+    return templates.TemplateResponse("accounting/payment_list.html", 
+                                      {"request": request})
+
+
+
+
 @api_payment.post("/api-insert-payment/", response_model=None)
 async def create_sales_transaction(data: paymentBM, username: str = Depends(get_current_user)):
     try:
@@ -57,6 +68,7 @@ async def create_sales_transaction(data: paymentBM, username: str = Depends(get_
             "date": data.date,
             "customer": data.customer,
             "customer_id": data.customer_id,
+            "cr_no": data.cr_no,
             "invoice_no": data.invoice_no,
             "cash_amount": data.cash_amount,
             "amount_2307": data.amount_2307,
@@ -87,8 +99,9 @@ async def get_sales(username: str = Depends(get_current_user)):
             "date": data['date'].strftime('%Y-%m-%d') if isinstance(data['date'], datetime) else data['date'],
             "customer": data['customer'],
             "customer_id": data['customer_id'],
+            "cr_no": data['cr_no'],
             "invoice_no": data['invoice_no'],
-            "cash_amount": data['amount'],
+            "cash_amount": data['cash_amount'],
             "amount_2307": data['amount_2307'],
             "remarks": data['remarks'],
             "user": username,
@@ -113,6 +126,7 @@ async def update_customer_profile_api(profile_id: str, data: paymentBM,username:
             "date": data.date,
             "customer": data.customer,
             "customer_id": data.customer_id,
+            "cr_no": data.cr_no,
             "invoice_no": data.invoice_no,
             "cash_amount": data.cash_amount,
             "amount_2307": data.amount_2307,
@@ -257,7 +271,7 @@ async def autocomplete_payment_balance(term: Optional[str] = None,username: str 
 			    "customer": item.get('customer'),
 				"customer_id": item.get('customer_id'),
 				"invoice_no": item.get('invoice_no'),
-                "balance": item.get('balance', 0)  # Ensure balance is present
+                "balance": item.get('balance')  # Ensure balance is present
             }
             for item in filtered_contact
         ]

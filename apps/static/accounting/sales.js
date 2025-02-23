@@ -72,7 +72,7 @@ let terms = "";
 let due_date = "";
 let tax_type = "Vatable";
 let amount = "";
-let table_sales_list = $("#table_sales_list");
+let table_sales_list = $("#table_sales tbody");
 
 const trans_date_el = $("#trans_date");
 const customer_el = $("#customer");
@@ -152,7 +152,7 @@ function openToEdit(index, customer_row_id) {
   if (isDoubleClick() === true) {
     isUpdating = true;
     $("#btn_save_branch").text("Update");
-    $("#table_sales_list tr").removeClass("table-primary");
+    $("#table_sales tr").removeClass("table-primary");
     //console.log(`#${customer_row_id}`);
     // Load selected branch data into form fields
     let data = sales_list[index];

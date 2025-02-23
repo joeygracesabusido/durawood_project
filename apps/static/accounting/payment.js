@@ -27,6 +27,12 @@ jQuery(document).ready(function($) {
                 // Set the related field based on the selected item
                 $("#customer_id").val(ui.item.customer_id);
                 $("#invoice_no").val(ui.item.invoice_no);
+                $("#balance").val(ui.item.balance)
+
+                // Format balance with thousand separator
+                //let formattedBalance = formatNumber(ui.item.balance.toString()); 
+                //$("#balance").val(formattedBalance); 
+
 
 
                 return false; // Prevent the default select action
@@ -46,6 +52,7 @@ $(document).ready(function () {
             date: $("#trans_date").val(),
             customer: $("#customer").val(),
             customer_id: $("#customer_id").val(),
+            cr_no: $("#collection_receipt").val(),
             invoice_no: $("#invoice_no").val(),
             cash_amount: parseFloat($("#cash_amount").val()) || 0, // Ensure it's a number
             amount_2307: parseFloat($("#amount_2307").val()) || 0,
@@ -69,6 +76,26 @@ $(document).ready(function () {
     });
 });
 
+
+
+ $(document).ready(function () {
+    function formatNumber(value) {
+      return parseFloat(value.replace(/,/g, '') || 0)
+        .toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    $("#balance").on("input", function () {
+      let rawValue = $(this).val();
+      let formattedValue = formatNumber(rawValue);
+      $(this).val(formattedValue);
+    });
+
+    // Ensure formatting on focus out
+    $("#balance").on("blur", function () {
+      let rawValue = $(this).val();
+      $(this).val(formatNumber(rawValue));
+    });
+  });
 
 
 

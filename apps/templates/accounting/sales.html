@@ -23,7 +23,40 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
+<style>
 
+
+@media (max-width: 768px) { /* For small screens */
+      .table thead {
+          font-size: 10px; /* Adjust size */
+      }
+  }
+
+  @media (min-width: 1024px) { /* For larger screens */
+      .table thead {
+          font-size: 14px; /* Increase size */
+      }
+  }
+
+
+thead {
+      background-color: #d6d6d6 !important; /* Light Gray */
+      color: black; /* Text color */
+  }
+
+
+ /* Set the font size of all table rows */
+  table {
+      font-size: 11px; /* Small font for all table text */
+  }
+
+  /* Ensure it adjusts for small screens */
+  @media (max-width: 768px) {
+      table {
+          font-size: 9px; /* Even smaller font for mobile */
+      }
+  }
+</style>
 
  
 
@@ -195,7 +228,7 @@
               class="table table-bordered"
               style="text-align: center"
             >
-              <thead class="table-dark">
+              <thead>
                 <tr>
                   <td>Trans ID</td>
                   <td>Date</>
