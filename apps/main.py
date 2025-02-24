@@ -22,6 +22,9 @@ from apps.routes.accounting.sales_report import api_sales_report
 from apps.routes.accounting.payment import api_payment
 
 
+from apps.routes.accounting.ar_aging import api_ar_aging_report
+
+
 
 from apps.routes.accounting.customer_profile import api_customer_profile
 
@@ -53,7 +56,10 @@ app.include_router(api_sales, tags=['Sales'])
 app.include_router(api_sales_report, tags=['Sales Report'])
 
 
-app.include_router(api_payment, tags=['Payment'])
+app.include_router(api_payment, tags=['Payment']),
+
+
+app.include_router(api_ar_aging_report, tags=['Aging Report'])
 
 
 
