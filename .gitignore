@@ -1,2 +1,4 @@
 __pycache__/
-.venv/
+myenv/
+start.sh
+fastapi-app.log
