@@ -29,7 +29,7 @@ $(document).ready(function () {
 
                             <td>${sale.tax_type}</td>
                             <td>${formatCurrency(sale.balance)}</td>
-                                                    </tr>
+                        </tr>
                     `;
                     $("#table_sales tbody").append(row);
                       
@@ -44,9 +44,13 @@ $(document).ready(function () {
     }
 
     function formatCurrency(amount) {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'Php' }).format(amount);
+    return new Intl.NumberFormat('en-US',
+      { minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount);
     }
 
+      
     fetchSalesReport(); // Call function when page loads
 });
 
@@ -73,7 +77,7 @@ const initializeDataTable = () => {
         responsive: true,
         scrollX: true,          // Enable horizontal scrolling if needed
         autoWidth: false,       // Disable fixed width
-        scrollY: '450px',       // Set a specific height
+        scrollY: true,       // Set a specific height
         scrollCollapse: true,
         destroy: true // Destroy any existing DataTable instance
 
