@@ -29,6 +29,8 @@ from apps.routes.accounting.ar_aging import api_ar_aging_report
 from apps.routes.accounting.customer_profile import api_customer_profile
 
 
+from apps.routes.roles import api_roles
+
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
@@ -60,6 +62,8 @@ app.include_router(api_payment, tags=['Payment']),
 
 
 app.include_router(api_ar_aging_report, tags=['Aging Report'])
+
+app.include_router(api_roles, tags=['Roles'])
 
 
 
