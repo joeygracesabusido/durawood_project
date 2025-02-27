@@ -22,11 +22,11 @@ class CustomerProfileBM(BaseModel):
 
     customer_vendor_id: str
     bussiness_name: str 
-    name_of_tax_payer: str 
-    tin: str
-    rdo: str
+    contact_no: str 
+    contact_person: str
     address: str
     tax_type: str
+    category: str
     description: str
     user: Optional[str] = None
     date_updated: datetime =  datetime.utcnow()
@@ -42,15 +42,17 @@ async def create_customer_profile(data: CustomerProfileBM, username: str = Depen
     try:
         customer_collection = mydb['customer_vendor_profile']
         customer_collection.create_index("customer_vendor_id", unique=True)
+        customer_collection.create_index("bussiness_name", unique=True) 
+ 
         dataInsert = {
 
             "customer_vendor_id": data.customer_vendor_id,
             "bussiness_name": data.bussiness_name,
-            "name_of_tax_payer": data.name_of_tax_payer,
-            "tin": data.tin,
-            "rdo": data.rdo,
+            "contact_no": data.contact_no,
+            "contact_person": data.contact_person,
             "address": data.address,
             "tax_type": data.tax_type,
+            "category": data.category,
             "description": data.description,
             "user": username,
             "date_updated": data.date_updated,
@@ -75,10 +77,10 @@ async def get_customer(username: str = Depends(get_current_user)):
             "customer_vendor_id": data['customer_vendor_id'] ,
             "bussiness_name": data['bussiness_name'],
             "name_of_tax_payer": data['name_of_tax_payer'],
-            "tin": data['tin'],
-            "rdo": data['rdo'],
+            "contact_no": data['contact_no'],
+            "contact_person": data['contact_person'],
             "address": data['address'],
-            "tax_type": data['tax_type'],
+            "category": data['category'],
             "description": data['description'],
             "user": username,
             "date_updated": data['date_updated'],
@@ -102,10 +104,10 @@ async def update_customer_profile_api(profile_id: str, data: CustomerProfileBM,u
                 "customer_vendor_id": data.customer_vendor_id,
                 "bussiness_name": data.bussiness_name,
                 "name_of_tax_payer": data.name_of_tax_payer,
-                "tin": data.tin,
-                "rdo": data.rdo,
+                "contact_no": data.contact_no,
+                "contact_person": data.contact_person,
                 "address": data.address,
-                "tax_type": data.tax_type,
+                "category": data.category,
                 "description": data.description,
                 "user": username,
                 "date_updated": data.date_created,
@@ -125,23 +127,13 @@ async def autocomplete_contact(term: Optional[str] = None, username: str = Depen
         
         #contact = get_customer()
 
-        result =  mydb.customer_vendor_profile.find().sort('bussiness_name', ASCENDING).to_list(None)
+        result =  mydb.customer_vendor_profile.find({"bussiness_name": { "$regex": term,"$options": "i" }} )
 
         customerData = [{
             
-            "id": str(data['_id']),
+            "value": data['bussiness_name'],
             "customer_vendor_id": data['customer_vendor_id'] ,
-            "bussiness_name": data['bussiness_name'],
-            "name_of_tax_payer": data['name_of_tax_payer'],
-            "tin": data['tin'],
-            "rdo": data['rdo'],
-            "address": data['address'],
-            "tax_type": data['tax_type'],
-            "description": data['description'],
-            "user": username,
-            "date_updated": data['date_updated'],
-            "date_created": data['date_created'],
-
+           
 
             } for data in result
 
@@ -149,28 +141,28 @@ async def autocomplete_contact(term: Optional[str] = None, username: str = Depen
 
 
         
-        contact = customerData
-        # Filter chart of accounts based on the search term
-        if term:
-            filtered_contact = [
-                item for item in contact
-                if term.lower() in item['bussiness_name'].lower() or term.lower() in item['name_of_tax_payer'].lower()
-            ]
-        else:
-            filtered_contact = contact  # If no term is provided, return all
+        # contact = customerData
+        # # Filter chart of accounts based on the search term
+        # if term:
+        #     filtered_contact = [
+        #         item for item in contact
+        #         if term.lower() in item['bussiness_name'].lower() or term.lower() in item['name_of_tax_payer'].lower()
+        #     ]
+        # else:
+        #     filtered_contact = contact  # If no term is provided, return all
+        #
+        # # Construct suggestions from filtered chart of account data
+        # suggestions = [
+        #     {
+        #         "value": f"{item['bussiness_name']}",
+        #         "customer_vendor_id": item['customer_vendor_id'],
+        #         
+        #     }
+        #     for item in filtered_contact
+        # 
+        # ]
 
-        # Construct suggestions from filtered chart of account data
-        suggestions = [
-            {
-                "value": f"{item['bussiness_name']}",
-                "customer_vendor_id": item['customer_vendor_id'],
-                
-            }
-            for item in filtered_contact
-        
-        ]
-
-        return suggestions
+        return customerData
 
     except Exception as e:
         error_message = str(e)

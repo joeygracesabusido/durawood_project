@@ -1,12 +1,20 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>   
-    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+   <!-- jQuery and jQuery UI -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Tailwind -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>  
+    
+
 
     <title>Sign Up</title>
     </head>
@@ -15,7 +23,7 @@
 <div class='grid place-items-center h-screen'>
             <div class='shadow-lg p-20 rounded-lg border-t-4
                             border-green-400 w-[500px]'>
-                <h1 class='text-xl font-bold my-4'>Enter the Details</h1>
+                <h1 class='text-xl font-bold my-4'>Enters the Details</h1>
 
                 <form class='flex flex-col gap-3'id="sign_up_form">
                     <input class="form-control"
@@ -41,13 +49,22 @@
                        type="password"
                         placeholder='Re-Type Password'/>
 
-          <select class="block w-full p-2 mt-1 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-gray-400"
-                  id="role">
-            <option value="Developer" class="py-2 px-4 bg-gray-200">Developer</option>
-            <option value="Administrator" class="py-2 px-4 bg-gray-300">Administrator</option>
-             <option value="Supervisor" class="py-2 px-4 bg-gray-300">Supervisor</option>
-            <option value="Accounts Payable" class="py-2 px-4 bg-gray-300">Accounts Payable</option>
-                      </select>
+                   <input class="form-control"
+                        id="role"
+                        type="text"
+                         placeholder='Role' />
+
+
+                <!---->
+                <!--     <select class="block w-full p-2 mt-1 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-gray-400" -->
+                <!--         id="role"> -->
+                <!--   <option value="Developer" class="py-2 px-4 bg-gray-200">Developer</option> -->
+                <!-- <option value="Administrator" class="py-2 px-4 bg-gray-300">Administrator</option> -->
+                <!--  <option value="Supervisor" class="py-2 px-4 bg-gray-300">Supervisor</option> -->
+                <!-- <option value="Accounts Payable" class="py-2 px-4 bg-gray-300">Accounts Payable</option> -->
+                <!--       </select> -->
+
+
 
                     <button type="submit" class='bg-green-600 text-white
                         font-bold cursor-pointer px-6 py-2'

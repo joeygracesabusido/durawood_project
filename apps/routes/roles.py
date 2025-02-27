@@ -24,9 +24,31 @@ class rolesBM(BaseModel):
 @api_roles.get("/roles/", response_class=HTMLResponse)
 async def get_sales_report(request: Request,
                                         username: str = Depends(get_current_user)):
- 
-    return templates.TemplateResponse("accounting/roles.html", 
+
+    role = mydb.login.find_one({"email_add":username})
+
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    print(roleAuthenticate['allowed_access'])
+    
+
+    if 'Allowed Roles' in roleAuthenticate['allowed_access']:
+
+
+
+        return templates.TemplateResponse("accounting/roles.html", 
                                       {"request": request})
+
+    else:
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail= "Not Authorized ",
+            # headers={"WWW-Authenticate": "Basic"},
+        )
+
+
+
 
 @api_roles.post("/api-insert-roles/", response_model=None)
 async def create_sales_transaction(data: rolesBM, username: str = Depends(get_current_user)):
@@ -52,42 +74,111 @@ async def create_sales_transaction(data: rolesBM, username: str = Depends(get_cu
 
 @api_roles.get("/api-get-role/")
 async def get_get(username: str = Depends(get_current_user)):
-    try:
-        result = mydb.roles.find().sort('role', -1)
 
-        SalesData = [{
-            
-            "id": str(data['_id']), 
-            "role": data['role'],
-            "allowed_access": data['allowed_access'],
-            "date_updated": data['date_updated'],
-            "date_created": data['date_created'],
+    role = mydb.login.find_one({"email_add":username})
+
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    print(roleAuthenticate['allowed_access'])
+    
+
+    if 'Allowed Roles' in roleAuthenticate['allowed_access']:
 
 
-        } for data in result
+        try:
+            result = mydb.roles.find().sort('role', -1)
 
-    ]
-        return SalesData
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+            SalesData = [{
+                
+                "id": str(data['_id']), 
+                "role": data['role'],
+                "allowed_access": data['allowed_access'],
+                "date_updated": data['date_updated'],
+                "date_created": data['date_created'],
+
+
+            } for data in result
+
+        ]
+            return SalesData
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+
+
+    else:
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail= "Not Authorized ",
+            # headers={"WWW-Authenticate": "Basic"},
+        )
+
+
 
 @api_roles.put("/api-update-role/{profile_id}", response_model=None)
 async def update_customer_profile_api(profile_id: str, data: rolesBM,username: str = Depends(get_current_user)):
     obj_id = ObjectId(profile_id)
+
+    role = mydb.login.find_one({"email_add":username})
+
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    print(roleAuthenticate['allowed_access'])
+    
+
+    if 'Allowed Roles' in roleAuthenticate['allowed_access']:
+
+        try:
+
+            updateData = {
+
+                "role": data.role,
+                "allowed_access": data.allowed_access,
+                "date_updated": datetime.utcnow(),
+                         
+                  
+                }
+            result = mydb.roles.update_one({'_id': obj_id},{'$set': updateData})
+            return {"message":"Role Data Has been Updated"} 
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+
+    else:
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail= "Not Authorized ",
+            # headers={"WWW-Authenticate": "Basic"},
+        )
+
+
+
+
+@api_roles.get("/api-autocomplete-roles/")
+async def autocomplete_roles(term: Optional[str] = None, username: str = Depends(get_current_user)):
+
+           
     try:
+    
+        #contact = get_customer()
 
-        updateData = {
+        result =  mydb.roles.find({"role": { "$regex": term, "$options": "i" } })
 
-            "role": data.role,
-            "allowed_access": data.allowed_access,
-            "date_updated": datetime.utcnow(),
-                     
-              
-            }
-        result = mydb.roles.update_one({'_id': obj_id},{'$set': updateData})
-        return {"message":"Role Data Has been Updated"} 
+        roleData = [{
+            
+            "value": data['role']
+
+            } for data in result
+
+        ]
+
+        return roleData
+    
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+        error_message = str(e)
+        raise HTTPException(status_code=500, detail=error_message)
 
+  
 
+   
 

@@ -38,3 +38,32 @@ $(document).ready(function() {
         });
     });
 });
+
+
+
+
+
+// Use jQuery in noConflict mode
+$(document).ready(function() {
+    $("#role").autocomplete({
+        source: function(request, response) {
+            $.ajax({
+                url: "/api-autocomplete-roles/",
+                data: { term: request.term },
+                dataType: "json",
+                success: function(data) {
+                    response(data);
+                },
+                error: function(err) {
+                    console.error("Error fetching autocomplete data:", err);
+                }
+            });
+        },
+        minLength: 0,
+        select: function(event, ui) {
+            $("#role").val(ui.item.value);
+            return false;
+        }
+    });
+});
+
