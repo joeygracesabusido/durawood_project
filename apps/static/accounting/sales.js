@@ -27,6 +27,7 @@ jQuery(document).ready(function($) {
                 $("#customer").val(ui.item.value);
                 // Set the related field based on the selected item
                 $("#customer_id").val(ui.item.customer_vendor_id);
+                $("#category").val(ui.item.category)
 
                 return false; // Prevent the default select action
             }
@@ -36,7 +37,7 @@ jQuery(document).ready(function($) {
 
 $(document).ready(function() {
     $("#terms").on("change", function() {
-        var transDate = $("#trans_date").val(); // Get the transaction date
+        var transDate = $("#invoice_date").val(); // Get the transaction date
         var terms = $(this).val(); // Get the selected term
 
         if (transDate) {
@@ -64,20 +65,33 @@ let isUpdating = false;
 let sales_list = {};
 let selectedCustomer = null;
 let clickTimer = null;
-let trans_date ="";
+let delivery_date = ""
+let invoice_date ="";
+let invoice_no = "";
+let po_no = "";
+let load_no = "";
+let dr_no = "";
 let customer = "";
 let customer_id = "";
-let invoice_no = "";
+let category = "";
 let terms = "";
 let due_date = "";
 let tax_type = "Vatable";
 let amount = "";
 let table_sales_list = $("#table_sales tbody");
 
-const trans_date_el = $("#trans_date");
+const delivery_date_el = $("#delivery_date");
+const invoice_date_el = $("#invoice_date");
+const invoice_no_el = $("#invoice_no");
+
+const po_no_el = $("#po_no")
+const load_no_el = $("#load_no");
+const dr_no_el = $("#dr_no");
+
+
 const customer_el = $("#customer");
 const customer_id_el = $("#customer_id");
-const invoice_no_el = $("#invoice_no");
+const category_el = $("#category");
 const terms_el = $("#terms");
 const due_date_el = $("#due_date");
 const tax_type_el = $("#tax_type");
@@ -121,11 +135,13 @@ function makeBranchRow(index, data) {
   return `<tr id1='${"customer_row_" + index}' onClick="openToEdit(${index},'${
     "customer_row_" + index
   }')">
-  <td>${data.id}</td>
-  <td>${data.date.split("T")[0]}</td>
-  <td>${data.customer}</td>
-  <td>${data.customer_id}</td>
+  
+  <td>${data.delivery_date.split("T")[0]}</td>
+  <td>${data.invoice_date}</td>
   <td>${data.invoice_no}</td>
+
+  <td>${data.customer}</td>
+  <td>${data.category}</td>
   <td>${data.terms}</td>
   <td>${data.due_date}</td>
   <td>${data.tax_type}</td>
@@ -157,9 +173,15 @@ function openToEdit(index, customer_row_id) {
     // Load selected branch data into form fields
     let data = sales_list[index];
 
-    trans_date_el.val(data.date);
+    delivery_date_el.val(data.delivery_date);
+    invoice_date_el.val(data.invoice_date);
+    invoice_no_el.val(data.invoice_no);
+    po_no_el.val(data.po_no);
+    load_no_el.val(data.load_no);
+    dr_no_el.val(data.dr_no)
     customer_el.val(data.customer);
     customer_id_el.val(data.customer_id);
+    category_el.val(data.category);
     invoice_no_el.val(data.invoice_no);
     terms_el.val(data.terms);
     due_date_el.val(data.due_date);
@@ -174,28 +196,38 @@ function openToEdit(index, customer_row_id) {
 async function saveOrUpdateCustomer() {
   // const branchName = $("#branchName").val();
   // const branchAddress = $("#branchAddress").val();
-  const trans_date = trans_date_el.val();
+  const delivery_date = delivery_date_el.val();
+  const invoice_date = invoice_date_el.val();
+  const invoice_no = invoice_no_el.val();
+  const po_no = po_no_el.val();
+  const load_no = load_no_el.val();
+  const dr_no = dr_no_el.val();
   const customer= customer_el.val();
   const customer_id= customer_id_el.val();
-  const invoice_no= invoice_no_el.val(); // Replace with actual user if n
+  const category = category_el.val();
   const terms=terms_el.val();
   const due_date=due_date_el.val();
   const tax_type=tax_type_el.val();
   const amount=amount_el.val();
 
-  console.log(trans_date,customer,customer_id,invoice_no,
-                terms,due_date,tax_type)
+  console.log(delivery_date,invoice_date,customer,customer_id,
+                invoice_no,due_date,tax_type,amount,po_no,load_no,dr_no)
   // Validate inputs
-  if (!trans_date || !customer||!customer_id || !invoice_no||!terms || !due_date||!tax_type || !amount) {
+  if (!delivery_date ||!invoice_date || !customer||!customer_id || !invoice_no||!terms || !due_date||!tax_type || !amount ||!po_no ||!load_no ||!dr_no ||!category) {
     alert("Please fill in all fields.");
     return;
   }
 
   // Create data object to send to the API
   const customerData = {
-    date: trans_date,
+    delivery_date: delivery_date,
+    invoice_date: invoice_date,
+    po_no: po_no,
+    load_no: load_no,
+    dr_no: dr_no,
     customer: customer ,
     customer_id: customer_id,
+      category: category,
     invoice_no: invoice_no,
     terms: terms, // Replace with actual user if needed
     due_date: due_date,
@@ -286,4 +318,38 @@ const initializeDataTable = () => {
     };
 
 
+$(document).ready(function() {
+    $('#tax_type, #amount').on('input change', function() {
+        calculateNetofVat();
+    });
+
+    calculateNetofVat();  // Calculate right away on load if fields have values
+});
+
+function calculateNetofVat() {
+    let tax_type = $('#tax_type').val();
+    let amount = parseFloat($('#amount').val().replace(/,/g, '')) || 0;
+
+    let net_of_vat = 0;
+    let vat = 0;
+    const tax_rate = 0.12;
+		
+
+console.log(tax_type)
+		
+if (tax_type === 'Vatable') {
+        net_of_vat = amount / 1.12;
+        vat = net_of_vat * tax_rate;
+}else{
+	net_of_vat = amount
+  vat = vat
+}
+
+
+    const stringNumberNetOfVat = net_of_vat.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+    const stringNumberVat = vat.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+
+    $('#net_of_vat').val(stringNumberNetOfVat);
+    $('#vat').val(stringNumberVat);
+}
 

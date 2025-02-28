@@ -22,10 +22,15 @@ templates = Jinja2Templates(directory="apps/templates")
 
 class SalesBM(BaseModel):
 
-    date: datetime
-    customer: str 
-    customer_id: str 
+    delivery_date: datetime
+    invoice_date: datetime
     invoice_no: str
+    po_no: str
+    load_no: str
+    dr_no: str
+    customer: str 
+    customer_id: str
+    category: str
     terms: str
     due_date: datetime
     tax_type: str
@@ -70,9 +75,6 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
 
     roleAuthenticate = mydb.roles.find_one({'role': role['role']})
 
-    print(roleAuthenticate['allowed_access'])
-    
-
     if 'Sales' in roleAuthenticate['allowed_access']:
 
         try:
@@ -83,13 +85,17 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
             # Ensure date_updated and date_created use current UTC timestamp
             insertData = {
                
-                "date": data.date,
+                "delivery_date": data.delivery_date,
+                "invoice_date": data.invoice_date,
+                "invoice_no": data.invoice_no,
+                "po_no": data.po_no,
+                "load_no":data.po_no,
+                "dr_no": data.dr_no,
                 "customer": data.customer,
                 "customer_id": data.customer_id,
+                "category": data.category,
                 "terms": data.terms,
-                "invoice_no": data.invoice_no,
                 "due_date": data.due_date,
-
                 "tax_type": data.tax_type,
                 "amount": data.amount,
                 "user": username,
@@ -123,12 +129,19 @@ async def get_sales(username: str = Depends(get_current_user)):
         SalesData = [{
             
             "id": str(data['_id']),
-            "date": data['date'].strftime('%Y-%m-%d') if isinstance(data['date'], datetime) else data['date'],
+            "delivery_date": data['delivery_date'].strftime('%Y-%m-%d') if isinstance(data['delivery_date'], datetime) else data['delivery_date'],
+            
+            "invoice_date": data['invoice_date'].strftime('%Y-%m-%d') if isinstance(data['invoice_date'], datetime) else data['invoice_date'],
+            "invoice_no": data['invoice_no'],
+
+            "po_no": data['po_no'],
+            "load_no": data['load_no'],
+            "dr_no": data['dr_no'],
             "customer": data['customer'],
             "customer_id": data['customer_id'],
+            "category": data['category'],
             "terms": data['terms'],
             "due_date": data['due_date'].strftime('%Y-%m-%d') if isinstance(data['due_date'], datetime) else data['due_date'],
-            "invoice_no": data['invoice_no'],
             "tax_type": data['tax_type'],
             "amount": data['amount'],
             "user": username,
@@ -151,7 +164,6 @@ async def update_customer_profile_api(profile_id: str, data: SalesBM,username: s
 
     roleAuthenticate = mydb.roles.find_one({'role': role['role']})
 
-    print(roleAuthenticate['allowed_access'])
     
 
     if 'Sales' in roleAuthenticate['allowed_access']:
@@ -160,20 +172,22 @@ async def update_customer_profile_api(profile_id: str, data: SalesBM,username: s
 
             updateData = {
 
-                "date": data.date,
+                "delivery_date": data.delivery_date,
+                "invoice_date": data.invoice_date,
+                "invoice_no": data.invoice_no,
+                "po_no": data.po_no,
+                "load_no":data.load_no,
+                "dr_no": data.dr_no,
                 "customer": data.customer,
                 "customer_id": data.customer_id,
+                "category": data.category,
                 "terms": data.terms,
-                "due_date": data. due_date,
-                "invoice_no": data.invoice_no,
+                "due_date": data.due_date,
                 "tax_type": data.tax_type,
                 "amount": data.amount,
                 "user": username,
-                "date_updated": data.date_updated,
-                
-
-
-                
+                "date_updated": datetime.utcnow(),
+                "date_created": datetime.utcnow(), 
                   
                 }
             result = mydb.sales.update_one({'_id': obj_id},{'$set': updateData})

@@ -83,17 +83,90 @@ thead {
 
            <div class="row mb-4">
                 <label for="inputText" class="col-sm-5 col-form-label"
-                  >Date</label
+                  >Delivery Date</label
                 >
                 <div class="col-sm-7">
                   <input
-                    id="trans_date"
+                    id="delivery_date"
                     type="date"
                     class="form-control" 
                     value=""
                   />
                 </div>
               </div>
+
+            <div class="row mb-4">
+                <label for="inputText" class="col-sm-5 col-form-label"
+                  >Invoice Date</label
+                >
+                <div class="col-sm-7">
+                  <input
+                    id="invoice_date"
+                    type="date"
+                    class="form-control" 
+                    value=""
+                  />
+                </div>
+              </div>
+
+
+           <div class="row mb-4">
+                <label for="inputText" class="col-sm-5 col-form-label"
+                  >Invoice No.</label
+                >
+                <div class="col-sm-7">
+                  <input
+                    id="invoice_no"
+                    type="text"
+                    class="form-control"
+                    value=""
+                  />
+                </div>
+              </div>
+
+           <div class="row mb-4">
+                <label for="inputText" class="col-sm-5 col-form-label"
+                  >PO No.</label
+                >
+                <div class="col-sm-7">
+                  <input
+                    id="po_no"
+                    type="text"
+                    class="form-control"
+                    value=""
+                  />
+                </div>
+              </div>
+
+           <div class="row mb-4">
+                <label for="inputText" class="col-sm-5 col-form-label"
+                  >Load No.</label
+                >
+                <div class="col-sm-7">
+                  <input
+                    id="load_no"
+                    type="text"
+                    class="form-control"
+                    value=""
+                  />
+                </div>
+              </div>
+
+
+           <div class="row mb-4">
+                <label for="inputText" class="col-sm-5 col-form-label"
+                  >DR No.</label
+                >
+                <div class="col-sm-7">
+                  <input
+                    id="dr_no"
+                    type="text"
+                    class="form-control"
+                    value=""
+                  />
+                </div>
+              </div>
+
 
 
             <div class="row mb-4">
@@ -127,11 +200,11 @@ thead {
 
               <div class="row mb-4">
                 <label for="inputText" class="col-sm-5 col-form-label"
-                  >Invoice No.</label
+                  >Category</label
                 >
                 <div class="col-sm-7">
                   <input
-                    id="invoice_no"
+                    id="category"
                     type="text"
                     class="form-control"
                     value=""
@@ -139,6 +212,7 @@ thead {
                 </div>
               </div>
 
+             
               <div class="row mb-4">
                 <label class="col-sm-5 col-form-label">Terms</label>
                 <div class="col-sm-7">
@@ -187,7 +261,7 @@ thead {
                     class="form-select"
                     aria-label="Vatable"
                   >
-                    <option value="Vatable ">Vatable</option>
+                    <option value="Vatable">Vatable</option>
                     <option value="Non-Vatable ">Non-Vatable</option>
                   </select>
                 </div>
@@ -206,6 +280,35 @@ thead {
                   />
                 </div>
               </div>
+
+           <div class="row mb-4">
+                <label for="inputText" class="col-sm-5 col-form-label"
+                  >Net of Vat</label
+                >
+                <div class="col-sm-7">
+                  <input
+                    id="net_of_vat"
+                    type="text"
+                    class="form-control"
+                    value=""
+                  />
+                </div>
+              </div>
+
+           <div class="row mb-4">
+                <label for="inputText" class="col-sm-5 col-form-label"
+                  >VAT</label
+                >
+                <div class="col-sm-7">
+                  <input
+                    id="vat"
+                    type="text"
+                    class="form-control"
+                    value=""
+                  />
+                </div>
+              </div>
+
 
 
               <div class="text-center">
@@ -230,11 +333,11 @@ thead {
             >
               <thead>
                 <tr>
-                  <td>Trans ID</td>
-                  <td>Date</>
+                  <td>Delivery Date</td>
+                  <td>INV Date</td>
+                  <td>Inv No.</td>
                   <td>Customer Name</>
-                  <td>Customer ID</>
-                  <td>Invoice</>
+                  <td>Category</>
                   <td>Terms</>
                   <td>Due Date</>
                   <td>Tax Type</td>

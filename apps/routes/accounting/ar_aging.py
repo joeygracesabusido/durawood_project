@@ -73,11 +73,11 @@ async def get_sales(username: str = Depends(get_current_user)):
                     },
                  "status": {
                         "$cond": {
-                            "if": { "$gt": ["$date", None] },
+                            "if": { "$gt": ["$invoice_date", None] },
                             "then": { 
                                 "$max": [{ 
                                     "$divide": [{ 
-                                        "$subtract": [{ "$toLong": "$$NOW" }, { "$toLong": "$date" }]
+                                        "$subtract": [{ "$toLong": "$$NOW" }, { "$toLong": "$invoice_date" }]
                                     }, 86400000] 
                                 }, 0]
                             },
@@ -99,7 +99,8 @@ async def get_sales(username: str = Depends(get_current_user)):
             {
                 "$project": {
                     "_id": 0,
-                    "date": 1,
+                    "invoice_date": 1,
+                    "category": 1,
                     "customer": 1,
                     "customer_id": 1,
                     "invoice_no": 1,

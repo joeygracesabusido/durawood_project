@@ -123,7 +123,11 @@ async def get_sales(username: str = Depends(get_current_user)):
             {
                 "$project": {
                     "_id": 0,
-                    "date": 1,
+                    "delivery_date": 1,
+                    "invoice_date":1,
+                    "po_no":1,
+                    "load_no":1,
+                    "dr_no":1,
                     "customer": 1,
                     "customer_id": 1,
                     "invoice_no": 1,

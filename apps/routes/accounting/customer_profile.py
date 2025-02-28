@@ -76,11 +76,11 @@ async def get_customer(username: str = Depends(get_current_user)):
             "id": str(data['_id']),
             "customer_vendor_id": data['customer_vendor_id'] ,
             "bussiness_name": data['bussiness_name'],
-            "name_of_tax_payer": data['name_of_tax_payer'],
             "contact_no": data['contact_no'],
             "contact_person": data['contact_person'],
             "address": data['address'],
             "category": data['category'],
+            "tax_type": data['tax_type'],
             "description": data['description'],
             "user": username,
             "date_updated": data['date_updated'],
@@ -103,7 +103,6 @@ async def update_customer_profile_api(profile_id: str, data: CustomerProfileBM,u
             
                 "customer_vendor_id": data.customer_vendor_id,
                 "bussiness_name": data.bussiness_name,
-                "name_of_tax_payer": data.name_of_tax_payer,
                 "contact_no": data.contact_no,
                 "contact_person": data.contact_person,
                 "address": data.address,
@@ -132,7 +131,8 @@ async def autocomplete_contact(term: Optional[str] = None, username: str = Depen
         customerData = [{
             
             "value": data['bussiness_name'],
-            "customer_vendor_id": data['customer_vendor_id'] ,
+            "customer_vendor_id": data['customer_vendor_id'],
+            "category": data['category']
            
 
             } for data in result

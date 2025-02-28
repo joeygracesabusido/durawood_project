@@ -5,19 +5,19 @@ let selectedCustomer = null;
 let clickTimer = null;
 let customer_vendor_id ="";
 let bussiness_name = "";
-let name_of_tax_payer = "";
-let tin = "";
-let rdo = "";
+let contact_no = "";
+let contact_person = "";
 let address = "";
+let category = "";
 let tax_type = "Vatable";
 let description = "Customer";
 let table_customer_list = $("#table_customer_list");
 
 const customer_vendor_id_el = $("#customer_vendor_id");
 const bussiness_name_el = $("#bussiness_name");
-const name_of_tax_payer_el = $("#name_of_tax_payer");
-const tin_el = $("#tin");
-const rdo_el = $("#rdo");
+const contact_no_el = $("#contact_no");
+const contact_person_el = $("#contact_person");
+const category_el = $("#category");
 const address_el = $("#address");
 const tax_type_el = $("#tax_type");
 const description_el = $("#description");
@@ -49,7 +49,7 @@ async function getCustomer() {
     }
   } catch (error) {
     console.error("An error occurred:", error);
-    alert("An error occurred while fetching the customers.");
+    
   }
 }
 
@@ -57,9 +57,9 @@ function makeBranchRow(index, data) {
   return `<tr id1='${"customer_row_" + index}' onClick="openToEdit(${index},'${
     "customer_row_" + index
   }')">
-  <td>${data.id}</td> 
-  <td>${data.customer_vendor_id}</td>
+   
   <td>${data.bussiness_name}</td>
+  <td>${data.category}</td>
   <td>${data.tax_type}</td>
   <td>${data.description}</td>
 </tr>`;
@@ -90,9 +90,9 @@ function openToEdit(index, customer_row_id) {
 
     customer_vendor_id_el.val(data.customer_vendor_id);
     bussiness_name_el.val(data.bussiness_name);
-    name_of_tax_payer_el.val(data.name_of_tax_payer);
-    tin_el.val(data.tin);
-    rdo_el.val(data.rdo);
+    contact_no_el.val(data.contact_no);
+    contact_person_el.val(data.contact_person);
+    category_el.val(data.category);
     address_el.val(data.address);
     tax_type_el.val(data.tax_type);
     description_el.val(data.description);
@@ -107,17 +107,17 @@ async function saveOrUpdateCustomer() {
   // const branchAddress = $("#branchAddress").val();
   const customer_vendor_id = customer_vendor_id_el.val();
   const bussiness_name= bussiness_name_el.val();
-  const name_of_tax_payer= name_of_tax_payer_el.val();
-  const tin= tin_el.val(); // Replace with actual user if needed
-  const  rdo=rdo_el.val();
+  const contact_no= contact_no_el.val();
+  const contact_person= contact_person_el.val(); 
+  const category=category_el.val();
   const address=address_el.val();
   const tax_type=tax_type_el.val();
   const description=description_el.val();
 
-  console.log(customer_vendor_id,bussiness_name,name_of_tax_payer,
-                tin,rdo,address,tax_type,description)
+  console.log(customer_vendor_id,bussiness_name,contact_no,
+                contact_person,category,address,tax_type,description)
   // Validate inputs
-  if (!bussiness_name || !name_of_tax_payer||!tin || !rdo||!address || !tax_type||!description || !customer_vendor_id) {
+  if (!bussiness_name || !contact_no||!contact_person || !category||!address || !tax_type||!description || !customer_vendor_id) {
     alert("Please fill in all fields.");
     return;
   }
@@ -126,9 +126,9 @@ async function saveOrUpdateCustomer() {
   const customerData = {
     customer_vendor_id: customer_vendor_id,
     bussiness_name: bussiness_name,
-    name_of_tax_payer: name_of_tax_payer,
-    tin: tin, // Replace with actual user if needed
-    rdo:rdo,
+    contact_no: contact_no,
+    contact_person: contact_person, 
+    category:category,
     address:address,
     tax_type:tax_type,
     description:description,
