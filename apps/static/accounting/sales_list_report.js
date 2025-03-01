@@ -55,6 +55,39 @@ $(document).ready(function () {
 });
 
 
+$("#printPDF").on("click", function () {
+    const content = document.getElementById("table_sales").outerHTML; // Get table content only
+    const today = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const printWindow = window.open("", "", "width=800,height=600");
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Sales List</title>
+            <style>
+                table { width: 100%; border-collapse: collapse; }
+                table, th, td { border: 1px solid black; }
+                th, td { padding: 8px; text-align: center; font-size: 12px; }
+                th { background-color: #f0f0f0; }
+                @media print {
+                    body { margin: 20px; }
+                    button { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <h2 style="text-align:center">Sales List as of ${today}</h2>
+            ${content}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+});
+
 
 
 

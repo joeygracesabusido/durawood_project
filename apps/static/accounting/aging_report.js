@@ -27,10 +27,10 @@ $(document).ready(function () {
                     }
 
                     let row = `
-                        <tr>
-                            <td>${sale.customer}</td>
-                            <td>${sale.invoice_no}</td>
-                            <td>${sale.category}</td>
+                        <tr class="text-right text-sm">
+                            <td class="text-center">${sale.customer}</td>
+                            <td class="text-center">${sale.invoice_no}</td>
+                            <td class="text-center">${sale.category}</td>
                             <td>${formatCurrency(col_1_30)}</td>
                             <td>${formatCurrency(col_31_60)}</td>
                             <td>${formatCurrency(col_61_90)}</td>
@@ -52,7 +52,7 @@ $(document).ready(function () {
                 // Append total row for each customer
                 $.each(customerTotals, function (customer, totals) {
                     let totalRow = `
-                        <tr style="font-weight: bold; background: gray; color: red;">
+                        <tr class="bg-gray-500 text-yellow-400 text-right">
                             <td colspan="1">${customer}</td>
                             <td colspan="2">Total:</td>
                             
@@ -85,35 +85,76 @@ $(document).ready(function () {
 });
 
 
+$("#printPDF").on("click", function () {
+    const content = document.getElementById("table_sales").outerHTML; // Get table content only
+    const today = new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    const printWindow = window.open("", "", "width=800,height=600");
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Account Receivable Aging Report</title>
+            <style>
+                table { width: 100%; border-collapse: collapse; }
+                table, th, td { border: 1px solid black; }
+                th, td { padding: 8px; text-align: center; font-size: 12px; }
+                th { background-color: #f0f0f0; }
+                @media print {
+                    body { margin: 20px; }
+                    button { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <h2 style="text-align:center">Account Receivable Aging Report as of ${today}</h2>
+            ${content}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+});
+
+
+//this function is for exporting to excel
+// this function is to implement exporting to excel
+  $(document).ready(function() {
+   
+    $('#exportExcel').on('click', function() {
+        // Extract data from the report table
+        const reportTable = document.getElementById('table_sales');
+        const workbook = XLSX.utils.table_to_book(reportTable, {sheet: "AR Aging"});
+        XLSX.writeFile(workbook, 'ar_aging.xlsx');
+    });
+});
 
 
 
 
-// this is for DataTable
-// const initializeDataTable = () => {
-//
-//     new DataTable('#table_sales', {
-//         layout: {
-//             topStart: 'buttons'
-//         },
-//         buttons: ['copy',  {
-//             extend: 'csv',
-//             filename: 'Sales Transasction', // Cust wom name for the exported CSV file
-//             title: 'Sales Transaction' // Optional: Title for the CSV file's content
-//         }],
-//         perPage: 10,
-//         searchable: true,
-//         sortable: true,
-//
-//         responsive: true,
-//         scrollX: true,          // Enable horizontal scrolling if needed
-//         autoWidth: false,       // Disable fixed width
-//         scrollY: true,       // Set a specific height
-//         scrollCollapse: true,
-//         destroy: true // Destroy any existing DataTable instance
-//
-//
-//     });
-//
-//     };
-//
+  // new DataTable('#table_sales', {
+    //     layout: {
+    //         topStart: 'buttons'
+    //     },
+    //     buttons: ['copy',  {
+    //         extend: 'csv',
+    //         filename: 'Sales Transasction', // Cust wom name for the exported CSV file
+    //         title: 'Sales Transaction' // Optional: Title for the CSV file's content
+    //     }],
+    //     perPage: 10,
+    //     searchable: true,
+    //     sortable: true,
+    //
+    //     responsive: true,
+    //     scrollX: true,          // Enable horizontal scrolling if needed
+    //     autoWidth: false,       // Disable fixed width
+    //     scrollY: true,       // Set a specific height
+    //     scrollCollapse: true,
+    //     destroy: true // Destroy any existing DataTable instance
+    //
+    //
+    // });
+
+

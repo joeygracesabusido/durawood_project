@@ -52,6 +52,50 @@ async def api_collection_list_template(request: Request,
     return templates.TemplateResponse("accounting/payment_list.html", 
                                       {"request": request})
 
+@api_payment.get("/update-collection-transaction/{id}", response_class=HTMLResponse)
+async def api_collection_list_template(request: Request,
+                                       id: str,
+                                       username: str = Depends(get_current_user)):
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    if 'Sales' in roleAuthenticate['allowed_access']:
+        # Convert id to ObjectId
+        obj_id = ObjectId(id)
+
+        # Query for the specific inventory item
+        item = mydb.payment.find_one({'_id': obj_id})
+
+        if item:
+            # Convert ObjectId to string and prepare data for template
+            collectionData = {
+                "id": str(item['_id']),
+                "date":item['date'].strftime('%Y-%m-%d') if isinstance(item['date'], datetime) else item['date'],
+                "customer": item['customer'],
+                "customer_id": item['customer_id'],
+                "invoice_no": item['invoice_no'],
+                "cr_no": item['cr_no'],
+                "cash_amount": item['cash_amount'],
+                "amount_2307": item['amount_2307'],
+                "remarks": item['remarks'],
+                "user": item['user'],
+                "date_created": item['date_created'],
+                "date_updated": item['date_updated']
+            }
+
+            return templates.TemplateResponse(
+                "accounting/collection_update.html",
+                {"request": request, "collectionData": collectionData}
+            )
+        else:
+            return JSONResponse(status_code=404, content={"message": "Payment item not found"})
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not Authorized",
+    )
+
+
 
 
 

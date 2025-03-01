@@ -1,0 +1,124 @@
+{% extends 'dashboard.html' %} {% block content %}
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> 
+
+    <!-- jQuery Core (this is required) -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  
+  <!-- jQuery UI (this provides autocomplete) -->
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+ </head> 
+
+     <style type="text/tailwindcss">
+          @theme {
+            --color-clifford: #da373d;
+          }
+    </style>
+
+
+
+<div id="main" class="main">
+  <div class="pagetitle">
+    <h1>Update Payment Transaction</h1>
+  </div>
+  
+  <section class="section">
+    <div class="py-6">
+      <div class="col-lg-7">
+        <div class="card">
+          <div class="card-body">
+            <form id="myForm" class="py-6">
+              <div class="row mb-4">
+                <label for="trans_date" class="col-sm-5 col-form-label">Date</label>
+                <div class="col-sm-7">
+                  <input id="trans_date" type="date" class="form-control" value="{{collectionData.date}}"/>
+                </div>
+              </div>
+
+              <div class="row mb-4">
+                <label for="customer" class="col-sm-5 col-form-label">Customer</label>
+                <div class="col-sm-7">
+                  <input id="customer" type="text" class="form-control" value="{{collectionData.customer}}"/>
+                </div>
+              </div>
+
+              <div class="row mb-4">
+                <label for="customer_id" class="col-sm-5 col-form-label">Customer ID</label>
+                <div class="col-sm-7">
+                  <input id="customer_id" type="text" class="form-control" value="{{collectionData.customer_id}}"/>
+                </div>
+              </div>
+
+
+              <div class="row mb-4">
+                <label for="customer_id" class="col-sm-5 col-form-label">Balance</label>
+                <div class="col-sm-7">
+                  <input id="balance" type="text" class="form-control" value=""/>
+                </div>
+              </div>
+
+
+
+              <div class="row mb-4">
+                <label for="invoice_no" class="col-sm-5 col-form-label">Invocie No.</label>
+                <div class="col-sm-7">
+                  <input id="invoice_no" type="text" class="form-control" value="{{collectionData.invoice_no}}"/>
+                </div>
+              </div>
+
+
+              <div class="row mb-4">
+                <label for="invoice_no" class="col-sm-5 col-form-label">Collection Receipt</label>
+                <div class="col-sm-7">
+                  <input id="collection_receipt" type="text" class="form-control" value="{{collectionData.cr_no}}"/>
+                </div>
+              </div>
+
+             
+              <div class="row mb-4">
+                <label for="amount" class="col-sm-5 col-form-label">Cash Amount</label>
+                <div class="col-sm-7">
+                  <input id="cash_amount" type="number" class="form-control" value="{{collectionData.cash_amount}}"/>
+                </div>
+              </div>
+
+
+               <div class="row mb-4">
+                <label for="amount" class="col-sm-5 col-form-label">2307 Amount</label>
+                <div class="col-sm-7">
+                  <input id="amount_2307" type="number" class="form-control" value="{{collectionData.amount_2307}}"/>
+                </div>
+              </div>
+
+               <div class="row mb-4">
+                <label for="amount" class="col-sm-5 col-form-label">Remarks</label>
+                <div class="col-sm-7">
+                  <input id="remarks" type="text" class="form-control" value="{{collectionData.remarks}}"/>
+                </div>
+              </div>
+
+
+
+              <div class="text-center">
+                <button id="btn_save_payment" type="button" class="btn btn-primary">Add</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <script src="/static/accounting/collectio_update.js"></script>
+</div>
+
+
+{% endblock %}
+

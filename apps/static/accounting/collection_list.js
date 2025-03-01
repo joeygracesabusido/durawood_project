@@ -17,13 +17,25 @@ $(document).ready(function () {
                         <tr>
                             <td>${payment.date}</td>
                             <td>${payment.customer}</td>
-                            <td>${payment.customer_id}</td>
-                            <td>${payment.customer_id}</td>
+                            <td>${payment.cr_no}</td>
 
                             <td>${payment.invoice_no}</td>
                             <td>${formatNumber(payment.cash_amount)}</td>
                             <td>${formatNumber(payment.amount_2307)}</td>
                             <td>${payment.remarks}</td>
+
+                            <td>
+                                <!-- Add action buttons here if needed -->
+                                <!--<button class="btn btn-primary btn-sm">Edit</button>-->
+
+                                <a href="/update-collection-transaction/${payment.id}"> \
+                                <button type="button" class="btn btn-primary btn-sm"> \
+                                 Edit</button></a>
+
+                                <!--<button class="btn btn-danger btn-sm">Delete</button> -->
+                            </td>
+
+
                         </tr>
                     `;
                     tableBody.append(row);
