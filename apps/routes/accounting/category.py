@@ -17,27 +17,21 @@ from  apps.database.mongodb import create_mongo_client
 mydb = create_mongo_client()
 
 
-api_payment = APIRouter()
+api_category = APIRouter()
 templates = Jinja2Templates(directory="apps/templates")
 
 
-class paymentBM(BaseModel):
+class categoryBM(BaseModel):
 
-    date: datetime
-    customer: str 
-    customer_id: str 
-    invoice_no: str
-    cr_no: str
-    cash_amount: float
-    amount_2307: Optional[float] = None
-    remarks: Optional[str]
+    
+    category: str
     user: Optional[str] = None
     date_updated: datetime =  datetime.utcnow()
     date_created: Optional[datetime] = datetime.utcnow()
 
 
 
-@api_payment.get("/payment/", response_class=HTMLResponse)
+@api_category.get("/category/", response_class=HTMLResponse)
 async def api_payment_template(request: Request,
                                         username: str = Depends(get_current_user)):
     role = mydb.login.find_one({"email_add": username})
@@ -55,14 +49,14 @@ async def api_payment_template(request: Request,
 
 
 
-@api_payment.get("/collection-list/", response_class=HTMLResponse)
+@api_category.get("/collection-list/", response_class=HTMLResponse)
 async def api_collection_list_template(request: Request,
                                         username: str = Depends(get_current_user)):
  
     return templates.TemplateResponse("accounting/payment_list.html", 
                                       {"request": request})
 
-@api_payment.get("/update-collection-transaction/{id}", response_class=HTMLResponse)
+@api_category.get("/update-collection-transaction/{id}", response_class=HTMLResponse)
 async def api_collection_list_template(request: Request,
                                        id: str,
                                        username: str = Depends(get_current_user)):
@@ -109,8 +103,9 @@ async def api_collection_list_template(request: Request,
 
 
 
-@api_payment.post("/api-insert-payment/", response_model=None)
-async def create_sales_transaction(data: paymentBM, username: str = Depends(get_current_user)):
+@api_category.post("/api-insert-payment/", response_model=None)
+async def create_sales_transaction(data: categoryBM, username: str = Depends(get_current_user)):
+
     role = mydb.login.find_one({"email_add": username})
     roleAuthenticate = mydb.roles.find_one({'role': role['role']})
 
@@ -152,7 +147,7 @@ async def create_sales_transaction(data: paymentBM, username: str = Depends(get_
 
 
 
-@api_payment.get("/api-get-payment/")
+@api_category.get("/api-get-payment/")
 async def get_sales(username: str = Depends(get_current_user)):
     try:
         result = mydb.payment.find().sort('date', -1)
@@ -180,8 +175,8 @@ async def get_sales(username: str = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
-@api_payment.put("/api-update-payment/{id}", response_model=None)
-async def update_customer_profile_api(id: str, data: paymentBM,username: str = Depends(get_current_user)):
+@api_category.put("/api-update-payment/{id}", response_model=None)
+async def update_customer_profile_api(id: str, data: categoryBM,username: str = Depends(get_current_user)):
     obj_id = ObjectId(id)
     try:
 
@@ -204,161 +199,5 @@ async def update_customer_profile_api(id: str, data: paymentBM,username: str = D
         return {"message":"Payment Data Has been Updated"} 
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
-
-
-@api_payment.get("/api-autocomplete-customer-payment/")
-async def autocomplete_payment_balance(term: Optional[str] = None,username: str = Depends(get_current_user)):
-    try:
-
-
-        # pipeline = [
-        #         {
-        #             "$lookup": {
-        #                 "from": "payment",
-        #                 "let": { "invoice_no": "$invoice_no" },
-        #                 "pipeline": [
-        #                     {
-        #                         "$match": {
-        #                             "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
-        #                         }
-        #                     },
-        #                     {
-        #                         "$group": {
-        #                             "_id": "$invoice_no",
-        #                             "total_cash": { "$sum": "$cash_amount" },
-        #                             "total_2307": { "$sum": "$amount_2307" }
-        #                         }
-        #                     }
-        #                 ],
-        #                 "as": "payment_info"
-        #             }
-        #         },
-        #         {
-        #             "$addFields": {
-        #                 "total_cash": {
-        #                     "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
-        #                 },
-        #                 "total_2307": {
-        #                     "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
-        #                 }
-        #             }
-        #         },
-        #         {
-        #             "$addFields": {
-        #                 "balance": {
-        #                     "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
-        #                 }
-        #             }
-        #         },
-        #         {
-        #             "$project": {
-        #                 "_id": 0,
-        #                 "customer": 1,
-        #                 "customer_id": 1,
-        #                 "invoice_no": 1,
-        #                 "balance": 1
-        #             }
-        #         }
-        #     ]
-        #
-
-        pipeline = [
-                {
-                    "$lookup": {
-                        "from": "payment",
-                        "let": { "invoice_no": "$invoice_no" },
-                        "pipeline": [
-                            {
-                                "$match": {
-                                    "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
-                                }
-                            },
-                            {
-                                "$group": {
-                                    "_id": "$invoice_no",
-                                    "total_cash": { "$sum": "$cash_amount" },
-                                    "total_2307": { "$sum": "$amount_2307" }
-                                }
-                            }
-                        ],
-                        "as": "payment_info"
-                    }
-                },
-                {
-                    "$addFields": {
-                        "total_cash": {
-                            "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
-                        },
-                        "total_2307": {
-                            "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
-                        }
-                    }
-                },
-                {
-                    "$addFields": {
-                        "balance": {
-                            "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
-                        }
-                    }
-                },
-                {
-                    "$match": {
-                        "balance": { "$gt": 0 }  # 🔥 This filters out invoices with a balance of 0 or less
-                    }
-                },
-                {
-                    "$project": {
-                        "_id": 0,
-                        "customer": 1,
-                        "customer_id": 1,
-                        "invoice_no": 1,
-                        "balance": 1
-                    }
-                }
-            ]
-
-	     
-        result = list(mydb.sales.aggregate(pipeline))
-        print(result)
-        # Ensure 'customer' field exists before filtering
-        if term:
-            filtered_contact = [
-                item for item in result
-                if term.lower() in item.get('customer', '').lower() or term.lower() in item.get('invoice_no', '').lower()
-            ]
-        else:
-            filtered_contact = result  # If no term is provided, return all
-
-        suggestions = [
-            {
-                "value": f"{item.get('customer', 'Unknown')} - Invoice: {item.get('invoice_no')} - Balance: {item.get('balance', 0):,.2f}",  # Avoid KeyError
-			    "customer": item.get('customer'),
-				"customer_id": item.get('customer_id'),
-				"invoice_no": item.get('invoice_no'),
-                "balance": item.get('balance')  # Ensure balance is present
-            }
-            for item in filtered_contact
-        ]
-
-        return suggestions
-
-
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
-    
-  
-   
-
-
-
-		
-
-  
-    
-        
-
-
-
-
 
 

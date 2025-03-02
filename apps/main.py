@@ -25,6 +25,7 @@ from apps.routes.accounting.payment import api_payment
 from apps.routes.accounting.ar_aging import api_ar_aging_report
 
 
+from apps.routes.accounting.category import api_category
 
 from apps.routes.accounting.customer_profile import api_customer_profile
 
@@ -66,7 +67,7 @@ app.include_router(api_ar_aging_report, tags=['Aging Report'])
 app.include_router(api_roles, tags=['Roles'])
 
 
-
+app.include_router(api_category, tags=['Category'])
 
 # Mount Strawberry's GraphQL app onto FastAPI
 app.mount("/graphql", graphql_app)

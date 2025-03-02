@@ -2,6 +2,7 @@
 {% extends 'dashboard.html' %} {% block content %}
 
  <head>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
 
@@ -9,7 +10,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> 
 
- </head> 
+   <!-- jQuery Core (this is required) -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  
+  <!-- jQuery UI (this provides autocomplete) -->
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
 
      <style type="text/tailwindcss">
           @theme {
@@ -18,6 +25,13 @@
     </style>
 
 
+
+
+
+
+ </head> 
+
+  
 
 
  
@@ -32,7 +46,7 @@
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Account Receivable Aging</h5>
-            <div calss"py-5 px-5">
+            <div class"py-5 px-5">
                <button id="printPDF" class="bg-sky-500 text-white py-2 px-4 rounded">Print to PDF</button>
                <button id="exportExcel" class="bg-yellow-300 text-gray-500 py-2 px-4 rounded">
                  Excel

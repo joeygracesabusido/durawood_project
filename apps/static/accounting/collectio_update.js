@@ -40,3 +40,50 @@ jQuery(document).ready(function($) {
         });
     });
 });
+
+
+$(document).ready(function() {
+
+    // Get the payment ID from URL or hidden input if needed
+    let paymentId = $("#payment_id").val();  // You can pass this from your template
+
+    // When button is clicked
+    $("#btn_save_payment").click(function() {
+        updatePayment(paymentId);
+    });
+
+    function updatePayment(paymentId) {
+        // Collect the data from the form inputs
+        let data = {
+            date: $("#trans_date").val(),
+            customer: $("#customer").val(),
+            customer_id: $("#customer_id").val(),
+            cr_no: $("#collection_receipt").val(),
+            invoice_no: $("#invoice_no").val(),
+            cash_amount: parseFloat($("#cash_amount").val()) || 0,
+            amount_2307: parseFloat($("#amount_2307").val()) || 0,
+            remarks: $("#remarks").val(),
+            date_updated: new Date().toISOString().slice(0, 10) // Auto set date updated
+        };
+
+        // Call API
+        $.ajax({
+            url: `/api-update-payment/${paymentId}`,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')  // Assuming token is stored in localStorage
+            },
+            success: function(response) {
+                alert("Payment data has been updated successfully!");
+                // Optionally, redirect or reload the page
+                window.location.href = "/payment/";  // Adjust as necessary
+            },
+            error: function(xhr) {
+                alert("Failed to update payment: " + xhr.responseJSON.detail);
+            }
+        });
+    }
+
+});
