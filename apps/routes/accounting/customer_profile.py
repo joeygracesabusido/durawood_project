@@ -121,7 +121,7 @@ async def update_customer_profile_api(profile_id: str, data: CustomerProfileBM,u
 
 
 @api_customer_profile.get("/api-autocomplete-vendor-customer/")
-async def autocomplete_contact(term: Optional[str] = None, username: str = Depends(get_current_user)):
+async def autocomplete_contact(term: Optional[str] = None):
     try:
         
         #contact = get_customer()
