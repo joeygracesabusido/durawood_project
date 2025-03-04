@@ -169,11 +169,11 @@ $(document).ready(function () {
                     let totals = categoryTotals[category];
                     tableHtml += `
                         <tr class="category-total" class="bg-white text-red-500 font-bold text-right">
-                            <td colspan="3" class="text-center">${category} Total:</td>
-                            <td>${formatCurrency(totals.col_1_30)}</td>
-                            <td>${formatCurrency(totals.col_31_60)}</td>
-                            <td>${formatCurrency(totals.col_61_90)}</td>
-                            <td>${formatCurrency(totals.col_91_over)}</td>
+                            <td colspan="3" class="text-right text-red-500">${category} Total:</td>
+                            <td class="text-right text-red-500">${formatCurrency(totals.col_1_30)}</td>
+                            <td class="text-right text-red-500">${formatCurrency(totals.col_31_60)}</td>
+                            <td class="text-right text-red-500">${formatCurrency(totals.col_61_90)}</td>
+                            <td class="text-right text-red-500">${formatCurrency(totals.col_91_over)}</td>
                         </tr>`;
                 }
 
