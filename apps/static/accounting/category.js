@@ -87,7 +87,7 @@ $(document).ready(function () {
         success: function (response) {
           alert("Category updated successfully!");
           fetchCategories();
-          $("#delivery_date").val("");
+          $("#category").val("");
           $("#btn_update_category").remove();
         },
         error: function (xhr) {

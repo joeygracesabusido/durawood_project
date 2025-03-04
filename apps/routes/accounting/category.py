@@ -90,6 +90,7 @@ async def get_category(username: str = Depends(get_current_user)):
         result = mydb.category.find().sort('date', -1)
 
         paymentData = [{
+            "id": str(data['_id']),
             "category": data['category'],
             "user": username,
             "date_updated": data['date_updated'],
