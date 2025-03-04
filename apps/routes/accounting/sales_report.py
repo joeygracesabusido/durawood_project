@@ -136,7 +136,8 @@ async def get_sales(username: str = Depends(get_current_user)):
                     "due_date": 1,
                     "amount": 1,
                     "balance": 1,
-                    "status": 1
+                    "status": 1,
+                    "category": 1,
                 }
             }
         ]

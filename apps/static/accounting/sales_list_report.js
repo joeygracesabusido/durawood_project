@@ -16,6 +16,7 @@ $(document).ready(function () {
                             <td>${sale.invoice_date ? sale.invoice_date.split("T")[0] : "NA"}</td>
                            
                             <td>${sale.customer}</td>
+                            <td>${sale.category}</td>
                             <td>${sale.dr_no}</td>
                             <td>${sale.invoice_no}</td>
                             <td>${sale.terms}</td>
