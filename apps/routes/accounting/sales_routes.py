@@ -203,4 +203,50 @@ async def update_customer_profile_api(profile_id: str, data: SalesBM,username: s
             # headers={"WWW-Authenticate": "Basic"},
         )
 
+@api_sales.get("/api-get-sum-sales/")
+async def get_sales_dashboard(
+    filter: str = "today", 
+    username: str = Depends(get_current_user)
+):
+    try:
+        # Get current date and time
+        now = datetime.utcnow()
+
+        # Define date filter range
+        if filter == "today":
+            start_date = datetime(now.year, now.month, now.day)
+            end_date = start_date + timedelta(days=1)
+
+        elif filter == "week":
+            start_date = datetime(now.year, now.month, now.day) - timedelta(days=now.weekday())
+            end_date = start_date + timedelta(days=7)
+
+        elif filter == "month":
+            start_date = datetime(now.year, now.month, 1)
+            if now.month == 12:
+                end_date = datetime(now.year + 1, 1, 1)
+            else:
+                end_date = datetime(now.year, now.month + 1, 1)
+
+        elif filter == "year":
+            start_date = datetime(now.year, 1, 1)
+            end_date = datetime(now.year + 1, 1, 1)
+
+        else:
+            raise HTTPException(status_code=400, detail="Invalid filter. Use 'today', 'week', or 'month'.")
+
+        # Query sales within the date range
+        sales_cursor = mydb.sales.find({
+            "invoice_date": {"$gte": start_date, "$lt": end_date}
+        })
+
+        # Calculate total amount
+        total_amount = sum(sale.get("amount", 0) for sale in sales_cursor)
+
+        return total_amount
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving sales data: {e}")
+
+
 

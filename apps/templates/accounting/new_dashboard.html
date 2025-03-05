@@ -32,22 +32,22 @@
                       <h6>Filter</h6>
                     </li>
 
-                    <li><a class="dropdown-item" href="#">Today</a></li>
-                    <li><a class="dropdown-item" href="#">This Month</a></li>
-                    <li><a class="dropdown-item" href="#">This Year</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="today">Today</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="month">This Month</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="year">This Year</a></li>
                   </ul>
                 </div>
 
                 <div class="card-body">
-                  <h5 class="card-title">Sales <span>|Todays</span></h5>
+                  <h5 class="card-title">Sales <span></span></h5>
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                       <i class="bi bi-cart"></i>
                     </div>
                     <div class="ps-3">
-                      <h6>145</h6>
-                      <span class="text-success small pt-1 fw-bold">12%</span> <span class="text-muted small pt-2 ps-1">increase</span>
+                      <h6 id="sales-amount" style="font-size:20px;"></h6>
+                      <span class="text-success small pt-1 fw-bold"></span> <span class="text-muted small pt-2 ps-1"></span>
 
                     </div>
                   </div>
@@ -67,22 +67,22 @@
                       <h6>Filter</h6>
                     </li>
 
-                    <li><a class="dropdown-item" href="#">Today</a></li>
-                    <li><a class="dropdown-item" href="#">This Month</a></li>
-                    <li><a class="dropdown-item" href="#">This Year</a></li>
+                    <li><a class="dropdown-item-payment" href="#" data-filter-payment="today">Today</a></li>
+                    <li><a class="dropdown-item-payment" href="#" data-filter-payment="month">This Month</a></li>
+                    <li><a class="dropdown-item-payment" href="#" data-filter-payment="year">This Year</a></li>
                   </ul>
                 </div>
 
                 <div class="card-body">
-                  <h5 class="card-title">Revenue <span>| This Month</span></h5>
+                  <h5 class="card-title">Payment<span>|</span></h5>
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                       <i class="bi bi-currency-dollar"></i>
                     </div>
                     <div class="ps-3">
-                      <h6>$3,264</h6>
-                      <span class="text-success small pt-1 fw-bold">8%</span> <span class="text-muted small pt-2 ps-1">increase</span>
+                      <h6 id="payment-amount" style="font-size: 22px;"></h6>
+                      <span class="text-success small pt-1 fw-bold"></span> <span class="text-muted small pt-2 ps-1"></span>
 
                     </div>
                   </div>
@@ -110,15 +110,15 @@
                 </div>
 
                 <div class="card-body">
-                  <h5 class="card-title">Expenses <span>| This Year</span></h5>
+                  <h5 class="card-title">Account Receivable<span></span></h5>
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                       <i class="bi bi-currency-dollar"></i>
                     </div>
                     <div class="ps-3">
-                      <h6>1244</h6>
-                      <span class="text-danger small pt-1 fw-bold">12%</span> <span class="text-muted small pt-2 ps-1">decrease</span>
+                      <h6></h6>
+                      <span class="text-danger small pt-1 fw-bold"></span> <span class="text-muted small pt-2 ps-1"></span>
 
                     </div>
                   </div>
@@ -657,6 +657,89 @@
       </div>
     </section>
 
+
+<script>
+$(document).ready(function() {
+    // Function to fetch sales data
+    function fetchSales(filter) {
+        $.ajax({
+            url: `/api-get-sum-sales/?filter=${filter}`,
+            type: 'GET',
+            success: function(response) {
+								console.log(response)
+                // Update the amount in the h6 tag
+                $('#sales-amount').text(response.toLocaleString('en-US', { style: 'currency', currency: 'PHP' }));
+
+                // Update the label
+                let labelText = filter === 'today' ? 'Today' :
+                                filter === 'month' ? 'This Month' :
+                                'This Year';
+
+                $('#sales-filter-label').text(`| ${labelText}`);
+            },
+            error: function() {
+                $('#sales-amount').text('Error loading data');
+            }
+        });
+    }
+
+    // Initial load (fetch today's sales by default)
+    fetchSales('today');
+
+    // Handle filter click
+    $('.dropdown-item').on('click', function() {
+        const filter = $(this).data('filter');
+        fetchSales(filter);
+    });
+});
+</script>
+
+  <!-- this function is for Payment Data --> 
+<script>
+$(document).ready(function() {
+    // Function to fetch sales data
+    function fetchSales(filter) {
+        $.ajax({
+            url: `/api-get-sum-payment/?filter=${filter}`,
+            type: 'GET',
+            success: function(response) {
+								console.log(response)
+                // Update the amount in the h6 tag
+                $('#payment-amount').text(response.toLocaleString('en-US', { style: 'currency', currency: 'PHP' }));
+
+                // Update the label
+                let labelText = filter === 'today' ? 'Today' :
+                                filter === 'month' ? 'This Month' :
+                                'This Year';
+
+                $('#payment-filter-label').text(`| ${labelText}`);
+            },
+            error: function() {
+                $('#payment-amount').text('Error loading data');
+            }
+        });
+    }
+
+    // Initial load (fetch today's sales by default)
+    fetchSales('today');
+
+    // Handle filter click
+    $('.dropdown-item-payment').on('click', function() {
+        const filter = $(this).data('filter-payment');
+        fetchSales(filter);
+    });
+});
+</script>
+
+
+
+<!-- <script src="/static/accounting/dasboard_total.js"></script> -->
+
+
+
 </div><!-- End #main -->
+
+
+
 
 {% endblock %}

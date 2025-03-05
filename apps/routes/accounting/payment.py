@@ -346,7 +346,53 @@ async def autocomplete_payment_balance(term: Optional[str] = None,username: str 
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
     
-  
+@api_payment.get("/api-get-sum-payment/")
+async def get_payment_dashboard(
+    filter: str = "today", 
+    username: str = Depends(get_current_user)
+):
+    try:
+        # Get current date and time
+        now = datetime.utcnow()
+
+        # Define date filter range
+        if filter == "today":
+            start_date = datetime(now.year, now.month, now.day)
+            end_date = start_date + timedelta(days=1)
+
+        elif filter == "week":
+            start_date = datetime(now.year, now.month, now.day) - timedelta(days=now.weekday())
+            end_date = start_date + timedelta(days=7)
+
+        elif filter == "month":
+            start_date = datetime(now.year, now.month, 1)
+            if now.month == 12:
+                end_date = datetime(now.year + 1, 1, 1)
+            else:
+                end_date = datetime(now.year, now.month + 1, 1)
+
+        elif filter == "year":
+            start_date = datetime(now.year, 1, 1)
+            end_date = datetime(now.year + 1, 1, 1)
+
+        else:
+            raise HTTPException(status_code=400, detail="Invalid filter. Use 'today', 'week', or 'month'.")
+
+        # Query sales within the date range
+        payment_cursor = mydb.payment.find({
+            "date": {"$gte": start_date, "$lt": end_date}
+        })
+
+        # Calculate total amount
+        total_amount = sum(payment.get("cash_amount", 0) for payment in payment_cursor)
+
+        return total_amount
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving sales data: {e}")
+
+
+ 
    
 
 
