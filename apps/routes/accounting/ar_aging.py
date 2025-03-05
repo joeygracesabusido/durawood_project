@@ -89,11 +89,13 @@ async def get_sales(username: str = Depends(get_current_user)):
             },
 
 		# filter out record where balance is greater than 0
-			{
-				"$match": {
+			
+                {"$match": {
 					"balance": {"$gt": 0}
-					}
-			},
+					}},
+                {"$sort": {
+                    "customer": 1, "invoice_date": 1}},
+			
 
 
             {
@@ -123,3 +125,46 @@ async def get_sales(username: str = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
 
+
+
+
+
+
+@api_ar_aging_report.get("/api-get-sum-ar")
+async def get_sum_ar(username: str = Depends(get_current_user)):
+    try:
+        # Aggregate total sales amount
+        sales_pipeline = [
+            {
+                "$group": {
+                    "_id": None,
+                    "total_sales": {"$sum": "$amount"}
+                }
+            }
+        ]
+        sales_result = list(mydb.sales.aggregate(sales_pipeline))
+        total_sales = sales_result[0]["total_sales"] if sales_result else 0
+
+        # Aggregate total cash and 2307 from payments
+        payment_pipeline = [
+            {
+                "$group": {
+                    "_id": None,
+                    "total_cash": {"$sum": "$cash_amount"},
+                    "total_2307": {"$sum": "$amount_2307"}
+                }
+            }
+        ]
+        payment_result = list(mydb.payment.aggregate(payment_pipeline))
+        total_cash = payment_result[0]["total_cash"] if payment_result else 0
+        total_2307 = payment_result[0]["total_2307"] if payment_result else 0
+
+        # Compute balance
+        balance = total_sales - (total_cash + total_2307)
+
+        return balance
+
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Error retrieving balance: {e}")
+
+              

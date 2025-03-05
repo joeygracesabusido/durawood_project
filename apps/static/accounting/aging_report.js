@@ -81,6 +81,7 @@ $(document).ready(function () {
         $.ajax({
             url: "/api-get-ar-aging-report/",
             type: "GET",
+            // headers: {'Authorization': 'Bearer ' + localStorage.getItem('access_token')},
             success: function (data) {
                 $("#table_sales tbody").empty();
 
@@ -88,20 +89,21 @@ $(document).ready(function () {
                 let categoryTotals = {};
                 let tableHtml = "";
                 let lastCustomer = null;
-
+                
                 data.forEach(sale => {
                     let balance = sale.balance || 0;
                     let status = sale.status;
-
-                    let col_1_30 = 0, col_31_60 = 0, col_61_90 = 0, col_91_over = 0;
-
-                    if (status <= 30) {
-                        col_1_30 = balance;
+                  
+                    let  col_1_15 = 0, col_16_30 = 0, col_31_60 = 0, col_61_90 = 0, col_91_over = 0;
+                    if (status <= 15) {
+                      col_1_15 = balance;
+                    }else if (status <= 30) {
+                        col_16_30 = balance;
                     } else if (status <= 60) {
                         col_31_60 = balance;
                     } else if (status <= 90) {
                         col_61_90 = balance;
-                    } else {
+                    } else if (status > 90){
                         col_91_over = balance;
                     }
 
@@ -111,10 +113,11 @@ $(document).ready(function () {
                         tableHtml += `
                             <tr class="bg-gray-500 text-yellow-400 text-right font-bold font-sans">
                                 <td colspan="3" class="text-center">${lastCustomer} Total:</td>
-                                <td>${formatCurrency(totals.col_1_30)}</td>
+                                <td>${formatCurrency(totals.col_1_15)}</td>
+                                <td>${formatCurrency(totals.col_16_30)}</td>
                                 <td>${formatCurrency(totals.col_31_60)}</td>
                                 <td>${formatCurrency(totals.col_61_90)}</td>
-                                <td>${formatCurrency(totals.col_91_over)}</td>
+                                <td>${formatCurrency(totals.col_91_over || 0)}</td>
                             </tr>`;
                     }
 
@@ -124,26 +127,30 @@ $(document).ready(function () {
                             <td class="text-center">${sale.customer}</td>
                             <td class="text-center">${sale.invoice_no}</td>
                             <td class="text-center">${sale.category}</td>
-                            <td>${formatCurrency(col_1_30)}</td>
+                            <td>${formatCurrency(col_1_15)}</td>
+                            <td>${formatCurrency(col_16_30)}</td>
                             <td>${formatCurrency(col_31_60)}</td>
                             <td>${formatCurrency(col_61_90)}</td>
-                            <td>${formatCurrency(col_91_over)}</td>
+                            <td>${formatCurrency(col_91_over || 0)}</td>
                         </tr>`;
 
                     // Track running totals per customer
                     if (!customerTotals[sale.customer]) {
-                        customerTotals[sale.customer] = { col_1_30: 0, col_31_60: 0, col_61_90: 0, col_91_over: 0 };
+                      customerTotals[sale.customer] = { col_1_15: 0, col_16_30: 0, col_31_60: 0, col_61_90: 0, col_91_over: 0 };
                     }
-                    customerTotals[sale.customer].col_1_30 += col_1_30;
+                     customerTotals[sale.customer].col_1_15 += col_1_15;
+                    customerTotals[sale.customer].col_16_30 += col_16_30;
                     customerTotals[sale.customer].col_31_60 += col_31_60;
                     customerTotals[sale.customer].col_61_90 += col_61_90;
                     customerTotals[sale.customer].col_91_over += col_91_over;
 
                     // Track running totals per category
                     if (!categoryTotals[sale.category]) {
-                        categoryTotals[sale.category] = { col_1_30: 0, col_31_60: 0, col_61_90: 0, col_91_over: 0 };
+                      categoryTotals[sale.category] = {  col_1_15: 0, col_16_30: 0, col_31_60: 0, col_61_90: 0, col_91_over: 0 };
                     }
-                    categoryTotals[sale.category].col_1_30 += col_1_30;
+                    categoryTotals[sale.category].col_1_15 += col_1_15;
+
+                    categoryTotals[sale.category].col_16_30 += col_16_30;
                     categoryTotals[sale.category].col_31_60 += col_31_60;
                     categoryTotals[sale.category].col_61_90 += col_61_90;
                     categoryTotals[sale.category].col_91_over += col_91_over;
@@ -157,10 +164,12 @@ $(document).ready(function () {
                     tableHtml += `
                         <tr class="bg-gray-500 text-yellow-400 text-right font-bold">
                             <td colspan="3" class="text-center">${lastCustomer} Total:</td>
-                            <td>${formatCurrency(totals.col_1_30)}</td>
+                            <td>${formatCurrency(totals.col_1_15)}</td>
+
+                            <td>${formatCurrency(totals.col_16_30)}</td>
                             <td>${formatCurrency(totals.col_31_60)}</td>
                             <td>${formatCurrency(totals.col_61_90)}</td>
-                            <td>${formatCurrency(totals.col_91_over)}</td>
+                            <td>${formatCurrency(totals.col_91_over || 0)}</td>
                         </tr>`;
                 }
 
@@ -170,10 +179,12 @@ $(document).ready(function () {
                     tableHtml += `
                         <tr class="category-total" class="bg-white text-red-500 font-bold text-right">
                             <td colspan="3" class="text-right text-red-500">${category} Total:</td>
-                            <td class="text-right text-red-500">${formatCurrency(totals.col_1_30)}</td>
+                             <td class="text-right text-red-500">${formatCurrency(totals.col_1_15)}</td>
+
+                            <td class="text-right text-red-500">${formatCurrency(totals.col_16_30)}</td>
                             <td class="text-right text-red-500">${formatCurrency(totals.col_31_60)}</td>
                             <td class="text-right text-red-500">${formatCurrency(totals.col_61_90)}</td>
-                            <td class="text-right text-red-500">${formatCurrency(totals.col_91_over)}</td>
+                            <td class="text-right text-red-500">${formatCurrency(totals.col_91_over || 0)}</td>
                         </tr>`;
                 }
 

@@ -117,7 +117,7 @@
                       <i class="bi bi-currency-dollar"></i>
                     </div>
                     <div class="ps-3">
-                      <h6></h6>
+                      <h6 id="ar_balance></h6>
                       <span class="text-danger small pt-1 fw-bold"></span> <span class="text-muted small pt-2 ps-1"></span>
 
                     </div>
@@ -127,6 +127,46 @@
               </div>
 
             </div>
+
+
+<script>
+      $(document).ready(function() {
+        // Function to fetch sales data
+        function fetchSales(filter) {
+            $.ajax({
+                url: `/api-get-sum-ar/?filter=${filter}`,
+                type: 'GET',
+                success: function(response) {
+                    console.log(response)
+                    // Update the amount in the h6 tag
+                    $('#ar_balance').text(response.toLocaleString('en-US', { style: 'currency', currency: 'PHP' }));
+
+                    // Update the label
+                    let labelText = filter === 'today' ? 'Today' :
+                                    filter === 'month' ? 'This Month' :
+                                    'This Year';
+
+                    $('#sales-filter-label').text(`| ${labelText}`);
+                },
+                error: function() {
+                    $('#ar_balance').text('Error loading data');
+                }
+            });
+        }
+
+        // Initial load (fetch today's sales by default)
+        fetchSales('today');
+
+        // Handle filter click
+        $('.dropdown-item').on('click', function() {
+            const filter = $(this).data('filter');
+            fetchSales(filter);
+        });
+    });
+    </script>
+
+                  
+
             <!-- End Customers Card -->
 
             <!-- Reports -->
