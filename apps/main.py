@@ -50,7 +50,7 @@ app.add_middleware(
 app.include_router(login_router,tags=['Login'])
 
 app.include_router(api, tags=['Admin'])
-app.include_router(api_customer_profile_temp)
+app.include_router(api_customer_profile_temp, tags=['Customer Profile'])
 
 app.include_router(api_customer_profile, tags=['Customer/Vendor'])
 
@@ -59,7 +59,7 @@ app.include_router(api_sales, tags=['Sales'])
 app.include_router(api_sales_report, tags=['Sales Report'])
 
 
-app.include_router(api_payment, tags=['Payment']),
+app.include_router(api_payment, tags=['Payment'])
 
 
 app.include_router(api_ar_aging_report, tags=['Aging Report'])

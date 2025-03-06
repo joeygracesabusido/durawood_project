@@ -29,6 +29,7 @@ async def get_sales_report(request: Request,
  
     return templates.TemplateResponse("accounting/ar_aging_report.html", 
                                       {"request": request})
+
 @api_ar_aging_report.get("/api-get-ar-aging-report")
 async def get_sales(username: str = Depends(get_current_user)):
     try:
@@ -167,4 +168,82 @@ async def get_sum_ar(username: str = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving balance: {e}")
 
-              
+@api_ar_aging_report.get("/api-get-ar-report")
+async def get_ar_report(username: str = Depends(get_current_user)):
+    try:
+ 
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "payment",
+                    "let": { "customer": "$customer" },
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": { "$eq": ["$customer", "$$customer"] }
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": "$invoice_no",
+                                "total_cash": { "$sum": "$cash_amount" },
+                                "total_2307": { "$sum": "$amount_2307" }
+                            }
+                        }
+                    ],
+                    "as": "payment_info"
+                }
+            },
+            {
+                "$addFields": {
+                    "total_cash": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+                    },
+                    "total_2307": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "balance": {
+                        "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+                    }
+                }
+            },
+            {
+                "$match": {
+                    "balance": {"$gt": 0}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$customer",
+                    "total_balance": { "$sum": "$balance" },
+                    "category": { "$first": "$category" }  # Optional if you want to show the first category per customer
+                }
+            },
+            {
+                "$sort": {
+                    "_id": 1  # Sort by customer name
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "customer": "$_id",
+                    "total_balance": 1,
+                    "category": 1  # Optional
+                }
+            }
+        ]
+
+
+
+        result = list(mydb.sales.aggregate(pipeline))
+
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+
