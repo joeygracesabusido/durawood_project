@@ -168,6 +168,10 @@ async def get_sum_ar(username: str = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving balance: {e}")
 
+
+
+
+
 @api_ar_aging_report.get("/api-get-ar-report")
 async def get_ar_report(username: str = Depends(get_current_user)):
     try:
@@ -246,4 +250,127 @@ async def get_ar_report(username: str = Depends(get_current_user)):
 
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+
+
+@api_ar_aging_report.get("/api-template-ar-aging-per-category/", response_class=HTMLResponse)
+async def get_sales_report(request: Request,
+                                        username: str = Depends(get_current_user)):
+ 
+    return templates.TemplateResponse("accounting/ar_aging_per_category.html", 
+                                      {"request": request})
+
+
+
+
+
+ 
+@api_ar_aging_report.get("/api-get-ar-aging-per-category")
+async def get_ar_aging_per_category(
+    username: str = Depends(get_current_user),
+    category: Optional[str] = None,
+    date_to: Optional[str] = None  # Only "date_to", no "date_from"
+):
+    try:
+        # Date filter only has "up to" (less than or equal)
+        date_filter = {}
+        if date_to:
+            date_filter["$lte"] = datetime.strptime(date_to, "%Y-%m-%d")
+
+        # Base match conditions (filters applied if provided)
+        match_conditions = {
+            "balance": {"$gt": 0}  # only records with unpaid balance
+        }
+
+        if category:
+            match_conditions["category"] = category
+
+        if date_to:
+            match_conditions["invoice_date"] = date_filter
+
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "payment",
+                    "let": {"invoice_no": "$invoice_no"},
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": {"$eq": ["$invoice_no", "$$invoice_no"]}
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": "$invoice_no",
+                                "total_cash": {"$sum": "$cash_amount"},
+                                "total_2307": {"$sum": "$amount_2307"}
+                            }
+                        }
+                    ],
+                    "as": "payment_info"
+                }
+            },
+            {
+                "$addFields": {
+                    "total_cash": {
+                        "$ifNull": [{"$arrayElemAt": ["$payment_info.total_cash", 0]}, 0]
+                    },
+                    "total_2307": {
+                        "$ifNull": [{"$arrayElemAt": ["$payment_info.total_2307", 0]}, 0]
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "balance": {
+                        "$subtract": ["$amount", {"$add": ["$total_cash", "$total_2307"]}]
+                    },
+                    "status": {
+                        "$cond": {
+                            "if": {"$gt": ["$invoice_date", None]},
+                            "then": {
+                                "$max": [{
+                                    "$divide": [{
+                                        "$subtract": [{"$toLong": "$$NOW"}, {"$toLong": "$invoice_date"}]
+                                    }, 86400000]
+                                }, 0]
+                            },
+                            "else": None
+                        }
+                    }
+                }
+            },
+            {"$match": match_conditions},  # Apply dynamic filters (category, date_to)
+            {
+                "$group": {
+                    "_id": { "category": "$category",
+							 "customer": "$customer"
+							},
+                    "total_balance": {"$sum": "$balance"},
+                    "details": {
+                        "$push": {
+                            "invoice_date": "$invoice_date",
+                            "customer": "$customer",
+                            "customer_id": "$customer_id",
+                            "invoice_no": "$invoice_no",
+                            "tax_type": "$tax_type",
+                            "terms": "$terms",
+                            "due_date": "$due_date",
+                            "amount": "$amount",
+                            "balance": "$balance",
+                            "status": "$status"
+                        }
+                    }
+                }
+            },
+            {"$sort": {"_id": 1}}
+        ]
+
+        result = list(mydb.sales.aggregate(pipeline))
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving AR aging report: {e}")
+ 
+
+
 
