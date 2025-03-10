@@ -2,6 +2,11 @@
 
 {% block content %}
 
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
 <div id="main" class="main">
 
     <div class="pagetitle">
@@ -106,7 +111,7 @@
                       <i class="bi bi-bar-chart-fill"></i>
                     </div>
                     <div class="ps-3">
-                      <h6 id="ar_balance" style="font-size: 22px;"></h6>
+                      <h6 id="ar_balance" style="font-size: 20px;"></h6>
                       <span class="text-danger small pt-1 fw-bold"></span> <span class="text-muted small pt-2 ps-1"></span>
 
                     </div>
@@ -270,7 +275,7 @@
     fetchAndRenderChart();
 
     // Auto-refresh every 30 seconds (adjust to your preference)
-    setInterval(fetchAndRenderChart, 5000);
+  //  setInterval(fetchAndRenderChart, 5000);
 });
 
 
@@ -440,8 +445,8 @@
             </div>-->
             <!-- End Recent Sales -->
 
-            <!-- Top Selling -->
-            <!-- <div class="col-12">
+            <!-- Top Customer with Balance -->
+             <div class="col-12">
               <div class="card top-selling overflow-auto">
 
                 <div class="filter">
@@ -451,77 +456,116 @@
                       <h6>Filter</h6>
                     </li>
 
-                    <li><a class="dropdown-item" href="#">Today</a></li>
-                    <li><a class="dropdown-item" href="#">This Month</a></li>
-                    <li><a class="dropdown-item" href="#">This Year</a></li>
+                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list>Today</a></li>
+                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list>This Month</a></li>
+                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list>This Year</a></li>
                   </ul>
                 </div>
 
                 <div class="card-body pb-0">
-                  <h5 class="card-title">Top Selling <span>| Today</span></h5>
+                  <h5 class="card-title">Account Receivable List <span>| Today</span></h5>
 
                   <table class="table table-borderless">
                     <thead>
                       <tr>
-                        <th scope="col">Preview</th>
-                        <th scope="col">Product</th>
-                        <th scope="col">Price</th>
-                        <th scope="col">Sold</th>
-                        <th scope="col">Revenue</th>
+                        <th scope="col">#</th>
+                        <th scope="col">Customer</th>
+                        <th scope="col">Amount</th>
+                        <th scope="col">Percentage</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <th scope="row"><a href="#"><img src="/static/assets/img/product-1.jpg" alt=""></a></th>
-                        <td><a href="#" class="text-primary fw-bold">Ut inventore ipsa voluptas nulla</a></td>
-                        <td>$64</td>
-                        <td class="fw-bold">124</td>
-                        <td>$5,828</td>
-                      </tr>
-                      <tr>
-                        <th scope="row"><a href="#"><img src="/static/assets/img/product-2.jpg" alt=""></a></th>
-                        <td><a href="#" class="text-primary fw-bold">Exercitationem similique doloremque</a></td>
-                        <td>$46</td>
-                        <td class="fw-bold">98</td>
-                        <td>$4,508</td>
-                      </tr>
-                      <tr>
-                        <th scope="row"><a href="#"><img src="/static/assets/img/product-3.jpg" alt=""></a></th>
-                        <td><a href="#" class="text-primary fw-bold">Doloribus nisi exercitationem</a></td>
-                        <td>$59</td>
-                        <td class="fw-bold">74</td>
-                        <td>$4,366</td>
-                      </tr>
-                      <tr>
-                        <th scope="row"><a href="#"><img src="/static/assets/img/product-4.jpg" alt=""></a></th>
-                        <td><a href="#" class="text-primary fw-bold">Officiis quaerat sint rerum error</a></td>
-                        <td>$32</td>
-                        <td class="fw-bold">63</td>
-                        <td>$2,016</td>
-                      </tr>
-                      <tr>
-                        <th scope="row"><a href="#"><img src="/static/assets/img/product-5.jpg" alt=""></a></th>
-                        <td><a href="#" class="text-primary fw-bold">Sit unde debitis delectus repellendus</a></td>
-                        <td>$79</td>
-                        <td class="fw-bold">41</td>
-                        <td>$3,239</td>
-                      </tr>
+                    
                     </tbody>
                   </table>
 
                 </div>
 
               </div>
-            </div> -->
+            </div> 
             <!-- End Top Selling -->
 
           </div>
+        </div>   
+
+
+      <script>
+					 $(document).ready(function () {
+				function loadArAgingList(filterType) {
+						$.ajax({
+								url: `/api-get-ar-aging-for-dashboard/?filter_type=${filterType}`,
+								type: 'GET',
+								success: function (data) {
+										if (data.length > 0) {
+												let totalAmount = data.reduce((sum, item) => sum + item.total_balance, 0);
+												let tbody = '';
+
+												// Sort by total balance (highest first) and rank
+												data.sort((a, b) => b.total_balance - a.total_balance);
+
+												data.forEach((item, index) => {
+														let percentage = (item.total_balance / totalAmount) * 100;
+														tbody += `
+																<tr>
+																		<td>${index + 1}</td>
+																		<td>${item._id}</td>
+																		<td>${item.total_balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+																		<td>${percentage.toFixed(2)}%</td>
+																</tr>
+														`;
+												});
+
+												$('table tbody').html(tbody);
+										} else {
+												$('table tbody').html('<tr><td colspan="4" class="text-center">No data available</td></tr>');
+										}
+								},
+								error: function (xhr) {
+										console.error('Error fetching data:', xhr.responseJSON.detail);
+								}
+						});
+				}
+
+				// Load data for "Today" on page load
+				loadArAgingList('today');
+
+				// Handle filter clicks
+				$('.dropdown-item-ar-list').on('click', function (e) {
+						e.preventDefault();
+
+						let filterType = $(this).text().toLowerCase().replace(' ', '');
+						loadArAgingList(filterType);
+
+						// Update the card title based on the selected filter
+						$('.card-title span').text(`| ${$(this).text()}`);
+				});
+		});
+
+					
+
+
+
+      </script>
+
+      
+
+
+        <!-- Left Side columns -->
+
+
+      <div class=" col-lg-4">
+        <div class="card">
+
+          <h5 class="card-title">Per Category <span>| Today</span></h5>
+					<div>
+            <canvas id="arAgingPieChart"></canvas>
+        	</div>
+
         </div>
 
-        <!-- End Left side columns -->
+      </div>
 
-        <!-- Right side columns -->
-        <!-- <div class="col-lg-4"> -->
+      <!-- <div class="col-lg-4"> -->
         <!---->
         <!--   <!-- Recent Activity --> 
         <!--   <div class="card"> -->
