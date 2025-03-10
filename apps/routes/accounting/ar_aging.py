@@ -465,6 +465,7 @@ async def get_ar_aging_per_category(
                 "$group": {
                     "_id": "$customer",
                     "total_balance": {"$sum": "$balance"},
+                    
                     "details": {
                         "$push": {
                             "invoice_date": "$invoice_date",
@@ -476,11 +477,125 @@ async def get_ar_aging_per_category(
                             "due_date": "$due_date",
                             "amount": "$amount",
                             "balance": "$balance",
-                            "status": "$status"
+                            "status": "$status",
+                            "category":"$category"
                         }
                     }
                 }
             },
+            {"$sort": {"_id": 1}}
+        ]
+
+        result = list(mydb.sales.aggregate(pipeline))
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving AR aging report: {e}")
+
+
+@api_ar_aging_report.get("/api-get-ar-aging-for-dashboard-per-category/")
+async def get_ar_aging_per_category(
+    username: str = Depends(get_current_user),
+    #date_to: Optional[str] = None,  # Accept date filter
+    filter_type: Optional[str] = None  # 'today', 'month', 'year'
+):
+    try:
+        # Build date filter
+        date_filter = {}
+        if filter_type:
+            now = datetime.utcnow()
+            if filter_type == "today":
+                start_of_day = datetime(now.year, now.month, now.day)
+                end_of_day = start_of_day + timedelta(days=1)
+                date_filter["$gte"] = start_of_day
+                date_filter["$lt"] = end_of_day
+            elif filter_type == "month":
+                start_of_month = datetime(now.year, now.month, 1)
+                next_month = start_of_month.replace(month=start_of_month.month % 12 + 1, day=1)
+                date_filter["$gte"] = start_of_month
+                date_filter["$lt"] = next_month
+            elif filter_type == "year":
+                start_of_year = datetime(now.year, 1, 1)
+                next_year = start_of_year.replace(year=start_of_year.year + 1)
+                date_filter["$gte"] = start_of_year
+                date_filter["$lt"] = next_year
+        # elif date_to:
+        #     date_filter["$lte"] = datetime.strptime(date_to, "%Y-%m-%d")
+
+        # Base match conditions
+        match_conditions = {"balance": {"$gt": 0}}  # Only unpaid balances
+        if date_filter:
+            match_conditions["invoice_date"] = date_filter
+
+        # MongoDB aggregation pipeline
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "payment",
+                    "let": {"invoice_no": "$invoice_no"},
+                    "pipeline": [
+                        {"$match": {"$expr": {"$eq": ["$invoice_no", "$$invoice_no"]}}},
+                        {"$group": {
+                            "_id": "$invoice_no",
+                            "total_cash": {"$sum": "$cash_amount"},
+                            "total_2307": {"$sum": "$amount_2307"}
+                        }}
+                    ],
+                    "as": "payment_info"
+                }
+            },
+            {
+                "$addFields": {
+                    "total_cash": {
+                        "$ifNull": [{"$arrayElemAt": ["$payment_info.total_cash", 0]}, 0]
+                    },
+                    "total_2307": {
+                        "$ifNull": [{"$arrayElemAt": ["$payment_info.total_2307", 0]}, 0]
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "balance": {
+                        "$subtract": ["$amount", {"$add": ["$total_cash", "$total_2307"]}]
+                    },
+                    "status": {
+                        "$cond": {
+                            "if": {"$gt": ["$invoice_date", None]},
+                            "then": {
+                                "$max": [{
+                                    "$divide": [
+                                        {"$subtract": [
+                                            {"$toLong": "$$NOW"}, 
+                                            {"$toLong": "$invoice_date"}
+                                        ]},
+                                        86400000  # Convert milliseconds to days
+                                    ]
+                                }, 0],
+                            },
+                            "else": None
+                        }
+                    }
+                }
+            },
+            {"$match": match_conditions},
+            {
+                "$group": {
+                    "_id": "$category",
+                    "total_balance": {"$sum": "$balance"},
+                }
+
+            },
+
+                {
+                "$project": {
+                    
+                    "category": "$_id",
+                    "total_balance": 1,
+                    "details": 1  # Optional
+                }
+            },
+
             {"$sort": {"_id": 1}}
         ]
 
