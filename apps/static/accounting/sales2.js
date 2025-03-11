@@ -179,6 +179,9 @@ function makeBranchRow(index, data) {
   <td>${data.delivery_date.split("T")[0]}</td>
   <td>${data.invoice_date}</td>
   <td>${data.invoice_no}</td>
+  <td>${data.dr_no}</td>
+  <td>${data.load_no}</td>
+  <td>${data.po_no}</td>
 
   <td>${data.customer}</td>
   <td>${data.category}</td>

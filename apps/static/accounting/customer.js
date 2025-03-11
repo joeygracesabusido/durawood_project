@@ -38,11 +38,14 @@ async function getCustomer() {
     if (response.ok) {
       customer_list = await response.json();
       table_customer_list.empty(); // Clear the table before appending rows
-      let i = 0;
+			let i = 0;
       customer_list.forEach((element) => {
         console.log(element);
         table_customer_list.append(makeBranchRow(i++, element));
       });
+
+		paginateTable()
+
     } else {
       const error = await response.json();
       alert(`Error: ${error.detail}`);
@@ -235,5 +238,31 @@ jQuery(document).ready(function($) {
     });
 
 
+
+const rowsPerPage = 10;
+let currentPage = 1;
+
+function paginateTable() {
+    const rows = $('#table_customer_list tr');
+    const totalRows = rows.length;
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+    rows.hide().slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage).show();
+
+    let pagination = `<nav><ul class="pagination">`;
+    for (let i = 1; i <= totalPages; i++) {
+        pagination += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+            <a class="page-link" href="#">${i}</a></li>`;
+    }
+    pagination += `</ul></nav>`;
+
+    $('#pagination').html(pagination);
+
+    $('.page-link').on('click', function (e) {
+        e.preventDefault();
+        currentPage = +$(this).text();
+        paginateTable();
+    });
+};
 
 
