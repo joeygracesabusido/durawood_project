@@ -78,17 +78,17 @@ $(document).ready(function() {
 
                     let row = `<tr>`;
                     if (firstRow) {
-                        row += `<td rowspan="${rowSpanCount}">${customer}</td>`;
+                        row += `<td rowspan="${rowSpanCount}" class="text-xs">${customer}</td>`;
                         firstRow = false;
                     }
                     row += `
-                        <td>${detail.invoice_no}</td>
-                        <td>${category}</td>
-                        <td class="text-right">${formatAmount(days_1_15)}</td>
-                        <td class="text-right">${formatAmount(days_16_30)}</td>
-                        <td class="text-right">${formatAmount(days_31_60)}</td>
-                        <td class="text-right">${formatAmount(days_61_90)}</td>
-                        <td class="text-right">${formatAmount(days_over_90)}</td>
+                        <td class="text-xs">${detail.invoice_no}</td>
+                        <td class="text-xs">${category}</td>
+                        <td class="text-right text-xs">${formatAmount(days_1_15)}</td>
+                        <td class="text-right text-xs">${formatAmount(days_16_30)}</td>
+                        <td class="text-right text-xs">${formatAmount(days_31_60)}</td>
+                        <td class="text-right text-xs">${formatAmount(days_61_90)}</td>
+                        <td class="text-right text-xs">${formatAmount(days_over_90)}</td>
                     `;
                     row += `</tr>`;
 
@@ -97,12 +97,12 @@ $(document).ready(function() {
 
                 $('#table_sales tbody').append(`
                     <tr class="bg-gray-200 font-bold">
-                        <td colspan="3" class="text-right">Subtotal for ${customer}:</td>
-                        <td class="text-right">${formatAmount(customerTotal.days_1_15)}</td>
-                        <td class="text-right">${formatAmount(customerTotal.days_16_30)}</td>
-                        <td class="text-right">${formatAmount(customerTotal.days_31_60)}</td>
-                        <td class="text-right">${formatAmount(customerTotal.days_61_90)}</td>
-                        <td class="text-right">${formatAmount(customerTotal.days_over_90)}</td>
+                        <td colspan="3" class="text-right text-xs">Subtotal:</td>
+                        <td class="text-right text-xs">${formatAmount(customerTotal.days_1_15)}</td>
+                        <td class="text-right text-xs">${formatAmount(customerTotal.days_16_30)}</td>
+                        <td class="text-right text-xs">${formatAmount(customerTotal.days_31_60)}</td>
+                        <td class="text-right text-xs">${formatAmount(customerTotal.days_61_90)}</td>
+                        <td class="text-right text-xs">${formatAmount(customerTotal.days_over_90)}</td>
                     </tr>
                 `);
             });
@@ -111,12 +111,12 @@ $(document).ready(function() {
 
             $('#table_sales tbody').append(`
                 <tr class="bg-gray-500 text-yellow-300 font-bold">
-                    <td colspan="3" class="text-right">Grand Total:</td>
-                    <td class="text-right">${formatAmount(grandTotal.days_1_15)}</td>
-                    <td class="text-right">${formatAmount(grandTotal.days_16_30)}</td>
-                    <td class="text-right">${formatAmount(grandTotal.days_31_60)}</td>
-                    <td class="text-right">${formatAmount(grandTotal.days_61_90)}</td>
-                    <td class="text-right">${formatAmount(grandTotal.days_over_90)}</td>
+                    <td colspan="3" class="text-right text-xs">Grand Total:</td>
+                    <td class="text-right text-xs">${formatAmount(grandTotal.days_1_15)}</td>
+                    <td class="text-right text-xs">${formatAmount(grandTotal.days_16_30)}</td>
+                    <td class="text-right text-xs">${formatAmount(grandTotal.days_31_60)}</td>
+                    <td class="text-right text-xs">${formatAmount(grandTotal.days_61_90)}</td>
+                    <td class="text-right text-xs">${formatAmount(grandTotal.days_over_90)}</td>
                 </tr>
             `);
 

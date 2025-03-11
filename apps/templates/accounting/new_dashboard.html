@@ -184,9 +184,9 @@
                       <h6>Filter</h6>
                     </li>
 
-                    <li><a class="dropdown-item" href="#">Today</a></li>
-                    <li><a class="dropdown-item" href="#">This Month</a></li>
-                    <li><a class="dropdown-item" href="#">This Year</a></li>
+                    <li><a class="dropdown-item-bar-chart" href="#">Today</a></li>
+                    <li><a class="dropdown-item-bar-chart" href="#">This Month</a></li>
+                    <li><a class="dropdown-item-bar-chart" href="#">This Year</a></li>
                   </ul>
                 </div>
 
@@ -557,6 +557,20 @@
         <div class="card">
 
           <h5 class="card-title">Per Category <span>| Today</span></h5>
+
+           <div class="filter">
+                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                    <li class="dropdown-header text-start">
+                      <h6>Filter</h6>
+                    </li>
+
+                    <li><a class="dropdown-item-pie" href="#" data-filter-pie>Today</a></li>
+                    <li><a class="dropdown-item-pie" href="#" data-filter-pie>This Month</a></li>
+                    <li><a class="dropdown-item-pie" href="#" data-filter-pie>This Year</a></li>
+                  </ul>
+                </div>
+
 					<div>
             <canvas id="arAgingPieChart"></canvas>
         	</div>
@@ -634,6 +648,18 @@ $(document).ready(function () {
 
     // Load chart on page load with filterType = 'today'
     loadArAgingChart('today');
+
+    // Handle filter clicks
+				$('.dropdown-item-pie').on('click', function (e) {
+						e.preventDefault();
+
+						let filterType = $(this).text().toLowerCase().replace(' ', '');
+						loadArAgingChart(filterType);
+
+						// Update the card title based on the selected filter
+						$('.card-title span').text(`| ${$(this).text()}`);
+				});
+
 });
 </script>
 
