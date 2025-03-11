@@ -57,7 +57,8 @@ function makeBranchRow(index, data) {
   return `<tr id1='${"customer_row_" + index}' onClick="openToEdit(${index},'${
     "customer_row_" + index
   }')">
-   
+  
+  <td>${data.customer_vendor_id}</td>
   <td>${data.bussiness_name}</td>
   <td>${data.category}</td>
   <td>${data.tax_type}</td>
@@ -223,6 +224,15 @@ jQuery(document).ready(function($) {
 });
 
 
+
+//✅ Move search filter handler INSIDE document ready
+    $('#search').on('keyup', function() {
+        let searchValue = $(this).val().toLowerCase();
+        $('#table_customer tbody tr').each(function() {
+            let text = $(this).text().toLowerCase();
+            $(this).toggle(text.includes(searchValue));
+        });
+    });
 
 
 

@@ -28,6 +28,8 @@ jQuery(document).ready(function($) {
                 // Set the related field based on the selected item
                 $("#customer_id").val(ui.item.customer_vendor_id);
                 $("#category").val(ui.item.category)
+                $("#tax_type").val(ui.item.tax_type)
+
 
                 return false; // Prevent the default select action
             }

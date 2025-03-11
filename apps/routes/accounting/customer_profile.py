@@ -69,7 +69,7 @@ async def create_customer_profile(data: CustomerProfileBM, username: str = Depen
 @api_customer_profile.get("/api-get-customer-profiles/")
 async def get_customer(username: str = Depends(get_current_user)):
     try:
-        result = mydb.customer_vendor_profile.find().sort('bussiness_name', -1)
+        result = mydb.customer_vendor_profile.find().sort('customer_vendor_id', -1)
 
         customerData = [{
             
@@ -132,7 +132,8 @@ async def autocomplete_contact(term: Optional[str] = None):
             
             "value": data['bussiness_name'],
             "customer_vendor_id": data['customer_vendor_id'],
-            "category": data['category']
+            "category": data['category'],
+            "tax_type": data['tax_type']
            
 
             } for data in result
