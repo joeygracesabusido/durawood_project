@@ -1,0 +1,106 @@
+
+{% extends 'dashboard.html' %} {% block content %}
+
+ <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> 
+
+   <!-- jQuery Core (this is required) -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  
+  <!-- jQuery UI (this provides autocomplete) -->
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+
+
+     <style type="text/tailwindcss">
+          @theme {
+            --color-clifford: #da373d;
+          }
+    </style>
+
+
+
+
+
+
+ </head> 
+
+  
+
+
+ 
+
+<div id="main" class="main">
+  <div class="pagetitle">
+  </div>
+  <!-- End Page Title -->
+
+  <section class="section">
+        <div class="col-lg-10">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Customer List</h5>
+            <div class"py-5 px-5">
+               <button id="printPDF" class="bg-sky-500 text-white py-2 px-4 rounded">Print to PDF</button>
+               <button id="exportExcel" class="bg-yellow-300 text-gray-500 py-2 px-4 rounded">
+                 Excel
+               </button>
+             <div class="py-2 w-1/3 ml-auto">
+
+                 <div class="col-span-5 px-1">
+                          <input
+                            id="search"
+                            type="text"
+                            class="form-control w-full"
+
+                            value=""
+                            placeholder="Search"
+                          />
+                 </div>
+
+
+              </div>
+
+                          
+
+            </div>
+          <br> 
+            <!-- General Form Elements -->
+            <table
+              id="table_sales"
+              class="min-w-full table-auto border border-gray-300"
+              style="text-align: center"
+            >
+              <thead class="bg-gray-500 text-white py-2 px-1 text-center border-x border-gray-300">
+                <tr>
+            
+                  <th>Customer</th>
+                  <th>Amount</th>
+                
+               </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+  <!--    -->
+  <!-- </section> -->
+  <script src="/static/accounting/customer_list_with_balance.js"></script> 
+</div>
+
+<!-- End #main -->
+
+{% endblock %}

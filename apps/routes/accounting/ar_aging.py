@@ -608,3 +608,180 @@ async def get_ar_aging_per_category(
 
 
 
+# this function is for Customer List Template to display
+@api_ar_aging_report.get("/api-template-customer-list-balance/", response_class=HTMLResponse)
+async def get_sales_report(request: Request,
+                                        username: str = Depends(get_current_user)):
+ 
+    return templates.TemplateResponse("accounting/customer_list_with_balance.html", 
+                                      {"request": request})
+
+
+
+
+@api_ar_aging_report.get("/api-get-per-customer-balance")
+async def get_list_customer_balance(username: str = Depends(get_current_user)):
+    try:
+        today = datetime.combine(date.today(), datetime.min.time())  # Convert to datetime
+
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "payment",
+                    "let": { "customer_id": "$customer_id" },
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": { "$eq": ["$customer_id", "$$customer_id"] }
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": "$invoice_no",
+                                "total_cash": { "$sum": "$cash_amount" },
+                                "total_2307": { "$sum": "$amount_2307" }
+                            }
+                        }
+                    ],
+                    "as": "payment_info"
+                }
+            },
+            {
+                "$addFields": {
+                    "total_cash": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+                    },
+                    "total_2307": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "balance": {
+                        "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+                
+                    }
+                     },
+            },
+		# filter out record where balance is greater than 0
+			
+                {"$match": {
+					"balance": {"$gt": 0}
+					}},
+
+				{
+
+					"$group": {
+						"_id": "$customer",
+						"total_balance": {"$sum": "$balance"}
+						}
+
+				},				
+
+                {"$sort": {
+                    "_id": 1}},
+			
+
+
+            {
+
+                "$project": {
+                    "_id": 0,
+                    
+                    "customer": "$_id",
+                    "total_balance": 1,
+                    
+                }
+            }
+        ]
+
+        result = list(mydb.sales.aggregate(pipeline))
+
+        return result
+
+       
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+
+
+# this function is for Customer List of Transaction to Display to display
+@api_ar_aging_report.get("/api-template-customer-list-transaction/", response_class=HTMLResponse)
+async def get_temp_customer_transactions(request: Request,
+                                        username: str = Depends(get_current_user)):
+ 
+    return templates.TemplateResponse("accounting/customer_list_with_balance.html", 
+                                      {"request": request})
+
+
+
+# this function is for Customer List Template to display
+@api_ar_aging_report.get("/api-template-customer-list-balance/", response_class=HTMLResponse)
+async def get_sales_report(request: Request,
+                                        username: str = Depends(get_current_user)):
+ 
+    return templates.TemplateResponse("accounting/customer_list_with_balance.html", 
+                                      {"request": request})
+
+
+
+
+@api_ar_aging_report.get("/api-get-transaction-history")
+async def get_transaction_history(
+    customer: Optional[str] = None,
+    username: str = Depends(get_current_user)
+):
+    try:
+        sales_pipeline = [
+            {
+                "$match": {"customer": customer} if customer else {}
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "date": "$invoice_date",
+                    "customer": 1,
+                    "invoice_no": 1,
+                    "sales_amount": "$amount",
+                    "payment_amount": None,
+                    "type": {"$literal": "Sales"}
+                }
+            }
+        ]
+
+        payment_pipeline = [
+            {
+                "$match": {"customer": customer} if customer else {}
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "date": "$date",
+                    "customer": 1,
+                    "invoice_no": 1,
+                    "sales_amount": None,
+                    "payment_amount": {
+                        "$add": ["$cash_amount", {"$ifNull": ["$amount_2307", 0]}]
+                    },
+                    "type": {"$literal": "Payment"}
+                }
+            }
+        ]
+
+        # Fetch sales and payment data
+        sales_data = list(mydb.sales.aggregate(sales_pipeline))
+        payment_data = list(mydb.payment.aggregate(payment_pipeline))
+
+        # Combine sales and payment data
+        transaction_history = sales_data + payment_data
+
+        # Sort by date in descending order (latest first)
+        transaction_history.sort(key=lambda x: x["date"], reverse=True)
+
+        return transaction_history
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving transaction history: {e}")
+
+
+
