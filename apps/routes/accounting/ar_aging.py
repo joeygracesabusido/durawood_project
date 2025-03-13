@@ -24,7 +24,7 @@ api_ar_aging_report = APIRouter()
 templates = Jinja2Templates(directory="apps/templates")
 
 @api_ar_aging_report.get("/api-ar-aging-report/", response_class=HTMLResponse)
-async def get_sales_report(request: Request,
+async def get_apiTemplate_sales_report(request: Request,
                                         username: str = Depends(get_current_user)):
  
     return templates.TemplateResponse("accounting/ar_aging_report.html", 
@@ -376,7 +376,7 @@ async def get_ar_aging_per_category(
 
 
 @api_ar_aging_report.get("/api-get-ar-aging-for-dashboard/")
-async def get_ar_aging_per_category(
+async def get_ar_aging_per_category_dashboard(
     username: str = Depends(get_current_user),
     #date_to: Optional[str] = None,  # Accept date filter
     filter_type: Optional[str] = None  # 'today', 'month', 'year'
@@ -706,22 +706,15 @@ async def get_list_customer_balance(username: str = Depends(get_current_user)):
 
 
 # this function is for Customer List of Transaction to Display to display
-@api_ar_aging_report.get("/api-template-customer-list-transaction/", response_class=HTMLResponse)
+@api_ar_aging_report.get("/api-template-customer-transaction/", response_class=HTMLResponse)
 async def get_temp_customer_transactions(request: Request,
                                         username: str = Depends(get_current_user)):
  
-    return templates.TemplateResponse("accounting/customer_list_with_balance.html", 
+    return templates.TemplateResponse("accounting/customer_transaction.html", 
                                       {"request": request})
 
 
 
-# this function is for Customer List Template to display
-@api_ar_aging_report.get("/api-template-customer-list-balance/", response_class=HTMLResponse)
-async def get_sales_report(request: Request,
-                                        username: str = Depends(get_current_user)):
- 
-    return templates.TemplateResponse("accounting/customer_list_with_balance.html", 
-                                      {"request": request})
 
 
 
@@ -775,8 +768,8 @@ async def get_transaction_history(
         # Combine sales and payment data
         transaction_history = sales_data + payment_data
 
-        # Sort by date in descending order (latest first)
-        transaction_history.sort(key=lambda x: x["date"], reverse=True)
+        # Sort by date in ascending order (latest last)
+        transaction_history.sort(key=lambda x: x["date"], reverse=False)
 
         return transaction_history
 
