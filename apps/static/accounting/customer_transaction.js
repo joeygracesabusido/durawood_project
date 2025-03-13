@@ -6,16 +6,21 @@ $(document).ready(function () {
             success: function (data) {
                 console.log(data);
                 let rows = '';
+                let cummulativeBalance = 0;
                 if (data.length > 0) {
                     data.forEach(item => {
+                        const salesAmount = item.sales_amount || 0;
+                        const paymentAmount = item.payment_amount || 0;
+                        cummulativeBalance += salesAmount - paymentAmount;
                         rows += `
                             <tr class="border-b border-gray-300">
-                                <td class="py-2 px-4">${formatDate(item.date)}</td>
-                                <td class="py-2 px-4">${item.customer || ''}</td>
-                                <td class="py-2 px-4">${item.invoice_no || ''}</td>
-                                <td class="py-2 px-4">${formatNumber(item.sales_amount)}</td>
-                                <td class="py-2 px-4">${formatNumber(item.payment_amount)}</td>
-                                <td class="py-2 px-4">${item.type || ''}</td>
+                                <td class="py-1 px-1 text-right">${formatDate(item.date)}</td>
+                                <td class="py-1 px-1">${item.customer || ''}</td>
+                                <td class="py-1 px-1">${item.invoice_no || ''}</td>
+                                <td class="py-1 px-1 text-right">${formatNumber(item.sales_amount)}</td>
+                                <td class="py-1 px-1 text-right">${formatNumber(item.payment_amount)}</td>
+                                <td class="py-1 px-1 ">${item.type || ''}</td>
+                                <td class="py-1 px-1 text-right">${formatNumber(cummulativeBalance)}</td>
                             </tr>
                         `;
                     });
@@ -100,4 +105,5 @@ $(document).ready(function () {
         printWindow.print();
     });
 });
+
 

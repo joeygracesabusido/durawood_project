@@ -10,8 +10,8 @@ $(document).ready(function () {
                     data.forEach(item => {
                         rows += `
                             <tr class="border-b border-gray-300" data-customer="${item.customer}">
-                                <td class="py-2 px-4">${item.customer}</td>
-                                <td class="py-2 px-4">${formatNumber(item.total_balance)}</td>
+                                <td class="py-2 px-4 text-left">${item.customer}</td>
+                                <td class="py-2 px-4 text-right">${formatNumber(item.total_balance)}</td>
                             </tr>
                         `;
                     });

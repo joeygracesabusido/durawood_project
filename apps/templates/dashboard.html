@@ -305,32 +305,32 @@
           >
            
             <li>
-              <a href="/api-sales-report/" class="sub-link">
+              <a href="/api-sales-report/" class="sub-link flex tems-center px-4 py-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition duration-200">
                  <i class="bi bi-circle"></i><!-- <i class="bi bi-cart"></i> -->
                 <span>Sales Report</span>
               </a>
             </li>
 
             <li>
-              <a href="/collection-list/" class="sub-link">
+              <a href="/collection-list/" class="sub-link flex tems-center px-4 py-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition duration-200">
                  <i class="bi bi-circle"></i><span>Collection Report</span>
               </a>
             </li>
 
             <li>
-              <a href="/api-ar-aging-report/" class="sub-link">
+              <a href="/api-ar-aging-report/" class="sub-link flex tems-center px-4 py-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition duration-200">
                  <i class="bi bi-circle"></i><span>A/R Aging Report</span>
               </a>
             </li>
 
           <li>
-              <a href="/api-template-ar-aging-per-category/" class="sub-link">
+              <a href="/api-template-ar-aging-per-category/" class="sub-link flex tems-center px-4 py-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition duration-200">
                 <i class="bi bi-circle"></i> <span>Aging Report per Category</span>
               </a>
             </li>
 
 
-           <a href="/api-template-customer-list-balance/" class="sub-link">
+           <a href="/api-template-customer-list-balance/" class="sub-link flex tems-center px-4 py-2 hover:bg-gray-100 focus:outline-none focus:bg-gray-200 transition duration-200">
                 <i class="bi bi-circle"></i> <span>Customer List Report</span>
               </a>
             </li>
@@ -588,6 +588,19 @@
         });
       });
     </script>
+
+
+
+    <script>
+
+
+    $('sub-link').on('click', function (e) {
+  e.stopPropagation(); // Stop parent handlers but allow navigation
+});
+
+
+    </script>
+
   </body>
 </html>
 

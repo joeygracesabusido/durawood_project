@@ -193,95 +193,97 @@
                 <div class="card-body">
                   <h5 class="card-title">Reports <span>/Account Receivable as of Today</span></h5>
 
+                  
+									<div style="width: 100%; overflow-x: auto;">
+											<div id="arAgingChart" style="min-width: 800px;"></div>
+									</div>
                   <!-- Line Chart -->
                   <div id="arAgingChart"></div>
 
+                 <script>
+												document.addEventListener("DOMContentLoaded", () => {
+						async function fetchAndRenderChart() {
+								try {
+										const response = await fetch("/api-get-ar-report");
+										const data = await response.json();
 
-						<script>
-                	document.addEventListener("DOMContentLoaded", () => {
-    async function fetchAndRenderChart() {
-        try {
-            const response = await fetch("/api-get-ar-report");
-            const data = await response.json();
+										const customers = data.map(item => item.customer);
+										const balances = data.map(item => item.total_balance);
 
-            const customers = data.map(item => item.customer);
-            const balances = data.map(item => item.total_balance);
+										const options = {
+												series: [{
+														name: 'Balance',
+														data: balances
+												}],
+												chart: {
+														height: 350,
+														// Set width dynamically based on number of data points
+														width: Math.max(800, customers.length * 50),
+														type: 'bar'
+												},
+												plotOptions: {
+														bar: {
+																horizontal: false,
+																columnWidth: '25%',
+																endingShape: 'rounded'
+														},
+												},
+												dataLabels: {
+														enabled: false
+												},
+												stroke: {
+														show: true,
+														width: 2,
+														colors: ['transparent']
+												},
+												xaxis: {
+														categories: customers,
+														labels: {
+																rotate: -45,
+																style: {
+																		fontSize: '9px',
+																}
+														}
+												},
+												yaxis: {
+														title: {
+																text: 'Balance Amount (PHP)'
+														}
+												},
+												fill: {
+														opacity: 1
+												},
+												tooltip: {
+														y: {
+																formatter: function (val) {
+																		return "₱ " + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+																}
+														}
+												}
+										};
 
-            const options = {
-                series: [{
-                    name: 'Balance',
-                    data: balances
-                }],
-                chart: {
-                    height: 350,
-                    type: 'bar'
-                },
-                plotOptions: {
-                    bar: {
-                        horizontal: false,
-                        columnWidth: '10%',
-                        endingShape: 'rounded'
-                    },
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                stroke: {
-                    show: true,
-                    width: 2,
-                    colors: ['transparent']
-                },
-                xaxis: {
-                    categories: customers,
-                    labels: {
-                        rotate: -45,
-                        style: {
-                            fontSize: '9px',
-                        }
-                    }
-                },
-                yaxis: {
-                    title: {
-                        text: 'Balance Amount (PHP)'
-                    }
-                },
-                fill: {
-                    opacity: 1
-                },
-                tooltip: {
-                    y: {
-                        formatter: function (val) {
-                            return "₱ " + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                        }
-                    }
-                }
-            };
+										// Destroy existing chart if present
+										if (window.arAgingChart && typeof window.arAgingChart.destroy === 'function') {
+												window.arAgingChart.destroy();
+										}
 
-            // Check if the chart already exists and destroy it if necessary
-            if (window.arAgingChart && typeof window.arAgingChart.destroy === 'function') {
-                window.arAgingChart.destroy();
-            }
+										// Create and render new chart
+										window.arAgingChart = new ApexCharts(document.querySelector("#arAgingChart"), options);
+										window.arAgingChart.render();
 
-            // Create and render the new chart
-            window.arAgingChart = new ApexCharts(document.querySelector("#arAgingChart"), options);
-            window.arAgingChart.render();
+								} catch (error) {
+										console.error("Failed to fetch AR report data:", error);
+								}
+						}
 
-        } catch (error) {
-            console.error("Failed to fetch AR report data:", error);
-        }
-    }
+						// Initial load
+						fetchAndRenderChart();
 
-    // Initial load
-    fetchAndRenderChart();
-
-    // Auto-refresh every 30 seconds (adjust to your preference)
-  //  setInterval(fetchAndRenderChart, 5000);
-});
-
-
-
-					</script>
-		
+						// Auto-refresh every 30 seconds (adjust as needed)
+						// setInterval(fetchAndRenderChart, 30000);
+				});
+</script> 
+	
 
 
       <!-- <script> -->

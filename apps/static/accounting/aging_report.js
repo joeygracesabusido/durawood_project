@@ -76,52 +76,67 @@
 //
 //     fetchSalesReport();
 
+// $(documen
+
+
+
+
+
+
 $(document).ready(function () {
     function fetchSalesReport() {
         $.ajax({
             url: "/api-get-ar-aging-report/",
             type: "GET",
-            // headers: {'Authorization': 'Bearer ' + localStorage.getItem('access_token')},
             success: function (data) {
                 $("#table_sales tbody").empty();
 
                 let customerTotals = {};
                 let categoryTotals = {};
+                let grandTotals = {
+                    col_1_15: 0, col_16_30: 0, col_31_60: 0,
+                    col_61_90: 0, col_91_over: 0, total: 0
+                };
+
                 let tableHtml = "";
                 let lastCustomer = null;
-                
+
                 data.forEach(sale => {
                     let balance = sale.balance || 0;
                     let status = sale.status;
-                  
-                    let  col_1_15 = 0, col_16_30 = 0, col_31_60 = 0, col_61_90 = 0, col_91_over = 0;
+
+                    let col_1_15 = 0, col_16_30 = 0, col_31_60 = 0, col_61_90 = 0, col_91_over = 0;
                     if (status <= 15) {
-                      col_1_15 = balance;
-                    }else if (status <= 30) {
+                        col_1_15 = balance;
+                    } else if (status <= 30) {
                         col_16_30 = balance;
                     } else if (status <= 60) {
                         col_31_60 = balance;
                     } else if (status <= 90) {
                         col_61_90 = balance;
-                    } else if (status > 90){
+                    } else if (status > 90) {
                         col_91_over = balance;
                     }
 
-                    // If customer changes, insert subtotal for previous customer (if any)
+                    // ✅ Calculate row total
+                    let rowTotal = col_1_15 + col_16_30 + col_31_60 + col_61_90 + col_91_over;
+
+                    // ✅ Add customer subtotal when customer changes
                     if (lastCustomer && sale.customer !== lastCustomer) {
                         let totals = customerTotals[lastCustomer];
                         tableHtml += `
-                            <tr class="bg-gray-500 text-yellow-400 text-right font-bold font-sans">
+                            <tr class="bg-gray-500 text-yellow-400 text-right text-sm">
                                 <td colspan="3" class="text-center">${lastCustomer} Total:</td>
                                 <td>${formatCurrency(totals.col_1_15)}</td>
                                 <td>${formatCurrency(totals.col_16_30)}</td>
                                 <td>${formatCurrency(totals.col_31_60)}</td>
                                 <td>${formatCurrency(totals.col_61_90)}</td>
-                                <td>${formatCurrency(totals.col_91_over || 0)}</td>
+                                <td>${formatCurrency(totals.col_91_over)}</td>
+                                <td>${formatCurrency(totals.total)}</td>
                             </tr>`;
                     }
 
-                    // Append actual row
+                    // ✅ Add row with calculated total
                     tableHtml += `
                         <tr class="text-right text-sm">
                             <td class="text-center">${sale.customer}</td>
@@ -131,62 +146,90 @@ $(document).ready(function () {
                             <td>${formatCurrency(col_16_30)}</td>
                             <td>${formatCurrency(col_31_60)}</td>
                             <td>${formatCurrency(col_61_90)}</td>
-                            <td>${formatCurrency(col_91_over || 0)}</td>
+                            <td>${formatCurrency(col_91_over)}</td>
+                            <td>${formatCurrency(rowTotal)}</td>
                         </tr>`;
 
-                    // Track running totals per customer
+                    // ✅ Track running totals per customer
                     if (!customerTotals[sale.customer]) {
-                      customerTotals[sale.customer] = { col_1_15: 0, col_16_30: 0, col_31_60: 0, col_61_90: 0, col_91_over: 0 };
+                        customerTotals[sale.customer] = {
+                            col_1_15: 0, col_16_30: 0, col_31_60: 0,
+                            col_61_90: 0, col_91_over: 0, total: 0
+                        };
                     }
-                     customerTotals[sale.customer].col_1_15 += col_1_15;
+                    customerTotals[sale.customer].col_1_15 += col_1_15;
                     customerTotals[sale.customer].col_16_30 += col_16_30;
                     customerTotals[sale.customer].col_31_60 += col_31_60;
                     customerTotals[sale.customer].col_61_90 += col_61_90;
                     customerTotals[sale.customer].col_91_over += col_91_over;
+                    customerTotals[sale.customer].total += rowTotal;
 
-                    // Track running totals per category
+                    // ✅ Track running totals per category
                     if (!categoryTotals[sale.category]) {
-                      categoryTotals[sale.category] = {  col_1_15: 0, col_16_30: 0, col_31_60: 0, col_61_90: 0, col_91_over: 0 };
+                        categoryTotals[sale.category] = {
+                            col_1_15: 0, col_16_30: 0, col_31_60: 0,
+                            col_61_90: 0, col_91_over: 0, total: 0
+                        };
                     }
                     categoryTotals[sale.category].col_1_15 += col_1_15;
-
                     categoryTotals[sale.category].col_16_30 += col_16_30;
                     categoryTotals[sale.category].col_31_60 += col_31_60;
                     categoryTotals[sale.category].col_61_90 += col_61_90;
                     categoryTotals[sale.category].col_91_over += col_91_over;
+                    categoryTotals[sale.category].total += rowTotal;
+
+                    // ✅ Track running grand totals
+                    grandTotals.col_1_15 += col_1_15;
+                    grandTotals.col_16_30 += col_16_30;
+                    grandTotals.col_31_60 += col_31_60;
+                    grandTotals.col_61_90 += col_61_90;
+                    grandTotals.col_91_over += col_91_over;
+                    grandTotals.total += rowTotal;
 
                     lastCustomer = sale.customer;
                 });
 
-                // Add final customer total after loop ends
+                // ✅ Add final customer total
                 if (lastCustomer) {
                     let totals = customerTotals[lastCustomer];
                     tableHtml += `
-                        <tr class="bg-gray-500 text-yellow-400 text-right font-bold">
+                        <tr class="bg-gray-500 text-yellow-400 text-right text-sm">
                             <td colspan="3" class="text-center">${lastCustomer} Total:</td>
                             <td>${formatCurrency(totals.col_1_15)}</td>
-
                             <td>${formatCurrency(totals.col_16_30)}</td>
                             <td>${formatCurrency(totals.col_31_60)}</td>
                             <td>${formatCurrency(totals.col_61_90)}</td>
-                            <td>${formatCurrency(totals.col_91_over || 0)}</td>
+                            <td>${formatCurrency(totals.col_91_over)}</td>
+                            <td>${formatCurrency(totals.total)}</td>
                         </tr>`;
                 }
 
-                // Append category totals at bottom
+                // ✅ Add category totals
                 for (let category in categoryTotals) {
                     let totals = categoryTotals[category];
                     tableHtml += `
-                        <tr class="category-total" class="bg-white text-red-500 font-bold text-right">
-                            <td colspan="3" class="text-right text-red-500">${category} Total:</td>
-                             <td class="text-right text-red-500">${formatCurrency(totals.col_1_15)}</td>
-
-                            <td class="text-right text-red-500">${formatCurrency(totals.col_16_30)}</td>
-                            <td class="text-right text-red-500">${formatCurrency(totals.col_31_60)}</td>
-                            <td class="text-right text-red-500">${formatCurrency(totals.col_61_90)}</td>
-                            <td class="text-right text-red-500">${formatCurrency(totals.col_91_over || 0)}</td>
+                        <tr class="category-total bg-white text-red-500 text-right text-sm">
+                            <td colspan="3" class="text-center">${category} Total:</td>
+                            <td>${formatCurrency(totals.col_1_15)}</td>
+                            <td>${formatCurrency(totals.col_16_30)}</td>
+                            <td>${formatCurrency(totals.col_31_60)}</td>
+                            <td>${formatCurrency(totals.col_61_90)}</td>
+                            <td>${formatCurrency(totals.col_91_over)}</td>
+                            <td>${formatCurrency(totals.total)}</td>
                         </tr>`;
                 }
+
+                // ✅ Add grand total row
+                tableHtml += `
+                    <tr class="bg-gray-700 text-white font-bold text-right text-sm">
+                        <td colspan="3" class="text-center">GRAND TOTAL:</td>
+                        <td>${formatCurrency(grandTotals.col_1_15)}</td>
+                        <td>${formatCurrency(grandTotals.col_16_30)}</td>
+                        <td>${formatCurrency(grandTotals.col_31_60)}</td>
+                        <td>${formatCurrency(grandTotals.col_61_90)}</td>
+                        <td>${formatCurrency(grandTotals.col_91_over)}</td>
+                        <td>${formatCurrency(grandTotals.total)}</td>
+                    </tr>`;
 
                 $("#table_sales tbody").html(tableHtml);
             },
@@ -205,6 +248,8 @@ $(document).ready(function () {
     }
 
     fetchSalesReport();
+
+
 
 
 
@@ -263,7 +308,7 @@ $(document).ready(function () {
                 </style>
             </head>
             <body>
-                 <h3 style="text-align:center">DCLSI</h3>
+                 <h3 style="text-align:center">Durawwod Construction & Lumber Supply, Inc.</h3>
 
                 <h3 style="text-align:center">Account Receivable Aging Report as of ${today}</h3>
                 ${content}
