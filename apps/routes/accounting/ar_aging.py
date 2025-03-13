@@ -617,27 +617,23 @@ async def get_sales_report(request: Request,
                                       {"request": request})
 
 
-
-
 @api_ar_aging_report.get("/api-get-per-customer-balance")
 async def get_list_customer_balance(username: str = Depends(get_current_user)):
     try:
-        today = datetime.combine(date.today(), datetime.min.time())  # Convert to datetime
-
         pipeline = [
             {
                 "$lookup": {
                     "from": "payment",
-                    "let": { "customer_id": "$customer_id" },
+                    "let": { "invoice_no": "$invoice_no" },
                     "pipeline": [
                         {
                             "$match": {
-                                "$expr": { "$eq": ["$customer_id", "$$customer_id"] }
+                                "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
                             }
                         },
                         {
                             "$group": {
-                                "_id": "$invoice_no",
+                                "_id": "$invoice_no",  # Group by invoice number
                                 "total_cash": { "$sum": "$cash_amount" },
                                 "total_2307": { "$sum": "$amount_2307" }
                             }
@@ -646,61 +642,53 @@ async def get_list_customer_balance(username: str = Depends(get_current_user)):
                     "as": "payment_info"
                 }
             },
+            { 
+                "$unwind": {
+                    "path": "$payment_info",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
             {
                 "$addFields": {
-                    "total_cash": {
-                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
-                    },
-                    "total_2307": {
-                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
-                    }
+                    "total_cash": { "$ifNull": ["$payment_info.total_cash", 0] },
+                    "total_2307": { "$ifNull": ["$payment_info.total_2307", 0] }
                 }
             },
             {
                 "$addFields": {
                     "balance": {
                         "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
-                
                     }
-                     },
+                }
             },
-		# filter out record where balance is greater than 0
-			
-                {"$match": {
-					"balance": {"$gt": 0}
-					}},
-
-				{
-
-					"$group": {
-						"_id": "$customer",
-						"total_balance": {"$sum": "$balance"}
-						}
-
-				},				
-
-                {"$sort": {
-                    "_id": 1}},
-			
-
-
             {
-
+                "$match": {
+                    "balance": { "$gt": 0 }
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$customer",
+                    "total_balance": { "$sum": "$balance" }
+                }
+            },
+            {
+                "$sort": { "_id": 1 }
+            },
+            {
                 "$project": {
                     "_id": 0,
-                    
                     "customer": "$_id",
-                    "total_balance": 1,
-                    
+                    "total_balance": 1
                 }
             }
         ]
 
         result = list(mydb.sales.aggregate(pipeline))
+        # print(list(mydb.sales.aggregate(pipeline)))
 
         return result
 
-       
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
