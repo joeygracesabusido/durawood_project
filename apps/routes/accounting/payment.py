@@ -354,7 +354,8 @@ async def get_payment_dashboard(
     try:
         # Get current date and time
         now = datetime.utcnow()
-
+        
+        query = {}
         # Define date filter range
         if filter == "today":
             start_date = datetime(now.year, now.month, now.day)
@@ -375,16 +376,28 @@ async def get_payment_dashboard(
             start_date = datetime(now.year, 1, 1)
             end_date = datetime(now.year + 1, 1, 1)
 
+        elif filter == "all":
+            start_date = None
+            end_date = None
+
+            
+
         else:
             raise HTTPException(status_code=400, detail="Invalid filter. Use 'today', 'week', or 'month'.")
 
-        # Query sales within the date range
-        payment_cursor = mydb.payment.find({
-            "date": {"$gte": start_date, "$lt": end_date}
-        })
+
+        if filter != 'all':
+        
+
+            # Query sales within the date range
+            query = {
+                "date": {"$gte": start_date, "$lt": end_date}
+            }
+        
+        payment_cursor = mydb.payment.find(query)
 
         # Calculate total amount
-        total_amount = sum(payment.get("cash_amount", 0) for payment in payment_cursor)
+        total_amount = sum(payment.get("cash_amount", 0) + payment.get("amount_2307", 0) for payment in payment_cursor)
 
         return total_amount
 

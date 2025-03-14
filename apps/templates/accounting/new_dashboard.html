@@ -40,6 +40,9 @@
                     <li><a class="dropdown-item" href="#" data-filter="today">Today</a></li>
                     <li><a class="dropdown-item" href="#" data-filter="month">This Month</a></li>
                     <li><a class="dropdown-item" href="#" data-filter="year">This Year</a></li>
+
+                  <li><a class="dropdown-item" href="#" data-filter="all">All</a></li>
+
                   </ul>
                 </div>
 
@@ -61,7 +64,7 @@
               </div>
             </div><!-- End Sales Card -->
 
-            <!-- Revenue Card -->
+            <!-- Payment Card -->
             <div class="col-xxl-4 col-md-6">
               <div class="card info-card revenue-card">
 
@@ -75,6 +78,9 @@
                     <li><a class="dropdown-item-payment" href="#" data-filter-payment="today">Today</a></li>
                     <li><a class="dropdown-item-payment" href="#" data-filter-payment="month">This Month</a></li>
                     <li><a class="dropdown-item-payment" href="#" data-filter-payment="year">This Year</a></li>
+                    <li><a class="dropdown-item-payment" href="#" data-filter-payment="all">All</a></li>
+
+
                   </ul>
                 </div>
 
@@ -458,14 +464,18 @@
                       <h6>Filter</h6>
                     </li>
 
-                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list>Today</a></li>
-                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list>This Month</a></li>
-                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list>This Year</a></li>
+                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="today">Today</a></li>
+                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="month">This Month</a></li>
+                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="year">This Year</a></li>
+
+                  <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="all">All</a></li>
+
+
                   </ul>
                 </div>
 
                 <div class="card-body pb-0">
-                  <h5 class="card-title">Account Receivable List <span>| Today</span></h5>
+                  <h5 class="card-title">Account Receivable List <span>|</span></h5>
 
                   <table class="table table-borderless">
                     <thead>
@@ -492,58 +502,69 @@
 
 
       <script>
-					 $(document).ready(function () {
-				function loadArAgingList(filterType) {
-						$.ajax({
-								url: `/api-get-ar-aging-for-dashboard/?filter_type=${filterType}`,
-								type: 'GET',
-								success: function (data) {
-										if (data.length > 0) {
-												let totalAmount = data.reduce((sum, item) => sum + item.total_balance, 0);
-												let tbody = '';
-
-												// Sort by total balance (highest first) and rank
-												data.sort((a, b) => b.total_balance - a.total_balance);
-
-												data.forEach((item, index) => {
-														let percentage = (item.total_balance / totalAmount) * 100;
-														tbody += `
-																<tr>
-																		<td>${index + 1}</td>
-																		<td>${item._id}</td>
-																		<td>${item.total_balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-																		<td>${percentage.toFixed(2)}%</td>
-																</tr>
-														`;
-												});
-
-												$('table tbody').html(tbody);
-										} else {
-												$('table tbody').html('<tr><td colspan="4" class="text-center">No data available</td></tr>');
-										}
-								},
-								error: function (xhr) {
-										console.error('Error fetching data:', xhr.responseJSON.detail);
-								}
-						});
-				}
-
-				// Load data for "Today" on page load
-				loadArAgingList('today');
-
-				// Handle filter clicks
-				$('.dropdown-item-ar-list').on('click', function (e) {
-						e.preventDefault();
-
-						let filterType = $(this).text().toLowerCase().replace(' ', '');
-						loadArAgingList(filterType);
-
-						// Update the card title based on the selected filter
-						$('.card-title span').text(`| ${$(this).text()}`);
-				});
-		});
-
 					
+$(document).ready(function () {
+    // Load data when the page loads with default filter type 'all'
+    loadArAgingList('all');
+
+    // Handle dropdown click using $(document).on() for dynamic elements
+    $(document).on('click', '.dropdown-item-ar-list', function (e) {
+        e.preventDefault();
+
+        let filterType = $(this).data('filter-ar-list');
+
+        // Load data based on the selected filter type
+        loadArAgingList(filterType);
+
+        // Update the card title with the selected filter
+        $('.card-title span').text(`| ${$(this).text()}`);
+    });
+});
+
+function loadArAgingList(filterType) {
+    $.ajax({
+        url: `/api-get-ar-aging-for-dashboard/?filter_type=${filterType}`,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            if (data.length > 0) {
+                let totalAmount = data.reduce((sum, item) => sum + item.total_balance, 0);
+                let tbody = '';
+
+                // Sort data by total balance (descending)
+                data.sort((a, b) => b.total_balance - a.total_balance);
+
+                data.forEach((item, index) => {
+                    let percentage = (item.total_balance / totalAmount) * 100;
+                    tbody += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item._id}</td>
+                            <td>${item.total_balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td>${percentage.toFixed(2)}%</td>
+                        </tr>
+                    `;
+                });
+
+                // Populate table body with new data
+                $('table tbody').html(tbody);
+            } else {
+                $('table tbody').html('<tr><td colspan="4" class="text-center">No data available</td></tr>');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error(`Error: ${error}`);
+            $('table tbody').html('<tr><td colspan="4" class="text-center text-danger">Failed to load data</td></tr>');
+        }
+    });
+}
+
+
+
+
+
+
+
 
 
 
@@ -961,6 +982,8 @@ $(document).ready(function () {
     </section>
 
 
+
+<!-- this function is for sales Transaction -->
 <script>
 $(document).ready(function() {
     // Function to fetch sales data
@@ -976,7 +999,8 @@ $(document).ready(function() {
                 // Update the label
                 let labelText = filter === 'today' ? 'Today' :
                                 filter === 'month' ? 'This Month' :
-                                'This Year';
+                                filter === 'year' ? 'This Year':
+                                filter === 'all' ? 'All':
 
                 $('#sales-filter-label').text(`| ${labelText}`);
             },
@@ -989,10 +1013,10 @@ $(document).ready(function() {
     // Initial load (fetch today's sales by default)
     fetchSales('today');
 
-
-			setInterval(function() {
-										fetchSales('today');
-								}, 5000); 
+			//
+			// setInterval(function() {
+			// 							fetchSales('today');
+			// 					}, 5000c); 
 
     // Handle filter click
     $('.dropdown-item').on('click', function() {
@@ -1018,7 +1042,8 @@ $(document).ready(function() {
                 // Update the label
                 let labelText = filter === 'today' ? 'Today' :
                                 filter === 'month' ? 'This Month' :
-                                'This Year';
+                                filter === 'year' ? 'This Year':
+                                filter === 'all' ? 'All':
 
                 $('#payment-filter-label').text(`| ${labelText}`);
             },
@@ -1031,10 +1056,10 @@ $(document).ready(function() {
     // Initial load (fetch today's sales by default)
     fetchSales('today');
 
-
-			setInterval(function() {
-										fetchSales('today');
-								}, 5000); 
+			//
+			// setInterval(function() {
+			// 							fetchSales('today');
+			// 					}, 5000); 
 
     // Handle filter click
     $('.dropdown-item-payment').on('click', function() {
