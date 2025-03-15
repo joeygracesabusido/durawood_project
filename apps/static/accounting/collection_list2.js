@@ -23,6 +23,12 @@ $(document).ready(function () {
                             <td>${formatNumber(payment.cash_amount)}</td>
                             <td>${formatNumber(payment.amount_2307)}</td>
                             <td>${payment.remarks}</td>
+                            <td>${payment.date_created}</td>
+                            <td>${payment.date_updated}</td>
+                            <td>${payment.user}</td>
+
+
+
 
                             <td>
                                 <!-- Add action buttons here if needed -->

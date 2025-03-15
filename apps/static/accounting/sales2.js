@@ -189,6 +189,10 @@ function makeBranchRow(index, data) {
   <td>${data.due_date}</td>
   <td>${data.tax_type}</td>
   <td>${data.amount}</td>
+ <td>${data.date_created}</td>
+ <td>${data.date_updated}</td>
+ <td>${data.user}</td>
+
 </tr>`;
     
 }

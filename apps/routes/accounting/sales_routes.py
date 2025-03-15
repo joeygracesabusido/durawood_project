@@ -144,7 +144,7 @@ async def get_sales(username: str = Depends(get_current_user)):
             "due_date": data['due_date'].strftime('%Y-%m-%d') if isinstance(data['due_date'], datetime) else data['due_date'],
             "tax_type": data['tax_type'],
             "amount": data['amount'],
-            "user": username,
+            "user": data['user'],
             "date_updated": data['date_updated'],
             "date_created": data['date_created'],
 

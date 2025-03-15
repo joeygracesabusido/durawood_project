@@ -168,7 +168,7 @@ async def get_sales(username: str = Depends(get_current_user)):
             "cash_amount": data['cash_amount'],
             "amount_2307": data['amount_2307'],
             "remarks": data['remarks'],
-            "user": username,
+            "user": data['user'],
             "date_updated": data['date_updated'],
             "date_created": data['date_created'],
 

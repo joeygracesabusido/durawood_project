@@ -126,7 +126,7 @@ $(document).ready(function () {
                         let totals = customerTotals[lastCustomer];
                         tableHtml += `
                             <tr class="bg-gray-500 text-yellow-400 text-right text-sm">
-                                <td colspan="3" class="text-center">${lastCustomer} Total:</td>
+                                <td colspan="3" class="text-right">${lastCustomer} Total:</td>
                                 <td>${formatCurrency(totals.col_1_15)}</td>
                                 <td>${formatCurrency(totals.col_16_30)}</td>
                                 <td>${formatCurrency(totals.col_31_60)}</td>
@@ -139,9 +139,9 @@ $(document).ready(function () {
                     // ✅ Add row with calculated total
                     tableHtml += `
                         <tr class="text-right text-sm">
-                            <td class="text-center">${sale.customer}</td>
-                            <td class="text-center">${sale.invoice_no}</td>
-                            <td class="text-center">${sale.category}</td>
+                            <td class="text-left">${sale.customer}</td>
+                            <td class="text-left">${sale.invoice_no}</td>
+                            <td class="text-left">${sale.category}</td>
                             <td>${formatCurrency(col_1_15)}</td>
                             <td>${formatCurrency(col_16_30)}</td>
                             <td>${formatCurrency(col_31_60)}</td>
