@@ -182,7 +182,6 @@ function makeBranchRow(index, data) {
   <td>${data.dr_no}</td>
   <td>${data.load_no}</td>
   <td>${data.po_no}</td>
-
   <td>${data.customer}</td>
   <td>${data.category}</td>
   <td>${data.terms}</td>

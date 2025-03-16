@@ -18,7 +18,7 @@ $(document).ready(function () {
                             <td>${payment.date}</td>
                             <td>${payment.customer}</td>
                             <td>${payment.cr_no}</td>
-
+                            <td>${payment.payment_method}</td>
                             <td>${payment.invoice_no}</td>
                             <td>${formatNumber(payment.cash_amount)}</td>
                             <td>${formatNumber(payment.amount_2307)}</td>

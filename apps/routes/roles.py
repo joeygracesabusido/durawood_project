@@ -79,40 +79,40 @@ async def get_get(username: str = Depends(get_current_user)):
 
     roleAuthenticate = mydb.roles.find_one({'role': role['role']})
 
-    print(roleAuthenticate['allowed_access'])
+    #print(roleAuthenticate['allowed_access'])
     
 
-    if 'Allowed Roles' in roleAuthenticate['allowed_access']:
+    # if 'Allowed Roles' in roleAuthenticate['allowed_access']:
 
 
-        try:
-            result = mydb.roles.find().sort('role', -1)
+    try:
+        result = mydb.roles.find().sort('role', -1)
 
-            SalesData = [{
-                
-                "id": str(data['_id']), 
-                "role": data['role'],
-                "allowed_access": data['allowed_access'],
-                "date_updated": data['date_updated'],
-                "date_created": data['date_created'],
-
-
-            } for data in result
-
-        ]
-            return SalesData
-        except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+        SalesData = [{
+            
+            "id": str(data['_id']), 
+            "role": data['role'],
+            "allowed_access": data['allowed_access'],
+            "date_updated": data['date_updated'],
+            "date_created": data['date_created'],
 
 
-    else:
-        
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail= "Not Authorized ",
-            # headers={"WWW-Authenticate": "Basic"},
-        )
+        } for data in result
 
+    ]
+        return SalesData
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+
+
+   
+    #
+    #     raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #         detail= "Not Authorized ",
+    #         # headers={"WWW-Authenticate": "Basic"},
+    #     )
+    #
 
 
 @api_roles.put("/api-update-role/{profile_id}", response_model=None)

@@ -34,6 +34,18 @@ class paymentBM(BaseModel):
     user: Optional[str] = None
     date_updated: datetime =  datetime.utcnow()
     date_created: Optional[datetime] = datetime.utcnow()
+    payment_method: str
+
+
+@api_payment.put("/add-new-column-payment/")
+async def add_new_column(username: str = Depends(get_current_user)):
+    result = mydb.payment.update_many(
+        {},
+        {"$set": {"payment_method": "Cash"}}  # Add new field with a default value
+    )
+    return {"modified_count": result.modified_count}
+
+
 
 
 
@@ -69,7 +81,7 @@ async def api_collection_list_template(request: Request,
     role = mydb.login.find_one({"email_add": username})
     roleAuthenticate = mydb.roles.find_one({'role': role['role']})
 
-    if 'Payment' in roleAuthenticate['allowed_access']:
+    if 'Update Payment' in roleAuthenticate['allowed_access']:
         # Convert id to ObjectId
         obj_id = ObjectId(id)
 
@@ -90,7 +102,8 @@ async def api_collection_list_template(request: Request,
                 "remarks": item['remarks'],
                 "user": item['user'],
                 "date_created": item['date_created'],
-                "date_updated": item['date_updated']
+                "date_updated": item['date_updated'],
+                "payment_method": item['payment_method']
             }
 
             return templates.TemplateResponse(
@@ -135,6 +148,7 @@ async def create_sales_transaction(data: paymentBM, username: str = Depends(get_
                 "user": username,
                 "date_updated": datetime.utcnow(),
                 "date_created": datetime.utcnow(),
+                "payment_method": data.payment_method
             }
 
             # Correct MongoDB insert operation
@@ -171,7 +185,7 @@ async def get_sales(username: str = Depends(get_current_user)):
             "user": data['user'],
             "date_updated": data['date_updated'],
             "date_created": data['date_created'],
-
+            "payment_method": data['payment_method']
 
         } for data in result
 
@@ -197,7 +211,7 @@ async def update_customer_profile_api(id: str, data: paymentBM,username: str = D
             "remarks": data.remarks,
             "user": username,
             "date_updated": data.date_updated,
-                     
+            "payment_method": data.payment_method        
               
             }
         result = mydb.payment.update_one({'_id': obj_id},{'$set': updateData})

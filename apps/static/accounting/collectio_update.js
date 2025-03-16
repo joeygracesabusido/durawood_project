@@ -63,7 +63,8 @@ $(document).ready(function() {
             cash_amount: parseFloat($("#cash_amount").val()) || 0,
             amount_2307: parseFloat($("#amount_2307").val()) || 0,
             remarks: $("#remarks").val(),
-            date_updated: new Date().toISOString().slice(0, 10) // Auto set date updated
+            date_updated: new Date().toISOString().slice(0, 10), // Auto set date update
+            payment_method: $("#payment_method").val(),
         };
 
         // Call API

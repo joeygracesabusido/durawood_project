@@ -46,8 +46,19 @@ jQuery(document).ready(function($) {
 $(document).ready(function () {
     $("#btn_save_payment").click(function (e) {
         e.preventDefault(); // Prevent form submission
+        
+        balance = $("#balance").val() || 0;
+        cashAmount = parseFloat($("#cash_amount").val()) || 0,
+        amount2307 = parseFloat($("#amount_2307").val()) || 0;
 
-        // Collect form data
+        let AmountSAve = 0;
+
+        AmountSAve = balance - (cashAmount + amount2307)
+
+
+        if (AmountSAve == 0) {
+
+           // Collect form data
         let paymentData = {
             date: $("#trans_date").val(),
             customer: $("#customer").val(),
@@ -57,6 +68,7 @@ $(document).ready(function () {
             cash_amount: parseFloat($("#cash_amount").val()) || 0, // Ensure it's a number
             amount_2307: parseFloat($("#amount_2307").val()) || 0,
             remarks: $("#remarks").val(),
+            payment_method: $("#payment_method").val(),
         };
 
         $.ajax({
@@ -73,6 +85,12 @@ $(document).ready(function () {
                 alert("❌ Error: " + xhr.responseJSON.detail); // Show error message
             }
         });
+ 
+
+
+            }
+      alert("Payment is greaterthan or lessthan Balance")
+        
     });
 });
 

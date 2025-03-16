@@ -73,6 +73,24 @@
                 </div>
               </div>
 
+              <div class="row mb-4">
+                  <label for="invoice_no" class="col-sm-5 col-form-label">Payment Method</label>
+                  <div class="col-sm-7">
+
+                    <select
+                        id="payment_method"
+                        class="form-select"
+                        >
+
+                      <option value="Cash" {% if collectionData.payment_method == 'Cash' %}selected{% endif %}>Cash</option>
+                      <option value="Check" {% if collectionData.payment_method == 'Check' %}selected{% endif %}>Check</option>
+
+                    </select>
+
+                  </div>
+                </div>
+
+
 
               <div class="row mb-4">
                 <label for="invoice_no" class="col-sm-5 col-form-label">Collection Receipt</label>
