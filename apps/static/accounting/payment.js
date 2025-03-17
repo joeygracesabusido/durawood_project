@@ -43,57 +43,59 @@ jQuery(document).ready(function($) {
 
 
 
-$(document).ready(function () {
-    $("#btn_save_payment").click(function (e) {
-        e.preventDefault(); // Prevent form submission
-        
-        balance = $("#balance").val() || 0;
-        cashAmount = parseFloat($("#cash_amount").val()) || 0,
-        amount2307 = parseFloat($("#amount_2307").val()) || 0;
-
-        let AmountSAve = 0;
-
-        AmountSAve = balance - (cashAmount + amount2307)
-
-
-        if (AmountSAve == 0) {
-
-           // Collect form data
-        let paymentData = {
-            date: $("#trans_date").val(),
-            customer: $("#customer").val(),
-            customer_id: $("#customer_id").val(),
-            cr_no: $("#collection_receipt").val(),
-            invoice_no: $("#invoice_no").val(),
-            cash_amount: parseFloat($("#cash_amount").val()) || 0, // Ensure it's a number
-            amount_2307: parseFloat($("#amount_2307").val()) || 0,
-            remarks: $("#remarks").val(),
-            payment_method: $("#payment_method").val(),
-        };
-
-        $.ajax({
-            url: "/api-insert-payment/",
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(paymentData),
-            success: function (response) {
-                alert("✅ " + response.message); // Show success message
-               // $("#paymentForm")[0].reset(); // Clear the form
-                window.location.href = "/payment/";
-            },
-            error: function (xhr) {
-                alert("❌ Error: " + xhr.responseJSON.detail); // Show error message
-            }
-        });
- 
-
-
-            }
-      alert("Payment is greaterthan or lessthan Balance")
-        
-    });
-});
-
+// $(document).ready(function () {
+//     $("#btn_save_payment").click(function (e) {
+//         e.preventDefault(); // Prevent form submission
+//
+//         let balance = $("#balance").val() || 0;
+//         let cashAmount = parseFloat($("#cash_amount").val()) || 0;
+//         let amount2307 = parseFloat($("#amount_2307").val()) || 0;
+//
+//         let AmountSAve = 0;
+//
+//         AmountSAve = balance - (cashAmount + amount2307)
+//
+//
+//         if (AmountSAve == 0) {
+//
+//            // Collect form data
+//         let paymentData = {
+//             date: $("#trans_date").val(),
+//             customer: $("#customer").val(),
+//             customer_id: $("#customer_id").val(),
+//             cr_no: $("#collection_receipt").val(),
+//             invoice_no: $("#invoice_no").val(),
+//             cash_amount: parseFloat($("#cash_amount").val()) || 0, // Ensure it's a number
+//             amount_2307: parseFloat($("#amount_2307").val()) || 0,
+//             remarks: $("#remarks").val(),
+//             payment_method: $("#payment_method").val(),
+//         };
+//
+//         console.log(paymentData)
+//
+//         // $.ajax({
+//         //     url: "/api-insert-payment/",
+//         //     type: "POST",
+//         //     contentType: "application/json",
+//         //     data: JSON.stringify(paymentData),
+//         //     success: function (response) {
+//         //         alert("✅ " + response.message); // Show success message
+//         //        // $("#paymentForm")[0].reset(); // Clear the form
+//         //         window.location.href = "/payment/";
+//         //     },
+//         //     error: function (xhr) {
+//         //         alert("❌ Error: " + xhr.responseJSON.detail); // Show error message
+//         //     }
+//         // });
+//         //
+//
+//
+//             }
+//       alert("Payment is greaterthan or lessthan Balance")
+//
+//     });
+// });
+//
 
 
  $(document).ready(function () {
@@ -115,5 +117,49 @@ $(document).ready(function () {
     });
   });
 
+$(document).ready(function () {
+    $("#btn_save_payment").click(function (e) {
+        e.preventDefault(); // Prevent form submission
+        
+        let balance = parseFloat($("#balance").val()) || 0;
+        let cashAmount = parseFloat($("#cash_amount").val()) || 0;
+        let amount2307 = parseFloat($("#amount_2307").val()) || 0;
 
+        let AmountSAve = balance - (cashAmount + amount2307);
+
+        if (Math.abs(AmountSAve > 0)) {
+            // Collect form data
+            let paymentData = {
+                date: $("#trans_date").val(),
+                customer: $("#customer").val(),
+                customer_id: $("#customer_id").val(),
+                cr_no: $("#collection_receipt").val(),
+                invoice_no: $("#invoice_no").val(),
+                cash_amount: cashAmount,
+                amount_2307: amount2307,
+                remarks: $("#remarks").val(),
+                payment_method: $("#payment_method").val(),
+            };
+
+            // console.log(paymentData);
+
+            $.ajax({
+                url: "/api-insert-payment/",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(paymentData),
+                success: function (response) {
+                    alert("✅ " + response.message); // Show success message
+                    // $("#paymentForm")[0].reset(); // Clear the form
+                    window.location.href = "/collection-list/";
+                },
+                error: function (xhr) {
+                    alert("❌ Error: " + (xhr.responseJSON?.detail || "Unknown error")); // Show error message
+                }
+            });
+        } else {
+            alert("❌ Payment is greater than  Balance");
+        }
+    });
+});
 
