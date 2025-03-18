@@ -127,7 +127,7 @@ $(document).ready(function () {
 
         let AmountSAve = balance - (cashAmount + amount2307);
 
-        if (Math.abs(AmountSAve => 0)) {
+        if (Math.abs(AmountSAve >= 0)) {
             // Collect form data
             let paymentData = {
                 date: $("#trans_date").val(),
@@ -141,7 +141,7 @@ $(document).ready(function () {
                 payment_method: $("#payment_method").val(),
             };
 
-            // console.log(paymentData);
+            console.log(paymentData);
 
             $.ajax({
                 url: "/api-insert-payment/",
