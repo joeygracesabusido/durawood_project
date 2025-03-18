@@ -4,6 +4,10 @@
 <!-- jQuery (Make sure it's loaded before jQuery UI) -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+<script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+
+
+
 <!-- jQuery UI CSS (for styling the autocomplete dropdown) -->
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
 
@@ -35,10 +39,57 @@
 
 
   <section class="section">
-        <div class="col-lg-10">
+        <div class="col-lg-12">
+
+
+
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Sales Transaction List</h5>
+<div class"py-5 px-5">
+             <div class="flex space-x-2">
+                <div class="py-2 w-1/4">
+                   <input class="form-control w-full"
+                      id="date_from"
+                      type="date"
+                      
+                      >
+                     </input>
+                  </div>
+               <div class="py-2 w-1/4">
+                 <input class="form-control w-full"
+                      id="date_to"
+                      type="date"
+                      
+                      >
+                   </input>
+
+
+              </div>
+
+              <div class="py-2 w-1/4">
+                
+                   <button id="search_data"
+                        class="bg-sky-500 
+                        text-white py-2 px-4
+                        rounded"
+
+                    >
+                   Search
+
+                  </button>
+
+
+
+                </div>
+
+            </div>
+           </div>
+
+
+
+
+
             <div calss"py-5 px-5">
                <button id="printPDF" class="btn btn-success" >
                  Print to PDF
@@ -68,6 +119,7 @@
 
                   <td>Tax Type</td>
                   <td>Amount</td>
+                 <td>Balance</td>
                 </tr>
               </thead>
               <tbody></tbody>

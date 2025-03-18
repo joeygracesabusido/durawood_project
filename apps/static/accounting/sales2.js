@@ -114,6 +114,7 @@ let dr_no = "";
 let customer = "";
 let customer_id = "";
 let category = "";
+let items = "";
 let terms = "";
 let due_date = "";
 let tax_type = "Vatable";
@@ -132,6 +133,7 @@ const dr_no_el = $("#dr_no");
 const customer_el = $("#customer");
 const customer_id_el = $("#customer_id");
 const category_el = $("#category");
+const items_el = $("#items");
 const terms_el = $("#terms");
 const due_date_el = $("#due_date");
 const tax_type_el = $("#tax_type");
@@ -184,6 +186,7 @@ function makeBranchRow(index, data) {
   <td>${data.po_no}</td>
   <td>${data.customer}</td>
   <td>${data.category}</td>
+  <td>${data.items}</td>
   <td>${data.terms}</td>
   <td>${data.due_date}</td>
   <td>${data.tax_type}</td>
@@ -228,6 +231,7 @@ function openToEdit(index, customer_row_id) {
     customer_el.val(data.customer);
     customer_id_el.val(data.customer_id);
     category_el.val(data.category);
+    items_el.val(data.items);
     invoice_no_el.val(data.invoice_no);
     terms_el.val(data.terms);
     due_date_el.val(data.due_date);
@@ -251,6 +255,7 @@ async function saveOrUpdateCustomer() {
   const customer= customer_el.val();
   const customer_id= customer_id_el.val();
   const category = category_el.val();
+  const items = items_el.val()
   const terms=terms_el.val();
   const due_date=due_date_el.val();
   const tax_type=tax_type_el.val();
@@ -273,7 +278,8 @@ async function saveOrUpdateCustomer() {
     dr_no: dr_no,
     customer: customer ,
     customer_id: customer_id,
-      category: category,
+    category: category,
+    items: items,
     invoice_no: invoice_no,
     terms: terms, // Replace with actual user if needed
     due_date: due_date,
@@ -310,7 +316,8 @@ async function saveOrUpdateCustomer() {
       contentType: "application/json",
       data: JSON.stringify(customerData),
       success: function (response) {
-        alert(response.message);
+alert(response.message);
+
         window.location.href = "/sales/";
         isUpdating = false;
         $("#btn_save_branch").text('Add');
@@ -399,3 +406,18 @@ if (tax_type === 'Vatable') {
     $('#vat').val(stringNumberVat);
 }
 
+
+
+
+
+
+ document.addEventListener("DOMContentLoaded", function () {
+    // Get today's date in YYYY-MM-DD format
+    let today = new Date().toISOString().split('T')[0];
+    
+    // Set the value of the date inputs to today's date
+    document.getElementById('delivery_date').value = today;
+    document.getElementById('invoice_date').value = today;
+
+
+});

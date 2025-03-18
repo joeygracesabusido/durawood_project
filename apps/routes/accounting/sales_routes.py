@@ -30,6 +30,7 @@ class SalesBM(BaseModel):
     dr_no: str
     customer: str 
     customer_id: str
+    items: str
     category: str
     terms: str
     due_date: datetime
@@ -39,6 +40,13 @@ class SalesBM(BaseModel):
     date_updated: datetime =  datetime.utcnow()
     date_created: Optional[datetime] = datetime.utcnow()
 
+@api_sales.put("/add-new-column-sales/")
+async def add_new_column(username: str = Depends(get_current_user)):
+    result = mydb.sales.update_many(
+        {},
+        {"$set": {"items": "CEMENT"}}  # Add new field with a default value
+    )
+    return {"modified_count": result.modified_count}
 
 
 @api_sales.get("/sales/", response_class=HTMLResponse)
@@ -94,6 +102,7 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
                 "customer": data.customer,
                 "customer_id": data.customer_id,
                 "category": data.category,
+                "items": data.items,
                 "terms": data.terms,
                 "due_date": data.due_date,
                 "tax_type": data.tax_type,
@@ -140,6 +149,7 @@ async def get_sales(username: str = Depends(get_current_user)):
             "customer": data['customer'],
             "customer_id": data['customer_id'],
             "category": data['category'],
+            "items": data['items'],
             "terms": data['terms'],
             "due_date": data['due_date'].strftime('%Y-%m-%d') if isinstance(data['due_date'], datetime) else data['due_date'],
             "tax_type": data['tax_type'],
@@ -181,6 +191,7 @@ async def update_customer_profile_api(profile_id: str, data: SalesBM,username: s
                 "customer": data.customer,
                 "customer_id": data.customer_id,
                 "category": data.category,
+                "items": data.items,
                 "terms": data.terms,
                 "due_date": data.due_date,
                 "tax_type": data.tax_type,

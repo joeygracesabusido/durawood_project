@@ -1,11 +1,24 @@
 
 $(document).ready(function () {
     function fetchSalesReport() {
+
+        let dateFrom = $("#date_from").val();
+        let dateTo = $("#date_to").val();
         $.ajax({
-            url: "/api-get-sales-report2/",
+            url: `/api-get-sales-report-with-params/?date_from=${dateFrom}&date_to=${dateTo}`,
             type: "GET",
+            cache: false,
             success: function (data) {
                 console.log("Sales Report Data:", data); // Debugging output
+
+               // Destroy existing DataTable instance
+                if ($.fn.DataTable.isDataTable("#table_sales")) {
+                    $('#table_sales').DataTable().clear().destroy();
+                } 
+
+
+
+
                 $("#table_sales tbody").empty(); // Clear table before adding new rows
 
                 $.each(data, function (index, sale) {
@@ -29,6 +42,7 @@ $(document).ready(function () {
                            </td>
 
                             <td>${sale.tax_type}</td>
+                            <td>${formatCurrency(sale.amount)}</td>
                             <td>${formatCurrency(sale.balance)}</td>
                         </tr>
                     `;
@@ -51,8 +65,12 @@ $(document).ready(function () {
       }).format(amount);
     }
 
-      
+     
+  $("#search_data").on("click", function () {
+
     fetchSalesReport(); // Call function when page loads
+
+    });
 });
 
 

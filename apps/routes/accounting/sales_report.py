@@ -151,3 +151,107 @@ async def get_sales(username: str = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
 
+
+
+
+
+@api_sales_report.get("/api-get-sales-report-with-params/")
+async def get_sales(
+    username: str = Depends(get_current_user),
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None
+):
+    try:
+        pipeline = []
+
+        # Add $match stage for date range filtering only if both dates are provided
+        if date_from and date_to:
+            pipeline.append({
+                "$match": {
+                    "invoice_date": {
+                        "$gte": datetime.combine(date_from, datetime.min.time()),
+                        "$lte": datetime.combine(date_to, datetime.max.time())
+                    }
+                }
+            })
+
+        pipeline += [
+            {
+                "$lookup": {
+                    "from": "payment",
+                    "let": { "invoice_no": "$invoice_no" },
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": "$invoice_no",
+                                "total_cash": { "$sum": "$cash_amount" },
+                                "total_2307": { "$sum": "$amount_2307" }
+                            }
+                        }
+                    ],
+                    "as": "payment_info"
+                }
+            },
+            {
+                "$addFields": {
+                    "total_cash": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+                    },
+                    "total_2307": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "balance": {
+                        "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+                    },
+                    "status": {
+                        "$cond": {
+                            "if": { "$gt": ["$due_date", None] },
+                            "then": {
+                                "$max": [{
+                                    "$divide": [{
+                                        "$subtract": [{ "$toLong": "$$NOW" }, { "$toLong": "$due_date" }]
+                                    }, 86400000]
+                                }, 0]
+                            },
+                            "else": None
+                        }
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "delivery_date": 1,
+                    "invoice_date": 1,
+                    "po_no": 1,
+                    "load_no": 1,
+                    "dr_no": 1,
+                    "customer": 1,
+                    "customer_id": 1,
+                    "invoice_no": 1,
+                    "tax_type": 1,
+                    "terms": 1,
+                    "due_date": 1,
+                    "amount": 1,
+                    "balance": 1,
+                    "status": 1,
+                    "category": 1,
+                }
+            }
+        ]
+
+        result = list(mydb.sales.aggregate(pipeline))
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+ 
