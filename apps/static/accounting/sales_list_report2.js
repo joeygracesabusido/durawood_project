@@ -1,4 +1,3 @@
-
 $(document).ready(function () {
     function fetchSalesReport() {
 
@@ -25,25 +24,25 @@ $(document).ready(function () {
                     
                    let statusColor = sale.status > 1 ? "style='color: orange;											 font-weight: ;'" : ""; 
 												let row = `
-                        <tr class="text-sm">
-                            <td class="text-sm">${sale.invoice_date ? sale.invoice_date.split("T")[0] : "NA"}</td>
+                        <tr>
+                            <td class="text-xs">${sale.invoice_date ? sale.invoice_date.split("T")[0] : "NA"}</td>
                            
-                            <td class="text-xs>${sale.customer}</td>
-                            <td>${sale.category}</td>
-                            <td>${sale.dr_no}</td>
-                            <td>${sale.invoice_no}</td>
-                            <td>${sale.terms}</td>
-                            <td>${sale.due_date ? sale.due_date.split("T")[0] : "NA"}</td>
+                            <td class="text-xs">${sale.customer}</td>
+                            <td class="text-xs">${sale.category}</td>
+                            <td class="text-xs">${sale.dr_no}</td>
+                            <td class="text-xs">${sale.invoice_no}</td>
+                            <td class="text-xs">${sale.terms}</td>
+                            <td class="text-xs">${sale.due_date ? sale.due_date.split("T")[0] : "NA"}</td>
 
-                           <td ${statusColor} style="${sale.status !== null && sale.balance <= 0 ? 'color: green; font-weight: bold;' : ''}">
+                           <td ${statusColor} style="${sale.status !== null && sale.balance <= 0 ? 'color: green;'  : ''}" class="text-xs">
                                 ${sale.status !== null 
                                     ? (sale.balance > 0 ? Math.floor(sale.status) + " days overdue" : "Paid") 
                                     : "N/A"}
                            </td>
 
-                            <td>${sale.tax_type}</td>
-                            <td>${formatCurrency(sale.amount)}</td>
-                            <td>${formatCurrency(sale.balance)}</td>
+                            <td class="text-xs">${sale.tax_type}</td>
+                            <td class="text-xs">${formatCurrency(sale.amount)}</td>
+                            <td class="text-xs">${formatCurrency(sale.balance)}</td>
                         </tr>
                     `;
                     $("#table_sales tbody").append(row);

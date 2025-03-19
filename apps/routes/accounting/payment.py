@@ -423,6 +423,48 @@ async def get_payment_dashboard(
    
 
 
+@api_payment.get("/api-get-payment-with-params/")
+async def get_sales(
+    username: str = Depends(get_current_user),
+    date_from: Optional[date] = None,
+    date_to: Optional[date] = None
+):
+    try:
+        # Build the filter based on the provided dates
+        filter_conditions = {}
+        if date_from:
+            filter_conditions["date"] = {"$gte": datetime.combine(date_from, datetime.min.time())}
+        if date_to:
+            if "date" in filter_conditions:
+                filter_conditions["date"]["$lte"] = datetime.combine(date_to, datetime.max.time())
+            else:
+                filter_conditions["date"] = {"$lte": datetime.combine(date_to, datetime.max.time())}
+        
+        # Query the database with the filter
+        result = mydb.payment.find(filter_conditions).sort('date', 1)
+
+        paymentData = [{
+            "id": str(data['_id']),
+            "date": data['date'].strftime('%Y-%m-%d') if isinstance(data['date'], datetime) else data['date'],
+            "customer": data.get('customer'),
+            "customer_id": data.get('customer_id'),
+            "cr_no": data.get('cr_no'),
+            "invoice_no": data.get('invoice_no'),
+            "cash_amount": data.get('cash_amount'),
+            "amount_2307": data.get('amount_2307'),
+            "remarks": data.get('remarks'),
+            "user": data.get('user'),
+            "date_updated": data.get('date_updated'),
+            "date_created": data.get('date_created'),
+            "payment_method": data.get('payment_method')
+        } for data in result]
+
+        return paymentData
+
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Error retrieving payments: {e}")
+
+
 
 		
 

@@ -4,9 +4,13 @@ $(document).ready(function () {
     }
 
     function fetchPayments() {
+
+        let dateFrom = $("#date_from").val();
+        let dateTo = $("#date_to").val();
         $.ajax({
-            url: "/api-get-payment/",
+            url: `/api-get-payment-with-params/?date_from=${dateFrom}&date_to=${dateTo}`,
             type: "GET",
+            cache: false,
             dataType: "json",
             success: function (data) {
                 let tableBody = $("#table_payment tbody");
@@ -67,7 +71,13 @@ $(document).ready(function () {
     }
 
     // Fetch data when the page loads
+   $("#search_data").on("click", function () {
+
     fetchPayments();
+
+  });
+
+  // fetchPayments();
 });
 
 
