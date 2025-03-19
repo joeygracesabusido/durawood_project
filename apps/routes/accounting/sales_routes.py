@@ -91,6 +91,10 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
             #due_date_datetime = datetime.strptime(str(data.due_date), "%Y-%m-%d")
 
             # Ensure date_updated and date_created use current UTC timestamp
+            sales_collection = mydb['sales']
+            sales_collection.create_index("invoice_no", unique=True)
+            
+            
             insertData = {
                
                 "delivery_date": data.delivery_date,
@@ -133,7 +137,7 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
 @api_sales.get("/api-get-sales/")
 async def get_sales(username: str = Depends(get_current_user)):
     try:
-        result = mydb.sales.find().sort('date', -1)
+        result = mydb.sales.find().sort('invoice_date', -1)
 
         SalesData = [{
             
@@ -149,7 +153,7 @@ async def get_sales(username: str = Depends(get_current_user)):
             "customer": data['customer'],
             "customer_id": data['customer_id'],
             "category": data['category'],
-            "items": data['items'],
+            "items": data.get('items'),
             "terms": data['terms'],
             "due_date": data['due_date'].strftime('%Y-%m-%d') if isinstance(data['due_date'], datetime) else data['due_date'],
             "tax_type": data['tax_type'],
