@@ -154,6 +154,11 @@ async function getSales() {
 
     if (response.ok) {
       sales_list = await response.json();
+
+			sales_list.sort((a, b) => new Date(b.date_updated) - new Date(a.date_updated));
+
+
+
       table_sales_list.empty(); // Clear the table before appending rows
       let i = 0;
       sales_list.forEach((element) => {
@@ -173,6 +178,38 @@ async function getSales() {
   }
 }
 
+
+ function formatDate(value) {
+
+
+
+		const date = new Date(value);
+
+				const year = date.getFullYear();
+				const month = String(date.getMonth() + 1).padStart(2, '0'); // Ensure 2 digits
+				const day = String(date.getDate()).padStart(2, '0'); // Ensure 2 digits
+				
+				// Format time to HH:MM AM/PM
+				// const time = date.toLocaleTimeString('en-US', {
+				// 		hour: '2-digit',
+				// 		minute: '2-digit',
+				// 		hour12: false,
+				// });
+        
+
+        let hour = date.getHours();
+        const minute = String(date.getMonth() + 1).padStart(2, '0');
+        const period = hour >= 12 ? 'PM' : 'AM';
+
+        hour = hour % 12 || 12;
+
+				return `${year}-${month}-${day} ${hour}:${minute}`;
+
+};
+
+
+
+
 function makeBranchRow(index, data) {
   return `<tr id1='${"customer_row_" + index}' onClick="openToEdit(${index},'${
     "customer_row_" + index
@@ -191,8 +228,8 @@ function makeBranchRow(index, data) {
   <td>${data.due_date}</td>
   <td>${data.tax_type}</td>
   <td>${data.amount}</td>
- <td>${data.date_created}</td>
- <td>${data.date_updated}</td>
+ <td>${formatDate(data.date_created)}</td>
+ <td>${formatDate(data.date_updated)}</td>
  <td>${data.user}</td>
 
 </tr>`;

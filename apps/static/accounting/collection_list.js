@@ -3,6 +3,26 @@ $(document).ready(function () {
         return parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    function formatDate(value) {
+
+
+		const date = new Date(value);
+
+				const year = date.getFullYear();
+				const month = String(date.getMonth() + 1).padStart(2, '0'); // Ensure 2 digits
+				const day = String(date.getDate()).padStart(2, '0'); // Ensure 2 digits
+				
+				// Format time to HH:MM AM/PM
+				const time = date.toLocaleTimeString('en-US', {
+						hour: '2-digit',
+						minute: '2-digit',
+						hour12: false,
+				});
+
+				return `${year}-${month}-${day} ${time}`;
+
+};
+
     function fetchPayments() {
 
         let dateFrom = $("#date_from").val();
@@ -27,8 +47,8 @@ $(document).ready(function () {
                             <td>${formatNumber(payment.cash_amount)}</td>
                             <td>${formatNumber(payment.amount_2307)}</td>
                             <td>${payment.remarks}</td>
-                            <td>${payment.date_created}</td>
-                            <td>${payment.date_updated}</td>
+                            <td>${formatDate(payment.date_created)}</td>
+                            <td>${formatDate(payment.date_updated)}</td>
                             <td>${payment.user}</td>
 
 
