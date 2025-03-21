@@ -8,7 +8,7 @@ from bson import ObjectId
 
 
 
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from apps.authentication.authenticate_user import get_current_user
 
 
@@ -112,8 +112,8 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
                 "tax_type": data.tax_type,
                 "amount": data.amount,
                 "user": username,
-                "date_updated": datetime.utcnow(),
-                "date_created": datetime.utcnow(),
+                "date_updated": datetime.now(timezone.utc),
+                "date_created": datetime.now(timezone.utc),
             }
 
             # Correct MongoDB insert operation

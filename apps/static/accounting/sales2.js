@@ -98,7 +98,7 @@ $(document).ready(function() {
 });
 
 //this function is for inserting Data and isUpdating
-//
+
 
 getSales();
 let isUpdating = false;
@@ -138,6 +138,46 @@ const terms_el = $("#terms");
 const due_date_el = $("#due_date");
 const tax_type_el = $("#tax_type");
 const amount_el = $("#amount");
+
+
+
+
+async function getCustomerBalance() {
+    let customerName = $('#customer').val() || '';
+
+    try {
+        const response = await fetch(`/api-get-per-customer-balance-with-params/?customer=${encodeURIComponent(customerName)}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (response.ok) {
+            const custBalance = await response.json();
+            console.log(custBalance);
+            // Check if data is returned and update input field
+            if (custBalance.length > 0) {
+                $('#summary-balance').text(
+                    custBalance[0].total_balance.toLocaleString('en-US', { 
+                        style: 'currency', 
+                        currency: 'PHP'
+                    })
+                );
+            } else {
+                $('#summary-balance').text('0.00'); // Set to zero if no data
+            }
+        } else {
+            console.error("Failed to fetch customer balance:", response.statusText);
+            $('#summary-balance').text('Error');
+        }
+    } catch (error) {
+        console.error("An error occurred:", error);
+        $('#summary-balance').text('Error');
+    }
+}
+
+
 
 
 
@@ -198,7 +238,7 @@ async function getSales() {
         
 
         let hour = date.getHours();
-        const minute = String(date.getMonth() + 1).padStart(2, '0');
+        const minute = String(date.getMinutes() + 1).padStart(2, '0');
         const period = hour >= 12 ? 'PM' : 'AM';
 
         hour = hour % 12 || 12;
@@ -298,9 +338,9 @@ async function saveOrUpdateCustomer() {
   const tax_type=tax_type_el.val();
   const amount=amount_el.val();
 
-  console.log(delivery_date,invoice_date,customer,customer_id,
-                invoice_no,due_date,tax_type,amount,po_no,load_no,dr_no)
-  // Validate inputs
+  // console.log(delivery_date,invoice_date,customer,customer_id,
+  //               invoice_no,due_date,tax_type,amount,po_no,load_no,dr_no)
+  // // Validate inputs
   if (!delivery_date ||!invoice_date || !customer||!customer_id || !invoice_no||!terms || !due_date||!tax_type || !amount ||!po_no ||!load_no ||!dr_no ||!category) {
     alert("Please fill in all fields.");
     return;
@@ -333,7 +373,9 @@ async function saveOrUpdateCustomer() {
       data: JSON.stringify(customerData),
       success: function (response) {
         alert(response?.message|| "Sales Transaction save Succesfully");
-        window.location.href = "/sales/";
+
+				getCustomerBalance();
+        // window.location.href = "/sales/";
        
         getSales();  // Refresh branch list
 

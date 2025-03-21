@@ -770,3 +770,83 @@ async def get_transaction_history(
 
 
 
+
+
+
+@api_ar_aging_report.get("/api-get-per-customer-balance-with-params/")
+async def get_list_customer_balance(
+    username: str = Depends(get_current_user), 
+    customer: Optional[str] = None
+):
+    try:
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "payment",
+                    "let": { "invoice_no": "$invoice_no" },
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": "$invoice_no",
+                                "total_cash": { "$sum": "$cash_amount" },
+                                "total_2307": { "$sum": "$amount_2307" }
+                            }
+                        }
+                    ],
+                    "as": "payment_info"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$payment_info",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+            {
+                "$addFields": {
+                    "total_cash": { "$ifNull": ["$payment_info.total_cash", 0] },
+                    "total_2307": { "$ifNull": ["$payment_info.total_2307", 0] }
+                }
+            },
+            {
+                "$addFields": {
+                    "balance": {
+                        "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+                    }
+                }
+            },
+            {
+                "$match": {
+                    "balance": { "$gt": 0 },
+                    **({"customer": customer} if customer else {})
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$customer",
+                    "total_balance": { "$sum": "$balance" }
+                }
+            },
+            {
+                "$sort": { "_id": 1 }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "customer": "$_id",
+                    "total_balance": 1
+                }
+            }
+        ]
+
+        result = list(mydb.sales.aggregate(pipeline))
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+
