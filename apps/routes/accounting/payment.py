@@ -333,7 +333,7 @@ async def autocomplete_payment_balance(term: Optional[str] = None,username: str 
 
 	     
         result = list(mydb.sales.aggregate(pipeline))
-        print(result)
+        # print(result)
         # Ensure 'customer' field exists before filtering
         if term:
             filtered_contact = [

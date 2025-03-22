@@ -151,7 +151,8 @@ $(document).ready(function () {
                 success: function (response) {
                     alert("✅ " + response.message); // Show success message
                     // $("#paymentForm")[0].reset(); // Clear the form
-                    window.location.href = "/collection-list/";
+                    // window.location.href = "/collection-list/";
+                    getCustomerBalance();
                 },
                 error: function (xhr) {
                     alert("❌ Error: " + (xhr.responseJSON?.detail || "Unknown error")); // Show error message
@@ -163,3 +164,49 @@ $(document).ready(function () {
     });
 });
 
+
+
+
+async function getCustomerBalance() {
+    let customerName = $('#customer').val() || '';
+
+    try {
+        const response = await fetch(`/api-get-per-customer-balance-with-params/?customer=${encodeURIComponent(customerName)}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (response.ok) {
+            const custBalance = await response.json();
+            console.log(custBalance);
+            // Check if data is returned and update input field
+            if (custBalance.length > 0) {
+                $('#summary-balance').text(
+                    custBalance[0].total_balance.toLocaleString('en-US', { 
+                        style: 'currency', 
+                        currency: 'PHP'
+                    })
+                );
+            } else {
+                $('#summary-balance').text('0.00'); // Set to zero if no data
+            }
+        } else {
+            console.error("Failed to fetch customer balance:", response.statusText);
+            $('#summary-balance').text('Error');
+        }
+    } catch (error) {
+        console.error("An error occurred:", error);
+        $('#summary-balance').text('Error');
+    }
+}
+
+ document.addEventListener("DOMContentLoaded", function () {
+    // Get today's date in YYYY-MM-DD format
+    let today = new Date().toISOString().split('T')[0];
+    
+    // Set the value of the date inputs to today's date
+    document.getElementById('trans_date').value = today;
+   
+});
