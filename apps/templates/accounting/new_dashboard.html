@@ -38,7 +38,10 @@
                     </li>
 
                     <li><a class="dropdown-item" href="#" data-filter="today">Today</a></li>
-                    <li><a class="dropdown-item" href="#" data-filter="month">This Month</a></li>
+                  <li><a class="dropdown-item" href="#" data-filter="week">This Week</a></li>
+  
+
+                  <li><a class="dropdown-item" href="#" data-filter="month">This Month</a></li>
                     <li><a class="dropdown-item" href="#" data-filter="year">This Year</a></li>
 
                   <li><a class="dropdown-item" href="#" data-filter="all">All</a></li>
@@ -76,6 +79,8 @@
                     </li>
 
                     <li><a class="dropdown-item-payment" href="#" data-filter-payment="today">Today</a></li>
+                     <li><a class="dropdown-item-payment" href="#" data-filter-payment="week">This Week</a></li>
+
                     <li><a class="dropdown-item-payment" href="#" data-filter-payment="month">This Month</a></li>
                     <li><a class="dropdown-item-payment" href="#" data-filter-payment="year">This Year</a></li>
                     <li><a class="dropdown-item-payment" href="#" data-filter-payment="all">All</a></li>
@@ -465,6 +470,8 @@
                     </li>
 
                     <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="today">Today</a></li>
+                      <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="week">This Week</a></li>
+
                     <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="month">This Month</a></li>
                     <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="year">This Year</a></li>
 
@@ -588,9 +595,15 @@ function loadArAgingList(filterType) {
                       <h6>Filter</h6>
                     </li>
 
-                    <li><a class="dropdown-item-pie" href="#" data-filter-pie>Today</a></li>
-                    <li><a class="dropdown-item-pie" href="#" data-filter-pie>This Month</a></li>
-                    <li><a class="dropdown-item-pie" href="#" data-filter-pie>This Year</a></li>
+                    <li><a class="dropdown-item-pie" href="#" data-filter-pie="today">Today</a></li>
+                    <li><a class="dropdown-item-pie" href="#" data-filter-pie="week">This Week</a></li>
+    
+
+              <li><a class="dropdown-item-pie" href="#" data-filter-pie="month">This Month</a></li>
+                    <li><a class="dropdown-item-pie" href="#" data-filter-pie="year">This Year</a></li>
+              <li><a class="dropdown-item-pie" href="#" data-filter-pie="all">All</a></li>
+
+
                   </ul>
                 </div>
 
@@ -611,9 +624,9 @@ function loadArAgingList(filterType) {
 $(document).ready(function () {
     function loadArAgingChart(filterType) {
         $.ajax({
-            url: '/api-get-ar-aging-for-dashboard-per-category/',
+      url: `/api-get-ar-aging-for-dashboard-per-category/?filter_type=${filterType}`,
             type: 'GET',
-            data: { filter_type: filterType },
+            dataType: 'json',
             
             success: function (data) {
                 // Extract category names and values
@@ -676,7 +689,7 @@ $(document).ready(function () {
 				$('.dropdown-item-pie').on('click', function (e) {
 						e.preventDefault();
 
-						let filterType = $(this).text().toLowerCase().replace(' ', '');
+						let filterType = $(this).data('filter-pie');
 						loadArAgingChart(filterType);
 
 						// Update the card title based on the selected filter
@@ -998,6 +1011,7 @@ $(document).ready(function() {
 
                 // Update the label
                 let labelText = filter === 'today' ? 'Today' :
+                                filter === 'week' ? 'This Week' :
                                 filter === 'month' ? 'This Month' :
                                 filter === 'year' ? 'This Year':
                                 filter === 'all' ? 'All':
@@ -1041,6 +1055,7 @@ $(document).ready(function() {
 
                 // Update the label
                 let labelText = filter === 'today' ? 'Today' :
+                                filter === 'week' ? 'This Week' :
                                 filter === 'month' ? 'This Month' :
                                 filter === 'year' ? 'This Year':
                                 filter === 'all' ? 'All':

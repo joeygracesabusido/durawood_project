@@ -391,6 +391,13 @@ async def get_ar_aging_per_category_dashboard(
                 end_of_day = start_of_day + timedelta(days=1)
                 date_filter["$gte"] = start_of_day
                 date_filter["$lt"] = end_of_day
+
+            elif filter_type == "week":
+                start_of_week = now - timedelta(days=now.weekday())
+                end_of_week = start_of_week + timedelta(days=7)
+                date_filter["$gte"] = start_of_week
+                date_filter["$lt"] = end_of_week
+
             elif filter_type == "month":
                 start_of_month = datetime(now.year, now.month, 1)
                 next_month = start_of_month.replace(month=start_of_month.month % 12 + 1, day=1)
@@ -513,6 +520,13 @@ async def get_ar_aging_per_category(
                 end_of_day = start_of_day + timedelta(days=1)
                 date_filter["$gte"] = start_of_day
                 date_filter["$lt"] = end_of_day
+
+            elif filter_type == "week":
+                start_of_week = now - timedelta(days=now.weekday())
+                end_of_week = start_of_week + timedelta(days=7)
+                date_filter["$gte"] = start_of_week
+                date_filter["$lt"] = end_of_week
+
             elif filter_type == "month":
                 start_of_month = datetime(now.year, now.month, 1)
                 next_month = start_of_month.replace(month=start_of_month.month % 12 + 1, day=1)
@@ -523,6 +537,10 @@ async def get_ar_aging_per_category(
                 next_year = start_of_year.replace(year=start_of_year.year + 1)
                 date_filter["$gte"] = start_of_year
                 date_filter["$lt"] = next_year
+
+            elif filter_type == "all":
+                date_filter = None
+
         # elif date_to:
         #     date_filter["$lte"] = datetime.strptime(date_to, "%Y-%m-%d")
 
