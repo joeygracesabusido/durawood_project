@@ -6,6 +6,9 @@ $(document).ready(function () {
             success: function (data) {
                 console.log(data);
                 let rows = '';
+
+                let grandTotal = 0;
+
                 if (data.length > 0) {
                     data.forEach(item => {
                         rows += `
@@ -14,7 +17,17 @@ $(document).ready(function () {
                                 <td class="py-2 px-4 text-right">${formatNumber(item.total_balance)}</td>
                             </tr>
                         `;
+
+                          grandTotal += parseFloat(item.total_balance);
                     });
+
+                      rows += `
+                          <tr class="bg-gray-300 font-bold">
+                            <td class="py-2 px-4 text-left">Grand Total</td>
+                            <td class="py-2 px-4 text-right">${formatNumber(grandTotal)}</td>
+                          </tr>`
+
+
                 } else {
                     rows = `
                         <tr>

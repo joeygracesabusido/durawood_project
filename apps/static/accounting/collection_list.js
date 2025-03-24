@@ -80,6 +80,18 @@ $(document).ready(function () {
                         ordering: true,
                         info: true,
                         autoWidth: false,
+                        dom:'Bftrip',
+                        
+                       buttons: [
+                            {
+                      extend: 'csv',
+                      text: 'Export to CSV',
+                      title: 'Payment Report', // Optional title for the
+                      className: 'btn btn-success' // Custom button styli
+                  }
+              ]
+
+
                     });
                 }
             },
