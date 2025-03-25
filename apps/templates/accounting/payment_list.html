@@ -6,60 +6,34 @@
 
 <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+   <!-- jQuery (Make sure it's loaded before jQuery UI) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> 
+<script src="https://unpkg.com/@tailwindcss/browser@4"></script>
 
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> -->
-   <!-- jQuery Core (this is required) -->
-  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-  
-  <!-- jQuery UI (this provides autocomplete) -->
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
-  
+
+<!-- jQuery UI CSS (for styling the autocomplete dropdown) -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+
+<!-- jQuery UI JavaScript -->
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
 <link href="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.4/b-3.1.1/b-html5-3.1.1/datatables.min.css" rel="stylesheet">
  
 <script src="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.4/b-3.1.1/b-html5-3.1.1/datatables.min.js"></script>
 
 
-<style>
-        @media (max-width: 768px) { /* For small screens */
-              .table thead {
-                  font-size: 12px; /* Adjust size */
-              }
-          }
-
-          @media (min-width: 1024px) { /* For larger screens */
-              .table thead {
-                  font-size: 14px; /* Increase size */
-              }
-          }
+<!-- Other CSS and JS files -->
+<!--<link rel="stylesheet" type="text/css" href="/static/style.css"> -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
 
 
-        thead {
-              background-color: #d6d6d6 !important; /* Light Gray */
-              color: black; /* Text color */
-          }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 
-        /* Set the font size of all table rows */
-          table {
-              font-size: 14px; /* Small font for all table text */
-          }
-
-          /* Ensure it adjusts for small screens */
-          @media (max-width: 768px) {
-              table {
-                  font-size: 9px; /* Even smaller font for mobile */
-              }
-          }
-
-
-</style>
 
 
  </head>
@@ -122,9 +96,9 @@
 
           <div class"py-5 px-5">
                <button id="printPDF" class="btn btn-warning">Print to PDF</button>
-               <button id="exportExcel" class="btn btn-success">
-                 Excel
-               </button>
+               <!-- <button id="exportExcel" class="btn btn-success"> -->
+               <!--   Excel -->
+               <!-- </button> -->
             
 
             </div>
@@ -133,10 +107,10 @@
             <!-- General Form Elements -->
             <table
               id="table_payment"
-              class="table table-bordered table-striped" 
+              class="table-auto w-full border-collapse border border-gray-700" 
             
             >
-              <thead class="table-dark text-center" >
+              <thead class="bg-gray-600 text-yellow-300 py-1 px-1 text-center text-sm" >
                 <tr>
             
                   <td>Date</>

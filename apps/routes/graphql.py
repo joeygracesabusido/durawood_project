@@ -8,10 +8,11 @@ from apps.views.mutation import Mutation
 
 
 from apps.views.grapql_aging import Query as AgingQuery
+from apps.views.graph_collection import Query as CollectionQuery
 
 
 @strawberry.type
-class Query(UserQuery,AgingQuery):
+class Query(UserQuery,AgingQuery,CollectionQuery):
     pass
 
 # Create a Strawberry schema
