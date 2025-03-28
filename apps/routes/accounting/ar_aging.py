@@ -868,3 +868,14 @@ async def get_list_customer_balance(
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
+
+
+# this function is for Customer List for balance Details to Display to display
+@api_ar_aging_report.get("/api-template-customer-list-for-balance-details/", response_class=HTMLResponse)
+async def get_temp_customer_transactions(request: Request,
+                                        username: str = Depends(get_current_user)):
+ 
+    return templates.TemplateResponse("accounting/customer_list_for_balance_details.html", 
+                                      {"request": request})
+
+
