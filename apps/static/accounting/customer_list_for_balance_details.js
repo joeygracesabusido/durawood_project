@@ -63,7 +63,7 @@ $(document).ready(function () {
     // Double click to redirect to customer transaction list
     $('#table_sales').on('dblclick', 'tr[data-customer]', function () {
         let customer = $(this).data('customer');
-        window.location.href = `/api-template-customer-transaction?customer=${encodeURIComponent(customer)}`;
+        window.location.href = `/api-template-customer-transaction-balance-details?customer=${encodeURIComponent(customer)}`;
     });
 
 

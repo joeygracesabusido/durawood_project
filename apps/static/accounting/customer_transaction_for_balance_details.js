@@ -1,3 +1,4 @@
+
 $(document).ready(function () {
     function fetchTransactionHistory(customer) {
         $.ajax({
@@ -6,31 +7,59 @@ $(document).ready(function () {
             success: function (data) {
                 console.log(data);
                 let rows = '';
-                let cummulativeBalance = 0;
+                let cumulativeBalance = 0;
+                let totalSales = 0;
+                let totalPayments = 0;
+                let totalTransaction = 0;
+
                 if (data.length > 0) {
                     data.forEach(item => {
                         const salesAmount = item.sales_amount || 0;
                         const paymentAmount = item.payment_amount || 0;
-                        cummulativeBalance += salesAmount - paymentAmount;
+                        const transactionAmount = salesAmount - paymentAmount;
+
+                        cumulativeBalance += transactionAmount;
+                        totalSales += salesAmount;
+                        totalPayments += paymentAmount;
+                        totalTransaction += transactionAmount;
+
                         rows += `
                             <tr class="border-b border-gray-300">
                                 <td class="py-1 px-1 text-right">${formatDate(item.date)}</td>
-                                <td class="py-1 px-1">${item.customer || ''}</td>
-                                <td class="py-1 px-1">${item.invoice_no || ''}</td>
-                                <td class="py-1 px-1 text-right">${formatNumber(item.sales_amount)}</td>
-                                <td class="py-1 px-1 text-right">${formatNumber(item.payment_amount)}</td>
-                                <td class="py-1 px-1 ">${item.type || ''}</td>
-                                <td class="py-1 px-1 text-right">${formatNumber(cummulativeBalance)}</td>
+                                <td class="text-right">${item.type || ''}</td>
+                                <td class="text-right">${item.invoice_no || ''}</td>
+                                <td class="text-right">${formatDate(item.due_date)}</td>
+                                <td class="text-right">${formatNumber(transactionAmount)}</td>
+                                <td class="text-right">${formatNumber(transactionAmount)}</td>
+                                <td class="text-right">${formatNumber(cumulativeBalance)}</td>
                             </tr>
                         `;
                     });
+
+                    // Add total row
+                    rows += `
+                        <tr class="font-bold bg-gray-200">
+                            <td colspan="4" class="text-right py-2 px-1">Total:</td>
+                            <td class="text-right">${formatNumber(totalTransaction)}</td>
+                            <td class="text-right">${formatNumber(totalTransaction)}</td>
+                            <td class="text-right">${formatNumber(totalTransaction)}</td>
+                        </tr>
+                    `;
+
+                    // Display customer name
+                    rows += `
+                        <tr>
+                            <td colspan="7" class="text-left py-2 px-1 font-bold">Customer: ${customer}</td>
+                        </tr>
+                    `;
                 } else {
                     rows = `
                         <tr>
-                            <td colspan="6" class="py-2 px-4 text-center">No data available</td>
+                            <td colspan="7" class="py-2 px-4 text-center">No data available</td>
                         </tr>
                     `;
                 }
+
                 $('#table_sales tbody').html(rows);
             },
             error: function (xhr) {
@@ -97,6 +126,7 @@ $(document).ready(function () {
             <body>
                 <h3 style="text-align:center">Durawood Construction & Lumber Supply, Inc.</h3>
                 <h3 style="text-align:center">Transaction History Report as of ${today}</h3>
+                <h4 style="text-align:left">Customer: ${customer}</h4>
                 ${content}
             </body>
             </html>
@@ -105,5 +135,4 @@ $(document).ready(function () {
         printWindow.print();
     });
 });
-
 

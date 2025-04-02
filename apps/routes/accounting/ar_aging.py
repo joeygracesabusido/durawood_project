@@ -744,6 +744,7 @@ async def get_transaction_history(
                     "_id": 0,
                     "date": "$invoice_date",
                     "customer": 1,
+                    "due_date": 1,
                     "invoice_no": 1,
                     "sales_amount": "$amount",
                     "payment_amount": None,
@@ -876,6 +877,14 @@ async def get_temp_customer_transactions(request: Request,
                                         username: str = Depends(get_current_user)):
  
     return templates.TemplateResponse("accounting/customer_list_for_balance_details.html", 
+                                      {"request": request})
+
+# this function is for Customer Balance Details
+@api_ar_aging_report.get("/api-template-customer-transaction-balance-details/", response_class=HTMLResponse)
+async def get_temp_customer_transactions(request: Request,
+                                        username: str = Depends(get_current_user)):
+ 
+    return templates.TemplateResponse("accounting/customer_transaction_for_balance_details.html", 
                                       {"request": request})
 
 
