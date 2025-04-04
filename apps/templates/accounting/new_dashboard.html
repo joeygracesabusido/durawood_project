@@ -78,12 +78,12 @@
                       <h6>Filter</h6>
                     </li>
 
-                    <li><a class="dropdown-item-payment" href="#" data-filter-payment="today">Today</a></li>
-                     <li><a class="dropdown-item-payment" href="#" data-filter-payment="week">This Week</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="today">Today</a></li>
+                     <li><a class="dropdown-item" href="#" data-filter="week">This Week</a></li>
 
-                    <li><a class="dropdown-item-payment" href="#" data-filter-payment="month">This Month</a></li>
-                    <li><a class="dropdown-item-payment" href="#" data-filter-payment="year">This Year</a></li>
-                    <li><a class="dropdown-item-payment" href="#" data-filter-payment="all">All</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="month">This Month</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="year">This Year</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="all">All</a></li>
 
 
                   </ul>
@@ -469,13 +469,16 @@
                       <h6>Filter</h6>
                     </li>
 
-                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="today">Today</a></li>
-                      <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="week">This Week</a></li>
 
-                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="month">This Month</a></li>
-                    <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="year">This Year</a></li>
+                    <!-- <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="today">Today</a></li> -->
 
-                  <li><a class="dropdown-item-ar-list" href="#" data-filter-ar-list="all">All</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="today">Today</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="week">This Week</a></li>
+
+                    <li><a class="dropdown-item" href="#" data-filter="month">This Month</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="year">This Year</a></li>
+
+                      <li><a class="dropdown-item-ar-list" href="#" data-filter="all">All</a></li>
 
 
                   </ul>
@@ -515,10 +518,10 @@ $(document).ready(function () {
     loadArAgingList('all');
 
     // Handle dropdown click using $(document).on() for dynamic elements
-    $(document).on('click', '.dropdown-item-ar-list', function (e) {
+    $(document).on('click', '.dropdown-item', function (e) {
         e.preventDefault();
 
-        let filterType = $(this).data('filter-ar-list');
+        let filterType = $(this).data('filter');
 
         // Load data based on the selected filter type
         loadArAgingList(filterType);
@@ -595,13 +598,15 @@ function loadArAgingList(filterType) {
                       <h6>Filter</h6>
                     </li>
 
-                    <li><a class="dropdown-item-pie" href="#" data-filter-pie="today">Today</a></li>
-                    <li><a class="dropdown-item-pie" href="#" data-filter-pie="week">This Week</a></li>
+                    <!-- <li><a class="dropdown-item-pie" href="#" data-filter-pie="today">Today</a></li> -->
+
+                    <li><a class="dropdown-item" href="#" data-filter="today">Today</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="week">This Week</a></li>
     
 
-              <li><a class="dropdown-item-pie" href="#" data-filter-pie="month">This Month</a></li>
-                    <li><a class="dropdown-item-pie" href="#" data-filter-pie="year">This Year</a></li>
-              <li><a class="dropdown-item-pie" href="#" data-filter-pie="all">All</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="month">This Month</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="year">This Year</a></li>
+                    <li><a class="dropdown-item" href="#" data-filter="all">All</a></li>
 
 
                   </ul>
@@ -686,10 +691,10 @@ $(document).ready(function () {
     loadArAgingChart('today');
 
     // Handle filter clicks
-				$('.dropdown-item-pie').on('click', function (e) {
+				$('.dropdown-item').on('click', function (e) {
 						e.preventDefault();
 
-						let filterType = $(this).data('filter-pie');
+						let filterType = $(this).data('filter');
 						loadArAgingChart(filterType);
 
 						// Update the card title based on the selected filter
@@ -1077,8 +1082,8 @@ $(document).ready(function() {
 			// 					}, 5000); 
 
     // Handle filter click
-    $('.dropdown-item-payment').on('click', function() {
-        const filter = $(this).data('filter-payment');
+    $('.dropdown-item').on('click', function() {
+        const filter = $(this).data('filter');
         fetchSales(filter);
     });
 });
