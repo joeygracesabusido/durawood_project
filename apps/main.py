@@ -30,6 +30,8 @@ from apps.routes.accounting.category import api_category
 from apps.routes.accounting.customer_profile import api_customer_profile
 
 
+from apps.routes.accounting.cash_transaction import api_cash
+
 from apps.routes.roles import api_roles
 
 from fastapi.staticfiles import StaticFiles
@@ -68,6 +70,8 @@ app.include_router(api_roles, tags=['Roles'])
 
 
 app.include_router(api_category, tags=['Category'])
+
+app.include_router(api_cash, tags=['Cash Transaction'])
 
 # Mount Strawberry's GraphQL app onto FastAPI
 app.mount("/graphql", graphql_app)
