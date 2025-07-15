@@ -220,145 +220,237 @@ async def update_customer_profile_api(id: str, data: paymentBM,username: str = D
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
 
-@api_payment.get("/api-autocomplete-customer-payment/")
-async def autocomplete_payment_balance(term: Optional[str] = None,username: str = Depends(get_current_user)):
-    try:
+# @api_payment.get("/api-autocomplete-customer-payment/")
+# async def autocomplete_payment_balance(term: Optional[str] = None,username: str = Depends(get_current_user)):
+#     try:
 
 
-        # pipeline = [
-        #         {
-        #             "$lookup": {
-        #                 "from": "payment",
-        #                 "let": { "invoice_no": "$invoice_no" },
-        #                 "pipeline": [
-        #                     {
-        #                         "$match": {
-        #                             "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
-        #                         }
-        #                     },
-        #                     {
-        #                         "$group": {
-        #                             "_id": "$invoice_no",
-        #                             "total_cash": { "$sum": "$cash_amount" },
-        #                             "total_2307": { "$sum": "$amount_2307" }
-        #                         }
-        #                     }
-        #                 ],
-        #                 "as": "payment_info"
-        #             }
-        #         },
-        #         {
-        #             "$addFields": {
-        #                 "total_cash": {
-        #                     "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
-        #                 },
-        #                 "total_2307": {
-        #                     "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
-        #                 }
-        #             }
-        #         },
-        #         {
-        #             "$addFields": {
-        #                 "balance": {
-        #                     "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
-        #                 }
-        #             }
-        #         },
-        #         {
-        #             "$project": {
-        #                 "_id": 0,
-        #                 "customer": 1,
-        #                 "customer_id": 1,
-        #                 "invoice_no": 1,
-        #                 "balance": 1
-        #             }
-        #         }
-        #     ]
-        #
+#         # pipeline = [
+#         #         {
+#         #             "$lookup": {
+#         #                 "from": "payment",
+#         #                 "let": { "invoice_no": "$invoice_no" },
+#         #                 "pipeline": [
+#         #                     {
+#         #                         "$match": {
+#         #                             "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
+#         #                         }
+#         #                     },
+#         #                     {
+#         #                         "$group": {
+#         #                             "_id": "$invoice_no",
+#         #                             "total_cash": { "$sum": "$cash_amount" },
+#         #                             "total_2307": { "$sum": "$amount_2307" }
+#         #                         }
+#         #                     }
+#         #                 ],
+#         #                 "as": "payment_info"
+#         #             }
+#         #         },
+#         #         {
+#         #             "$addFields": {
+#         #                 "total_cash": {
+#         #                     "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+#         #                 },
+#         #                 "total_2307": {
+#         #                     "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+#         #                 }
+#         #             }
+#         #         },
+#         #         {
+#         #             "$addFields": {
+#         #                 "balance": {
+#         #                     "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+#         #                 }
+#         #             }
+#         #         },
+#         #         {
+#         #             "$project": {
+#         #                 "_id": 0,
+#         #                 "customer": 1,
+#         #                 "customer_id": 1,
+#         #                 "invoice_no": 1,
+#         #                 "balance": 1
+#         #             }
+#         #         }
+#         #     ]
+#         #
 
-        pipeline = [
-                {
-                    "$lookup": {
-                        "from": "payment",
-                        "let": { "invoice_no": "$invoice_no" },
-                        "pipeline": [
-                            {
-                                "$match": {
-                                    "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
-                                }
-                            },
-                            {
-                                "$group": {
-                                    "_id": "$invoice_no",
-                                    "total_cash": { "$sum": "$cash_amount" },
-                                    "total_2307": { "$sum": "$amount_2307" }
-                                }
-                            }
-                        ],
-                        "as": "payment_info"
-                    }
-                },
-                {
-                    "$addFields": {
-                        "total_cash": {
-                            "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
-                        },
-                        "total_2307": {
-                            "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
-                        }
-                    }
-                },
-                {
-                    "$addFields": {
-                        "balance": {
-                            "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
-                        }
-                    }
-                },
-                {
-                    "$match": {
-                        "balance": { "$gt": 0 }  # 🔥 This filters out invoices with a balance of 0 or less
-                    }
-                },
-                {
-                    "$project": {
-                        "_id": 0,
-                        "customer": 1,
-                        "customer_id": 1,
-                        "invoice_no": 1,
-                        "balance": 1
-                    }
-                }
-            ]
+#         pipeline = [
+#                 {
+#                     "$lookup": {
+#                         "from": "payment",
+#                         "let": { "invoice_no": "$invoice_no" },
+#                         "pipeline": [
+#                             {
+#                                 "$match": {
+#                                     "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
+#                                 }
+#                             },
+#                             {
+#                                 "$group": {
+#                                     "_id": "$invoice_no",
+#                                     "total_cash": { "$sum": "$cash_amount" },
+#                                     "total_2307": { "$sum": "$amount_2307" }
+#                                 }
+#                             }
+#                         ],
+#                         "as": "payment_info"
+#                     }
+#                 },
+#                 {
+#                     "$addFields": {
+#                         "total_cash": {
+#                             "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+#                         },
+#                         "total_2307": {
+#                             "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+#                         }
+#                     }
+#                 },
+#                 {
+#                     "$addFields": {
+#                         "balance": {
+#                             "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+#                         }
+#                     }
+#                 },
+#                 {
+#                     "$match": {
+#                         "balance": { "$gt": 0 }  # 🔥 This filters out invoices with a balance of 0 or less
+#                     }
+#                 },
+#                 {
+#                     "$project": {
+#                         "_id": 0,
+#                         "customer": 1,
+#                         "customer_id": 1,
+#                         "invoice_no": 1,
+#                         "balance": 1
+#                     }
+#                 }
+#             ]
 
 	     
-        result = list(mydb.sales.aggregate(pipeline))
-        # print(result)
-        # Ensure 'customer' field exists before filtering
+#         result = list(mydb.sales.aggregate(pipeline))
+#         # print(result)
+#         # Ensure 'customer' field exists before filtering
+#         if term:
+#             filtered_contact = [
+#                 item for item in result
+#                 if term.lower() in item.get('customer', '').lower() or term.lower() in item.get('invoice_no', '').lower()
+#             ]
+#         else:
+#             filtered_contact = result  # If no term is provided, return all
+
+#         suggestions = [
+#             {
+#                 "value": f"{item.get('customer', 'Unknown')} - Invoice: {item.get('invoice_no')} - Balance: {item.get('balance', 0):,.2f}",  # Avoid KeyError
+# 			    "customer": item.get('customer'),
+# 				"customer_id": item.get('customer_id'),
+# 				"invoice_no": item.get('invoice_no'),
+#                 "balance": item.get('balance')  # Ensure balance is present
+#             }
+#             for item in filtered_contact
+#         ]
+
+#         return suggestions
+
+
+#     except Exception as e:
+#         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+
+@api_payment.get("/api-autocomplete-customer-payment/")
+async def autocomplete_payment_balance(
+    term: Optional[str] = None,
+    username: str = Depends(get_current_user)
+):
+    try:
+        match_stage = {
+            "$match": {
+                "balance": { "$gt": 0 }
+            }
+        }
+
+        # Optional term filter using regex (if provided)
         if term:
-            filtered_contact = [
-                item for item in result
-                if term.lower() in item.get('customer', '').lower() or term.lower() in item.get('invoice_no', '').lower()
+            match_stage["$match"]["$or"] = [
+                { "customer": { "$regex": term, "$options": "i" } },
+                { "invoice_no": { "$regex": term, "$options": "i" } }
             ]
-        else:
-            filtered_contact = result  # If no term is provided, return all
+
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "payment",
+                    "let": { "invoice_no": "$invoice_no" },
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": "$invoice_no",
+                                "total_cash": { "$sum": "$cash_amount" },
+                                "total_2307": { "$sum": "$amount_2307" }
+                            }
+                        }
+                    ],
+                    "as": "payment_info"
+                }
+            },
+            {
+                "$addFields": {
+                    "total_cash": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+                    },
+                    "total_2307": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "balance": {
+                        "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+                    }
+                }
+            },
+            match_stage,
+            {
+                "$project": {
+                    "_id": 0,
+                    "customer": 1,
+                    "customer_id": 1,
+                    "invoice_no": 1,
+                    "balance": 1
+                }
+            },
+            {
+                "$limit": 20  # Limit results to 20 matches for performance
+            }
+        ]
+
+        result = list(mydb.sales.aggregate(pipeline))
 
         suggestions = [
             {
-                "value": f"{item.get('customer', 'Unknown')} - Invoice: {item.get('invoice_no')} - Balance: {item.get('balance', 0):,.2f}",  # Avoid KeyError
-			    "customer": item.get('customer'),
-				"customer_id": item.get('customer_id'),
-				"invoice_no": item.get('invoice_no'),
-                "balance": item.get('balance')  # Ensure balance is present
+                "value": f"{item.get('customer', 'Unknown')} - Invoice: {item.get('invoice_no')} - Balance: {item.get('balance', 0):,.2f}",
+                "customer": item.get("customer"),
+                "customer_id": item.get("customer_id"),
+                "invoice_no": item.get("invoice_no"),
+                "balance": item.get("balance")
             }
-            for item in filtered_contact
+            for item in result
         ]
 
         return suggestions
 
-
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving payment suggestions: {e}")
+
     
 @api_payment.get("/api-get-sum-payment/")
 async def get_payment_dashboard(
