@@ -101,7 +101,7 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
                 "invoice_date": data.invoice_date,
                 "invoice_no": data.invoice_no,
                 "po_no": data.po_no,
-                "load_no":data.po_no,
+                "load_no":data.load_no,
                 "dr_no": data.dr_no,
                 "customer": data.customer,
                 "customer_id": data.customer_id,
