@@ -766,6 +766,9 @@ async def get_transaction_history(
                     "date": "$date",
                     "customer": 1,
                     "invoice_no": 1,
+                    "cr_no": 1,
+                    "payment_method": 1,
+                    "remarks": 1,
                     "sales_amount": None,
                     "payment_amount": {
                         "$add": ["$cash_amount", {"$ifNull": ["$amount_2307", 0]}]
@@ -889,5 +892,4 @@ async def get_temp_customer_transactions(request: Request,
  
     return templates.TemplateResponse("accounting/customer_transaction_for_balance_details.html", 
                                       {"request": request})
-
 
