@@ -4,14 +4,15 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- jQuery must load before inline scripts; do not defer -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
   <link href="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.4/b-3.1.1/b-html5-3.1.1/datatables.min.css" rel="stylesheet">
  
-  <script src="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.4/b-3.1.1/b-html5-3.1.1/datatables.min.js"></script>
+  <script defer src="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.4/b-3.1.1/b-html5-3.1.1/datatables.min.js"></script>
 
   
 
@@ -74,15 +75,7 @@
     <!-- Template Main CSS File -->
     <link href="/static/assets/css/style.css" rel="stylesheet" />
 
-    <!-- Vendor JS Files -->
-    <script src="/static/assets/vendor/apexcharts/apexcharts.min.js"></script>
-    <script src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/assets/vendor/chart.js/chart.umd.js"></script>
-    <script src="/static/assets/vendor/echarts/echarts.min.js"></script>
-    <script src="/static/assets/vendor/quill/quill.js"></script>
-    <script src="/static/assets/vendor/simple-datatables/simple-datatables.js"></script>
-    <script src="/static/assets/vendor/tinymce/tinymce.min.js"></script>
-    <script src="/static/assets/vendor/php-email-form/validate.js"></script>
+    <!-- Removed duplicate Vendor JS Files block; scripts are already loaded in <head> -->
     <title>IT SOLUTION</title>
   </head>
 
@@ -511,21 +504,16 @@
     </div> -->
 
     <!-- Vendor JS Files -->
-    <script src="/static/assets/vendor/apexcharts/apexcharts.min.js"></script>
-    <script src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/assets/vendor/chart.js/chart.umd.js"></script>
-    <script src="/static/assets/vendor/echarts/echarts.min.js"></script>
-    <script src="/static/assets/vendor/quill/quill.js"></script>
-    <script src="/static/assets/vendor/simple-datatables/simple-datatables.js"></script>
-    <script src="/static/assets/vendor/tinymce/tinymce.min.js"></script>
-    <script src="/static/assets/vendor/php-email-form/validate.js"></script>
+    <script defer src="/static/assets/vendor/apexcharts/apexcharts.min.js"></script>
+    <script defer src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script defer src="/static/assets/vendor/chart.js/chart.umd.js"></script>
+    <script defer src="/static/assets/vendor/echarts/echarts.min.js"></script>
+    <script defer src="/static/assets/vendor/quill/quill.js"></script>
+    <script defer src="/static/assets/vendor/simple-datatables/simple-datatables.js"></script>
+    <script defer src="/static/assets/vendor/tinymce/tinymce.min.js"></script>
+    <script defer src="/static/assets/vendor/php-email-form/validate.js"></script>
 
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
-      integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
+    <!-- Removed duplicate jQuery include to prevent conflicts -->
 
     <script>
       const userString = localStorage.getItem("user");
@@ -557,7 +545,7 @@
         // Handle sub nav-links
         subLinks.forEach(function (subLink) {
           const hrefValue = subLink.getAttribute("href");
-          console.log(window.location.pathname);
+          // console.log(window.location.pathname);
           // Add 'active' class if the href value is included in the current path
           if (window.location.pathname.includes(hrefValue)) {
             // Navigate to the closest `ul` (nav-content) and find its previous sibling (the main-link)
@@ -589,20 +577,10 @@
       }
     </script>
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-      crossorigin="anonymous"
-    ></script>
+    <!-- Removed duplicate Bootstrap bundle include to avoid collapse/dropdown conflicts -->
     <!-- Template Main JS File -->
     <script src="/static/assets/js/main.js"></script>
-    <script>
-      $(document).ready(function () {
-        $(".dropdown-toggle").click(function () {
-          $(this).next(".dropdown-menu").slideToggle(100);
-        });
-      });
-    </script>
+    <!-- Removed custom jQuery dropdown handler; Bootstrap handles dropdowns/collapses -->
 
 
 

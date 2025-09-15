@@ -11,7 +11,10 @@ $(document).ready(function () {
   function formatDateOnly(dateString) {
     if (!dateString) return '';
     const d = new Date(dateString);
-    return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('/');
+    const month = d.toLocaleString('en-US', { month: 'short' });
+    const day = String(d.getDate()).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${month}/${day}/${year}`; // e.g., Mar/14/2025
   }
 
   function formatDateTime(dateString) {
@@ -43,20 +46,39 @@ $(document).ready(function () {
   }
 
   // Render transactions table to desired format
-  function fetchTransactionHistory(customer) {
+  function fetchTransactionHistory(customer, dateFrom, dateTo) {
+    let url = `/api-get-transaction-history?customer=${encodeURIComponent(customer)}`;
+    if (dateFrom) url += `&date_from=${encodeURIComponent(dateFrom)}`;
+    if (dateTo) url += `&date_to=${encodeURIComponent(dateTo)}`;
     $.ajax({
-      url: `/api-get-transaction-history?customer=${encodeURIComponent(customer)}`,
+      url,
       type: 'GET',
       success: function (data) {
+        // Support old API (array) and new API ({ beginning_balance, transactions })
+        const beginningBalance = Array.isArray(data) ? 0 : (data.beginning_balance || 0);
+        const list = Array.isArray(data) ? data : (data.transactions || []);
         let rows = '';
-        let cumulative = 0;
+        let cumulative = beginningBalance || 0;
         let totalDebit = 0;
         let totalCredit = 0;
         let minDate = null;
         let maxDate = null;
 
-        if (Array.isArray(data) && data.length) {
-          data.forEach((item) => {
+        // Add Beginning Balance row if applicable
+        if (dateFrom && (beginningBalance || 0) !== 0) {
+          rows += `
+            <tr>
+              <td class="border px-3 py-2">${formatDateOnly(dateFrom)}</td>
+              <td class="border px-3 py-2 text-gray-500">Beginning Balance</td>
+              <td class="border px-3 py-2 text-right">0.00</td>
+              <td class="border px-3 py-2 text-right">0.00</td>
+              <td class="border px-3 py-2 text-right">${formatNumber(cumulative)}</td>
+            </tr>
+          `;
+        }
+
+        if (Array.isArray(list) && list.length) {
+          list.forEach((item) => {
             const isSales = item.type === 'Sales';
             const debit = isSales ? item.sales_amount || 0 : 0;
             const credit = !isSales ? item.payment_amount || 0 : 0;
@@ -91,7 +113,7 @@ $(document).ready(function () {
 
             rows += `
               <tr>
-                <td class="border px-3 py-2">${formatDateTime(item.date)}</td>
+                <td class="border px-3 py-2">${formatDateOnly(item.date)}</td>
                 <td class="border px-3 py-2">${referenceHtml}</td>
                 <td class="border px-3 py-2 text-right">${debit ? formatNumber(debit) : '0.00'}</td>
                 <td class="border px-3 py-2 text-right">${credit ? formatNumber(credit) : '0.00'}</td>
@@ -110,9 +132,15 @@ $(document).ready(function () {
         $('#table_sales tbody').html(rows);
         $('#totalDebit').text(formatNumber(totalDebit));
         $('#totalCredit').text(formatNumber(totalCredit));
-        $('#remainingBalance').text(formatNumber(totalDebit - totalCredit));
+        $('#remainingBalance').text(formatNumber(cumulative));
 
-        if (minDate && maxDate) {
+        // Show selected range if provided; else infer from data
+        if (dateFrom || dateTo) {
+          const fromDisp = dateFrom ? formatDateOnly(dateFrom) : '';
+          const toDisp = dateTo ? formatDateOnly(dateTo) : '';
+          const range = `${fromDisp}${(fromDisp && toDisp) ? ' - ' : ''}${toDisp}`;
+          $('#dateRangeDisplay').text(range);
+        } else if (minDate && maxDate) {
           const range = `${formatDateOnly(minDate)} - ${formatDateOnly(maxDate)}`;
           $('#dateRangeDisplay').text(range);
         }
@@ -130,6 +158,15 @@ $(document).ready(function () {
     populateCustomerHeader(customer);
     fetchTransactionHistory(customer);
   }
+
+  // Apply date range filter
+  $('#applyFilter').on('click', function () {
+    const dateFrom = $('#dateFrom').val();
+    const dateTo = $('#dateTo').val();
+    if (customer) {
+      fetchTransactionHistory(customer, dateFrom, dateTo);
+    }
+  });
 
   // Export to Excel
   $('#exportExcel').on('click', function () {

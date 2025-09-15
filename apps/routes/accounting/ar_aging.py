@@ -735,13 +735,46 @@ async def get_temp_customer_transactions(request: Request,
 @api_ar_aging_report.get("/api-get-transaction-history")
 async def get_transaction_history(
     customer: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
     username: str = Depends(get_current_user)
 ):
+    """
+    Returns a customer's transaction history with optional date filtering.
+    If a date_from is provided, computes a beginning_balance as of that date:
+      beginning_balance = (sum of sales before date_from) - (sum of payments before date_from)
+    Transactions returned include only those within [date_from, date_to] if provided.
+    """
     try:
+        from_dt = None
+        to_dt = None
+        if date_from:
+            # start of day
+            from_parsed = datetime.strptime(date_from, "%Y-%m-%d")
+            from_dt = datetime(from_parsed.year, from_parsed.month, from_parsed.day)
+        if date_to:
+            # end of day (exclusive upper bound)
+            to_parsed = datetime.strptime(date_to, "%Y-%m-%d")
+            to_dt = datetime(to_parsed.year, to_parsed.month, to_parsed.day) + timedelta(days=1)
+
+        # Build range match for transactions
+        sales_match: Dict = {"customer": customer} if customer else {}
+        payment_match: Dict = {"customer": customer} if customer else {}
+        if from_dt or to_dt:
+            date_cond_sales: Dict = {}
+            date_cond_payment: Dict = {}
+            if from_dt:
+                date_cond_sales["$gte"] = from_dt
+                date_cond_payment["$gte"] = from_dt
+            if to_dt:
+                date_cond_sales["$lt"] = to_dt
+                date_cond_payment["$lt"] = to_dt
+            if date_cond_sales:
+                sales_match["invoice_date"] = date_cond_sales
+                payment_match["date"] = date_cond_payment
+
         sales_pipeline = [
-            {
-                "$match": {"customer": customer} if customer else {}
-            },
+            {"$match": sales_match},
             {
                 "$project": {
                     "_id": 0,
@@ -757,9 +790,7 @@ async def get_transaction_history(
         ]
 
         payment_pipeline = [
-            {
-                "$match": {"customer": customer} if customer else {}
-            },
+            {"$match": payment_match},
             {
                 "$project": {
                     "_id": 0,
@@ -778,17 +809,41 @@ async def get_transaction_history(
             }
         ]
 
-        # Fetch sales and payment data
+        # Fetch sales and payment data within range
         sales_data = list(mydb.sales.aggregate(sales_pipeline))
         payment_data = list(mydb.payment.aggregate(payment_pipeline))
 
-        # Combine sales and payment data
+        # Combine and sort
         transaction_history = sales_data + payment_data
-
-        # Sort by date in ascending order (latest last)
         transaction_history.sort(key=lambda x: x["date"], reverse=False)
 
-        return transaction_history
+        # Compute beginning balance prior to from_dt
+        beginning_balance = 0
+        if from_dt and customer:
+            # Sales before from_dt
+            sales_before_pipeline = [
+                {"$match": {"customer": customer, "invoice_date": {"$lt": from_dt}}},
+                {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+            ]
+            # Payments before from_dt
+            payments_before_pipeline = [
+                {"$match": {"customer": customer, "date": {"$lt": from_dt}}},
+                {"$group": {"_id": None, "total": {"$sum": {"$add": ["$cash_amount", {"$ifNull": ["$amount_2307", 0]}]}}}}
+            ]
+            sales_before = list(mydb.sales.aggregate(sales_before_pipeline))
+            payments_before = list(mydb.payment.aggregate(payments_before_pipeline))
+            total_sales_before = sales_before[0]["total"] if sales_before else 0
+            total_payments_before = payments_before[0]["total"] if payments_before else 0
+            beginning_balance = total_sales_before - total_payments_before
+
+        # Backward compatibility: if no date filters, return plain list
+        if not date_from and not date_to:
+            return transaction_history
+        else:
+            return {
+                "beginning_balance": beginning_balance,
+                "transactions": transaction_history
+            }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving transaction history: {e}")
@@ -892,4 +947,3 @@ async def get_temp_customer_transactions(request: Request,
  
     return templates.TemplateResponse("accounting/customer_transaction_for_balance_details.html", 
                                       {"request": request})
-
