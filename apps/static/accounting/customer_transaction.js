@@ -57,8 +57,10 @@ $(document).ready(function () {
         // Support old API (array) and new API ({ beginning_balance, transactions })
         const beginningBalance = Array.isArray(data) ? 0 : (data.beginning_balance || 0);
         const list = Array.isArray(data) ? data : (data.transactions || []);
+        const debitsOnly = $('#debitsOnly').is(':checked');
         let rows = '';
-        let cumulative = beginningBalance || 0;
+        let netCumulative = beginningBalance || 0;      // debits - credits
+        let displayCumulative = beginningBalance || 0;  // shown in table
         let totalDebit = 0;
         let totalCredit = 0;
         let minDate = null;
@@ -72,7 +74,7 @@ $(document).ready(function () {
               <td class="border px-3 py-2 text-gray-500">Beginning Balance</td>
               <td class="border px-3 py-2 text-right">0.00</td>
               <td class="border px-3 py-2 text-right">0.00</td>
-              <td class="border px-3 py-2 text-right">${formatNumber(cumulative)}</td>
+              <td class="border px-3 py-2 text-right">${formatNumber(displayCumulative)}</td>
             </tr>
           `;
         }
@@ -82,14 +84,27 @@ $(document).ready(function () {
             const isSales = item.type === 'Sales';
             const debit = isSales ? item.sales_amount || 0 : 0;
             const credit = !isSales ? item.payment_amount || 0 : 0;
-            cumulative += debit - credit;
-            totalDebit += debit;
-            totalCredit += credit;
+            // Update net cumulative irrespective of filter
+            netCumulative += debit - credit;
 
             const dateObj = item.date ? new Date(item.date) : null;
             if (dateObj) {
               if (!minDate || dateObj < minDate) minDate = dateObj;
               if (!maxDate || dateObj > maxDate) maxDate = dateObj;
+            }
+
+            // Skip non-sales rows if debitsOnly
+            if (debitsOnly && !isSales) return;
+
+            // Track totals for displayed rows
+            totalDebit += debit;
+            totalCredit += credit;
+
+            // Display cumulative: debits-only shows only debit accumulation; otherwise show net
+            if (debitsOnly) {
+              displayCumulative += debit;
+            } else {
+              displayCumulative = netCumulative;
             }
 
             // Reference cell content
@@ -117,7 +132,7 @@ $(document).ready(function () {
                 <td class="border px-3 py-2">${referenceHtml}</td>
                 <td class="border px-3 py-2 text-right">${debit ? formatNumber(debit) : '0.00'}</td>
                 <td class="border px-3 py-2 text-right">${credit ? formatNumber(credit) : '0.00'}</td>
-                <td class="border px-3 py-2 text-right">${formatNumber(cumulative)}</td>
+                <td class="border px-3 py-2 text-right">${formatNumber(displayCumulative)}</td>
               </tr>
             `;
           });
@@ -132,7 +147,10 @@ $(document).ready(function () {
         $('#table_sales tbody').html(rows);
         $('#totalDebit').text(formatNumber(totalDebit));
         $('#totalCredit').text(formatNumber(totalCredit));
-        $('#remainingBalance').text(formatNumber(cumulative));
+        $('#remainingBalance').text(formatNumber(debitsOnly ? displayCumulative : netCumulative));
+
+        // Hide/show Credit column when debits-only is active
+        $('#table_sales th:nth-child(4), #table_sales td:nth-child(4)').toggle(!debitsOnly);
 
         // Show selected range if provided; else infer from data
         if (dateFrom || dateTo) {
@@ -161,6 +179,15 @@ $(document).ready(function () {
 
   // Apply date range filter
   $('#applyFilter').on('click', function () {
+    const dateFrom = $('#dateFrom').val();
+    const dateTo = $('#dateTo').val();
+    if (customer) {
+      fetchTransactionHistory(customer, dateFrom, dateTo);
+    }
+  });
+
+  // Re-render when toggling Debits only
+  $('#debitsOnly').on('change', function () {
     const dateFrom = $('#dateFrom').val();
     const dateTo = $('#dateTo').val();
     if (customer) {
