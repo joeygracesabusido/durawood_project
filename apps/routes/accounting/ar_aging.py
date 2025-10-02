@@ -687,14 +687,10 @@ async def get_list_customer_balance(username: str = Depends(get_current_user)):
                 }
             },
             {
-                "$match": {
-                    "balance": { "$gt": 0 }
-                }
-            },
-            {
                 "$group": {
                     "_id": "$customer",
-                    "total_balance": { "$sum": "$balance" }
+                    "total_balance": { "$sum": "$balance" },
+                    "category": { "$first": "$category" }
                 }
             },
             {
@@ -704,7 +700,8 @@ async def get_list_customer_balance(username: str = Depends(get_current_user)):
                 "$project": {
                     "_id": 0,
                     "customer": "$_id",
-                    "total_balance": 1
+                    "total_balance": 1,
+                    "category": 1
                 }
             }
         ]

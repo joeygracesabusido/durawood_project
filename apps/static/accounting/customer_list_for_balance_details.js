@@ -14,6 +14,7 @@ $(document).ready(function () {
                         rows += `
                             <tr class="border-b border-gray-300" data-customer="${item.customer}">
                                 <td class="py-2 px-4 text-left">${item.customer}</td>
+                                <td class="py-2 px-4 text-left">${item.category}</td>
                                 <td class="py-2 px-4 text-right">${formatNumber(item.total_balance)}</td>
                             </tr>
                         `;
@@ -24,6 +25,7 @@ $(document).ready(function () {
                       rows += `
                           <tr class="bg-gray-300 font-bold">
                             <td class="py-2 px-4 text-left">Grand Total</td>
+                            <td></td>
                             <td class="py-2 px-4 text-right">${formatNumber(grandTotal)}</td>
                           </tr>`
 
@@ -31,7 +33,7 @@ $(document).ready(function () {
                 } else {
                     rows = `
                         <tr>
-                            <td colspan="2" class="py-2 px-4 text-center">No data available</td>
+                            <td colspan="3" class="py-2 px-4 text-center">No data available</td>
                         </tr>
                     `;
                 }
