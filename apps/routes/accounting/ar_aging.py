@@ -643,7 +643,7 @@ async def get_sales_report(request: Request,
 
 
 @api_ar_aging_report.get("/api-get-per-customer-balance")
-async def get_list_customer_balance(username: str = Depends(get_current_user)):
+async def get_list_customer_balance(username: str = Depends(get_current_user), balance_filter: Optional[str] = None):
     try:
         pipeline = [
             {
@@ -693,6 +693,14 @@ async def get_list_customer_balance(username: str = Depends(get_current_user)):
                     "category": { "$first": "$category" }
                 }
             },
+        ]
+
+        if balance_filter == "positive":
+            pipeline.append(
+                {"$match": {"total_balance": {"$gt": 0}}}
+            )
+
+        pipeline.extend([
             {
                 "$sort": { "_id": 1 }
             },
@@ -704,7 +712,7 @@ async def get_list_customer_balance(username: str = Depends(get_current_user)):
                     "category": 1
                 }
             }
-        ]
+        ])
 
         result = list(mydb.sales.aggregate(pipeline))
         # print(list(mydb.sales.aggregate(pipeline)))

@@ -1,8 +1,13 @@
 $(document).ready(function () {
     function fetchCustomerBalance() {
+        let balanceFilter = $('input[name="balance_filter"]:checked').val();
+
         $.ajax({
             url: '/api-get-per-customer-balance',
             type: 'GET',
+            data: {
+                balance_filter: balanceFilter
+            },
             success: function (data) {
                 console.log(data);
                 let rows = '';
@@ -53,6 +58,11 @@ $(document).ready(function () {
 
     // Fetch data on page load
     fetchCustomerBalance();
+
+    // Re-fetch data when filter changes
+    $('input[name="balance_filter"]').on('change', function() {
+        fetchCustomerBalance();
+    });
 
     // Search functionality
     $('#search').on('input', function () {
@@ -118,4 +128,3 @@ $(document).ready(function () {
         printWindow.print();
     });
 });
-
