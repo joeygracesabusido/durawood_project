@@ -557,6 +557,13 @@ async def get_sales(
         raise HTTPException(status_code=404, detail=f"Error retrieving payments: {e}")
 
 
+@api_payment.get("/payment-transaction/", response_class=HTMLResponse)
+async def api_payment_transaction_template(request: Request,
+                                        username: str = Depends(get_current_user)):
+ 
+    return templates.TemplateResponse("accounting/payment_transaction.html", 
+                                      {"request": request})
+
 
 		
 

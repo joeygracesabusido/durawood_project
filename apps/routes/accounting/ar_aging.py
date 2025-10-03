@@ -643,18 +643,41 @@ async def get_sales_report(request: Request,
 
 
 @api_ar_aging_report.get("/api-get-per-customer-balance")
-async def get_list_customer_balance(username: str = Depends(get_current_user), balance_filter: Optional[str] = None):
+async def get_list_customer_balance(
+    username: str = Depends(get_current_user), 
+    balance_filter: Optional[str] = None,
+    date_to: Optional[str] = None,
+    term: Optional[str] = None
+):
     try:
+        sales_match = {}
+        if term:
+            sales_match["customer"] = {"$regex": term, "$options": "i"}
+
+        payment_match_conditions = {'$expr': {'$eq': ['$invoice_no', '$$invoice_no']}}
+
+        if date_to:
+            try:
+                date_to_dt = datetime.strptime(date_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+                sales_match['invoice_date'] = {'$lte': date_to_dt}
+                payment_match_conditions = {
+                    '$and': [
+                        payment_match_conditions,
+                        {'date': {'$lte': date_to_dt}}
+                    ]
+                }
+            except (ValueError, TypeError):
+                pass
+
         pipeline = [
+            {"$match": sales_match},
             {
                 "$lookup": {
                     "from": "payment",
                     "let": { "invoice_no": "$invoice_no" },
                     "pipeline": [
                         {
-                            "$match": {
-                                "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
-                            }
+                            "$match": payment_match_conditions
                         },
                         {
                             "$group": {
@@ -833,6 +856,7 @@ async def get_transaction_history(
                         "due_date": 1,
                         "invoice_no": 1,
                         "sales_amount": "$amount",
+                        "balance": 1,
                         "payment_amount": None,
                         "type": {"$literal": "Sales"}
                     }

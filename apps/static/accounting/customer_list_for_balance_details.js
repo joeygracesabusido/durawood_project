@@ -1,12 +1,14 @@
 $(document).ready(function () {
     function fetchCustomerBalance() {
         let balanceFilter = $('input[name="balance_filter"]:checked').val();
+        let dateTo = $('#date_to').val();
 
         $.ajax({
             url: '/api-get-per-customer-balance',
             type: 'GET',
             data: {
-                balance_filter: balanceFilter
+                balance_filter: balanceFilter,
+                date_to: dateTo
             },
             success: function (data) {
                 console.log(data);
@@ -60,7 +62,7 @@ $(document).ready(function () {
     fetchCustomerBalance();
 
     // Re-fetch data when filter changes
-    $('input[name="balance_filter"]').on('change', function() {
+    $('#filter_button').on('click', function() {
         fetchCustomerBalance();
     });
 
