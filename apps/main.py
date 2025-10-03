@@ -13,7 +13,7 @@ from apps.routes.login import login_router
 from apps.routes.admin import api
 from apps.routes.accounting.customer_profile_temp import api_customer_profile_temp
 
-
+# from apps.routes.accounting.chart_of_account import api_chart_of_account
 
 from apps.routes.accounting.sales_routes import api_sales
 from apps.routes.accounting.sales_report import api_sales_report
@@ -55,6 +55,8 @@ app.include_router(api, tags=['Admin'])
 app.include_router(api_customer_profile_temp, tags=['Customer Profile'])
 
 app.include_router(api_customer_profile, tags=['Customer/Vendor'])
+
+# app.include_router(api_chart_of_account, tags=['Chart of Account'])
 
 app.include_router(api_sales, tags=['Sales'])
 

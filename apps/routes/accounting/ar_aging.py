@@ -709,7 +709,7 @@ async def get_list_customer_balance(
             },
             {
                 "$group": {
-                    "_id": "$customer",
+                    "_id": { "customer": "$customer", "customer_id": "$customer_id" },
                     "total_balance": { "$sum": "$balance" },
                     "category": { "$first": "$category" }
                 }
@@ -723,12 +723,13 @@ async def get_list_customer_balance(
 
         pipeline.extend([
             {
-                "$sort": { "_id": 1 }
+                "$sort": { "_id.customer": 1 }
             },
             {
                 "$project": {
                     "_id": 0,
-                    "customer": "$_id",
+                    "customer": "$_id.customer",
+                    "customer_id": "$_id.customer_id",
                     "total_balance": 1,
                     "category": 1
                 }

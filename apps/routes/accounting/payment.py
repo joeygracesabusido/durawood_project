@@ -1,7 +1,7 @@
 
 from fastapi import APIRouter, Body, HTTPException, Depends, Request, Response, status
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from typing import Union, List, Optional, Dict
 from pydantic import BaseModel
 from bson import ObjectId
@@ -158,6 +158,56 @@ async def create_sales_transaction(data: paymentBM, username: str = Depends(get_
 
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Error inserting sales: {e}")
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not Authorized",
+    )
+
+
+
+@api_payment.post("/api-insert-payment-batch/", response_model=None)
+async def create_payments_batch(data: List[paymentBM], username: str = Depends(get_current_user)):
+    """Insert multiple payment documents in a single request.
+
+    Expects a JSON array of paymentBM objects.
+    """
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    if 'Payment' in roleAuthenticate['allowed_access']:
+        try:
+            if not isinstance(data, list) or len(data) == 0:
+                raise HTTPException(status_code=400, detail="No payment items provided")
+
+            insert_docs = []
+            for item in data:
+                # Build insert document per item
+                insertData = {
+                    "date": item.date,
+                    "customer": item.customer,
+                    "customer_id": item.customer_id,
+                    "cr_no": item.cr_no,
+                    "invoice_no": item.invoice_no,
+                    "cash_amount": item.cash_amount,
+                    "amount_2307": item.amount_2307,
+                    "remarks": item.remarks,
+                    "user": username,
+                    "date_updated": datetime.utcnow(),
+                    "date_created": datetime.utcnow(),
+                    "payment_method": item.payment_method
+                }
+                insert_docs.append(insertData)
+
+            # Insert all at once
+            mydb.payment.insert_many(insert_docs)
+
+            return {"message": f"{len(insert_docs)} payments have been inserted successfully"}
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error inserting payments batch: {e}")
+
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not Authorized",
