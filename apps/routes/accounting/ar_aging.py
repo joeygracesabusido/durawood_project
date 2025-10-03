@@ -742,6 +742,7 @@ async def get_transaction_history(
     customer: Optional[str] = None,
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
+    balance_only: Optional[str] = None,
     username: str = Depends(get_current_user)
 ):
     """
@@ -763,8 +764,11 @@ async def get_transaction_history(
             to_dt = datetime(to_parsed.year, to_parsed.month, to_parsed.day) + timedelta(days=1)
 
         # Build range match for transactions
-        sales_match: Dict = {"customer": customer} if customer else {}
-        payment_match: Dict = {"customer": customer} if customer else {}
+        sales_match: Dict = {}
+        payment_match: Dict = {}
+        if customer:
+            sales_match["customer"] = customer
+            payment_match["customer"] = customer
         if from_dt or to_dt:
             date_cond_sales: Dict = {}
             date_cond_payment: Dict = {}
@@ -777,46 +781,136 @@ async def get_transaction_history(
             if date_cond_sales:
                 sales_match["invoice_date"] = date_cond_sales
                 payment_match["date"] = date_cond_payment
+        
+        sales_data = []
+        payment_data = []
 
-        sales_pipeline = [
-            {"$match": sales_match},
-            {
-                "$project": {
-                    "_id": 0,
-                    "date": "$invoice_date",
-                    "customer": 1,
-                    "due_date": 1,
-                    "invoice_no": 1,
-                    "sales_amount": "$amount",
-                    "payment_amount": None,
-                    "type": {"$literal": "Sales"}
+        if balance_only == 'true':
+            sales_pipeline = [
+                {"$match": sales_match},
+                {
+                    "$lookup": {
+                        "from": "payment",
+                        "let": { "invoice_no": "$invoice_no" },
+                        "pipeline": [
+                            {
+                                "$match": {
+                                    "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
+                                }
+                            },
+                            {
+                                "$group": {
+                                    "_id": "$invoice_no",
+                                    "total_cash": { "$sum": "$cash_amount" },
+                                    "total_2307": { "$sum": "$amount_2307" }
+                                }
+                            }
+                        ],
+                        "as": "payment_info"
+                    }
+                },
+                {
+                    "$addFields": {
+                        "total_cash": { "$sum": "$payment_info.total_cash" },
+                        "total_2307": { "$sum": "$payment_info.total_2307" }
+                    }
+                },
+                {
+                    "$addFields": {
+                        "balance": {
+                            "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+                        }
+                    }
+                },
+                {
+                    "$match": {
+                        "balance": {"$gt": 0}
+                    }
+                },
+                {
+                    "$project": {
+                        "_id": 0,
+                        "date": "$invoice_date",
+                        "customer": 1,
+                        "due_date": 1,
+                        "invoice_no": 1,
+                        "sales_amount": "$amount",
+                        "payment_amount": None,
+                        "type": {"$literal": "Sales"}
+                    }
                 }
-            }
-        ]
+            ]
+            sales_data = list(mydb.sales.aggregate(sales_pipeline))
+            
+            # Get the invoice numbers from the sales data
+            invoice_nos = [s['invoice_no'] for s in sales_data]
+            
+            # Adjust payment_match to only get payments for those invoices
+            if invoice_nos:
+                payment_match["invoice_no"] = {"$in": invoice_nos}
+            else: # No sales with balance, so no payments to fetch
+                payment_match["invoice_no"] = {"$in": []}
 
-        payment_pipeline = [
-            {"$match": payment_match},
-            {
-                "$project": {
-                    "_id": 0,
-                    "date": "$date",
-                    "customer": 1,
-                    "invoice_no": 1,
-                    "cr_no": 1,
-                    "payment_method": 1,
-                    "remarks": 1,
-                    "sales_amount": None,
-                    "payment_amount": {
-                        "$add": ["$cash_amount", {"$ifNull": ["$amount_2307", 0]}]
-                    },
-                    "type": {"$literal": "Payment"}
+            
+            payment_pipeline = [
+                {"$match": payment_match},
+                {
+                    "$project": {
+                        "_id": 0,
+                        "date": "$date",
+                        "customer": 1,
+                        "invoice_no": 1,
+                        "cr_no": 1,
+                        "payment_method": 1,
+                        "remarks": 1,
+                        "sales_amount": None,
+                        "payment_amount": {
+                            "$add": ["$cash_amount", {"$ifNull": ["$amount_2307", 0]}]
+                        },
+                        "type": {"$literal": "Payment"}
+                    }
                 }
-            }
-        ]
+            ]
+            payment_data = list(mydb.payment.aggregate(payment_pipeline))
 
-        # Fetch sales and payment data within range
-        sales_data = list(mydb.sales.aggregate(sales_pipeline))
-        payment_data = list(mydb.payment.aggregate(payment_pipeline))
+        else:
+            sales_pipeline = [
+                {"$match": sales_match},
+                {
+                    "$project": {
+                        "_id": 0,
+                        "date": "$invoice_date",
+                        "customer": 1,
+                        "due_date": 1,
+                        "invoice_no": 1,
+                        "sales_amount": "$amount",
+                        "payment_amount": None,
+                        "type": {"$literal": "Sales"}
+                    }
+                }
+            ]
+            payment_pipeline = [
+                {"$match": payment_match},
+                {
+                    "$project": {
+                        "_id": 0,
+                        "date": "$date",
+                        "customer": 1,
+                        "invoice_no": 1,
+                        "cr_no": 1,
+                        "payment_method": 1,
+                        "remarks": 1,
+                        "sales_amount": None,
+                        "payment_amount": {
+                            "$add": ["$cash_amount", {"$ifNull": ["$amount_2307", 0]}]
+                        },
+                        "type": {"$literal": "Payment"}
+                    }
+                }
+            ]
+            # Fetch sales and payment data within range
+            sales_data = list(mydb.sales.aggregate(sales_pipeline))
+            payment_data = list(mydb.payment.aggregate(payment_pipeline))
 
         # Combine and sort
         transaction_history = sales_data + payment_data

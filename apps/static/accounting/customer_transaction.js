@@ -47,9 +47,14 @@ $(document).ready(function () {
 
   // Render transactions table to desired format
   function fetchTransactionHistory(customer, dateFrom, dateTo) {
+    const balanceOnly = $('#balanceOnly').is(':checked');
     let url = `/api-get-transaction-history?customer=${encodeURIComponent(customer)}`;
     if (dateFrom) url += `&date_from=${encodeURIComponent(dateFrom)}`;
     if (dateTo) url += `&date_to=${encodeURIComponent(dateTo)}`;
+    if (balanceOnly) url += `&balance_only=true`;
+
+    console.log('Fetching transaction history with URL:', url); // Add this line
+
     $.ajax({
       url,
       type: 'GET',
@@ -171,28 +176,31 @@ $(document).ready(function () {
   }
 
   // Read customer from query and render
-  const customer = new URLSearchParams(window.location.search).get('customer');
-  if (customer) {
-    populateCustomerHeader(customer);
-    fetchTransactionHistory(customer);
-  }
+  const customer = new URLSearchParams(window.location.search).get('customer') || '';
+  
+  // Always call fetchTransactionHistory on load
+  populateCustomerHeader(customer);
+  fetchTransactionHistory(customer);
 
   // Apply date range filter
   $('#applyFilter').on('click', function () {
     const dateFrom = $('#dateFrom').val();
     const dateTo = $('#dateTo').val();
-    if (customer) {
-      fetchTransactionHistory(customer, dateFrom, dateTo);
-    }
+    fetchTransactionHistory(customer, dateFrom, dateTo);
   });
 
   // Re-render when toggling Debits only
   $('#debitsOnly').on('change', function () {
     const dateFrom = $('#dateFrom').val();
     const dateTo = $('#dateTo').val();
-    if (customer) {
-      fetchTransactionHistory(customer, dateFrom, dateTo);
-    }
+    fetchTransactionHistory(customer, dateFrom, dateTo);
+  });
+
+  // Re-render when toggling Balance only
+  $('#balanceOnly').on('change', function () {
+    const dateFrom = $('#dateFrom').val();
+    const dateTo = $('#dateTo').val();
+    fetchTransactionHistory(customer, dateFrom, dateTo);
   });
 
   // Export to Excel

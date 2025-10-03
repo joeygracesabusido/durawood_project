@@ -28,7 +28,7 @@ $(document).ready(function () {
                     });
 
                       rows += `
-                          <tr class="bg-gray-300 font-bold">
+                          <tr class="bg-gray-300 font-bold grand-total-row">
                             <td class="py-2 px-4 text-left">Grand Total</td>
                             <td></td>
                             <td class="py-2 px-4 text-right">${formatNumber(grandTotal)}</td>
@@ -67,9 +67,43 @@ $(document).ready(function () {
     // Search functionality
     $('#search').on('input', function () {
         let value = $(this).val().toLowerCase();
-        $('#table_sales tbody tr').filter(function () {
-            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        let currentGrandTotal = 0;
+        let hasVisibleRows = false;
+
+        $('#table_sales tbody tr').each(function () {
+            let row = $(this);
+            // Exclude the grand total row from filtering
+            if (row.hasClass('grand-total-row')) {
+                return true; // Continue to the next iteration
+            }
+
+            let rowText = row.text().toLowerCase();
+            let isVisible = rowText.indexOf(value) > -1;
+            row.toggle(isVisible);
+
+            if (isVisible) {
+                hasVisibleRows = true;
+                // Get the balance from the third column (index 2)
+                let balanceText = row.find('td:eq(2)').text();
+                // Remove formatting and parse as float
+                let balance = parseFloat(balanceText.replace(/,/g, ''));
+                if (!isNaN(balance)) {
+                    currentGrandTotal += balance;
+                }
+            }
         });
+
+        // Update the grand total row
+        let grandTotalRow = $('#table_sales tbody tr.grand-total-row');
+        if (grandTotalRow.length) {
+            grandTotalRow.find('td:eq(2)').text(formatNumber(currentGrandTotal));
+            // If no other rows are visible, hide the grand total row or show 0
+            if (!hasVisibleRows && value !== '') { // If search has a value but no rows match
+                grandTotalRow.hide();
+            } else {
+                grandTotalRow.show();
+            }
+        }
     });
 
     // Double click to redirect to customer transaction list
