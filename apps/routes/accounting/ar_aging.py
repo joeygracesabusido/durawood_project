@@ -667,16 +667,14 @@ async def get_list_customer_balance(username: str = Depends(get_current_user), b
                     "as": "payment_info"
                 }
             },
-            { 
-                "$unwind": {
-                    "path": "$payment_info",
-                    "preserveNullAndEmptyArrays": True
-                }
-            },
             {
                 "$addFields": {
-                    "total_cash": { "$ifNull": ["$payment_info.total_cash", 0] },
-                    "total_2307": { "$ifNull": ["$payment_info.total_2307", 0] }
+                    "total_cash": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+                    },
+                    "total_2307": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+                    }
                 }
             },
             {
@@ -981,15 +979,13 @@ async def get_list_customer_balance(
                 }
             },
             {
-                "$unwind": {
-                    "path": "$payment_info",
-                    "preserveNullAndEmptyArrays": True
-                }
-            },
-            {
                 "$addFields": {
-                    "total_cash": { "$ifNull": ["$payment_info.total_cash", 0] },
-                    "total_2307": { "$ifNull": ["$payment_info.total_2307", 0] }
+                    "total_cash": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+                    },
+                    "total_2307": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+                    }
                 }
             },
             {
