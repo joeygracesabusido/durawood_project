@@ -40,9 +40,7 @@ $(document).ready(function () {
 
 
     function initDataTable() {
-        if (!$.fn.DataTable.isDataTable("#table_payment")) {
-
-            new DataTable('#table_payment', {
+        new DataTable('#table_payment', {
             layout: { topStart: 'buttons' },
             buttons: ['copy', {
                 extend: 'csv',
@@ -59,8 +57,6 @@ $(document).ready(function () {
             autoWidth: false,
             destroy: true
         });
-
-        }
     }
 
     function fetchPayments() {
@@ -232,6 +228,6 @@ $(document).ready(function () {
     });
 
     // Initial Data Fetch
-    fetchGraphQlPayment();
+    fetchPayments();
 });
 

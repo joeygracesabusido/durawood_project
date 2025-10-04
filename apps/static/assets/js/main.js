@@ -48,6 +48,17 @@
     })
   }
 
+  // Prevent clicks inside the sidebar from bubbling up to global/document handlers
+  // which can cause Bootstrap collapse/dropdown to immediately re-toggle (blink).
+  const _sidebar = select('#sidebar');
+  if (_sidebar) {
+    _sidebar.addEventListener('click', function(e) {
+      // Only stop propagation for clicks originating inside the sidebar
+      // so other global handlers still work normally.
+      e.stopPropagation();
+    });
+  }
+
   /**
    * Search bar toggle
    */

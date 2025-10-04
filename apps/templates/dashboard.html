@@ -569,6 +569,17 @@
         });
       });
 
+      // Stop clicks within the sidebar (including dropdown menus) from
+      // bubbling to document-level handlers that may re-toggle Bootstrap
+      // dropdowns/collapses and cause blinking.
+      document.addEventListener('click', function(e) {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+        if (sidebar.contains(e.target)) {
+          e.stopPropagation();
+        }
+      }, true);
+
       function openSlideMenu() {
         document.getElementById("side-menu").style.width = "220px";
         document.getElementById("main").style.marginLeft = "150px";
