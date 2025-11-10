@@ -2,7 +2,7 @@ $(document).ready(function () {
     // Function to fetch report using the initial endpoint (on page load)
     function fetchInitialSalesReport() {
         $.ajax({
-            url: `/api-get-sales-report2/`,
+            url: `/api-get-sales/`,
             type: "GET",
             cache: false,
             success: function (data) {
@@ -22,7 +22,7 @@ $(document).ready(function () {
         let dateTo = $("#date_to").val();
 
         $.ajax({
-            url: `/api-get-sales-report-with-params/?date_from=${dateFrom}&date_to=${dateTo}`,
+            url: `/api-get-sales/?date_from=${dateFrom}&date_to=${dateTo}`,
             type: "GET",
             cache: false,
             success: function (data) {

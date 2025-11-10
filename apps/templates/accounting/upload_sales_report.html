@@ -1,0 +1,207 @@
+
+{% extends 'dashboard.html' %} {% block content %}
+<link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
+<link rel="stylesheet" href="/static/accounting/upload_sales_report.css">
+
+<div id="main" class="main">
+    <div class="pagetitle">
+        <h1>Invoices Import</h1>
+    </div>
+    <!-- End Page Title -->
+
+    <section class="section">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="container mx-auto p-8">
+                        <div class="progress-stepper">
+                            <div class="step active">
+                                <div class="step-number">1</div>
+                                <div class="step-label">File Upload</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-label">Mapping</div>
+                            </div>
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-label">Results</div>
+                            </div>
+                        </div>
+
+                        <p class="text-gray-600 my-8">
+                            Download a sample file and compare it with your import file to ensure it is properly formatted. It's not necessary for the columns to be in the same order, you can map them later.
+                        </p>
+
+                        <!-- File Upload Step -->
+                        <div id="upload-step" class="step-content active">
+                            <div class="drag-and-drop-area">
+                                <div class="icon">↓</div>
+                                <p>Drag and drop files here or click to select files</p>
+                                <button class="upload-btn">Upload File</button>
+                                <input type="file" id="file-upload" class="hidden" accept=".csv, .xlsx">
+                                <p class="supported-formats">Supported Formats: CSV, XLSX</p>
+                                <p class="max-size">Maximum size: 25MB</p>
+                            </div>
+
+                            <div class="table-example mt-4">
+                                <div>
+                                    <h5>Table Example</h5>
+                                    <p>You can download the sample file to obtain detailed information about the data fields used during the import.</p>
+                                </div>
+                                <div class="download-section mt-4">
+                                    <button id="download-sales" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                        Download SALES.ods
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mapping Step -->
+                        <div id="mapping-step" class="step-content hidden">
+                            <div class="mapping-container">
+                                <p class="text-gray-600 mb-4">
+                                    Review and map the column headers in your csv/xlsx file with the required fields.
+                                </p>
+                                
+                                <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                                    <span class="block sm:inline"></span>
+                                </div>
+
+                                <div id="success-message" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                                    <span class="block sm:inline"></span>
+                                </div>
+
+                                <div class="mapping-fields grid gap-4">
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Delivery Date *</label>
+                                        </div>
+                                        <select name="delivery_date" class="w-full p-2 border rounded mapping-select" required>
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Invoice Date *</label>
+                                        </div>
+                                        <select name="invoice_date" class="w-full p-2 border rounded mapping-select" required>
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Invoice No. *</label>
+                                        </div>
+                                        <select name="invoice_no" class="w-full p-2 border rounded mapping-select" required>
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">PO No.</label>
+                                        </div>
+                                        <select name="po_no" class="w-full p-2 border rounded mapping-select">
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Load No.</label>
+                                        </div>
+                                        <select name="load_no" class="w-full p-2 border rounded mapping-select">
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">DR No.</label>
+                                        </div>
+                                        <select name="dr_no" class="w-full p-2 border rounded mapping-select">
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Customer *</label>
+                                        </div>
+                                        <select name="customer" class="w-full p-2 border rounded mapping-select" required>
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Customer ID</label>
+                                        </div>
+                                        <select name="customer_id" class="w-full p-2 border rounded mapping-select">
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Category</label>
+                                        </div>
+                                        <select name="category" class="w-full p-2 border rounded mapping-select">
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Terms</label>
+                                        </div>
+                                        <select name="terms" class="w-full p-2 border rounded mapping-select">
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Due Date *</label>
+                                        </div>
+                                        <select name="due_date" class="w-full p-2 border rounded mapping-select" required>
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Tax Type</label>
+                                        </div>
+                                        <select name="tax_type" class="w-full p-2 border rounded mapping-select">
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Amount *</label>
+                                        </div>
+                                        <select name="amount" class="w-full p-2 border rounded mapping-select" required>
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions mt-6">
+                            <button class="cancel-btn bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Back</button>
+                            <button class="next-btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" disabled>Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="/static/accounting/upload_sales_report.js"></script>
+</div>
+{% endblock %}

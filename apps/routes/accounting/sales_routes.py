@@ -1,9 +1,15 @@
-from fastapi import APIRouter, Body, HTTPException, Depends, Request, Response, status
+from fastapi import (
+    APIRouter, Body, HTTPException, Depends, Request, Response, 
+    status, UploadFile, File, Form
+)
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from typing import Union, List, Optional, Dict
 from pydantic import BaseModel
 from bson import ObjectId
+import io
+import pandas as pd
+import json
 
 
 
@@ -135,16 +141,23 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
 
 
 @api_sales.get("/api-get-sales/")
-async def get_sales(username: str = Depends(get_current_user)):
+async def get_sales(date_from: Optional[str] = None, date_to: Optional[str] = None, username: str = Depends(get_current_user)):
     try:
-        result = mydb.sales.find().sort('date_updated', -1)
+        query = {}
+        if date_from and date_to:
+            query["invoice_date"] = {
+                "$gte": datetime.strptime(date_from, "%Y-%m-%d"),
+                "$lte": datetime.strptime(date_to, "%Y-%m-%d")
+            }
+        
+        result = mydb.sales.find(query).sort('date_updated', -1)
 
         SalesData = [{
             
             "id": str(data['_id']),
-            "delivery_date": data['delivery_date'].strftime('%Y-%m-%d') if isinstance(data['delivery_date'], datetime) else data['delivery_date'],
+            "delivery_date": data['delivery_date'].strftime('%Y-%m-%d') if data.get('delivery_date') and isinstance(data['delivery_date'], datetime) else data.get('delivery_date', ''),
             
-            "invoice_date": data['invoice_date'].strftime('%Y-%m-%d') if isinstance(data['invoice_date'], datetime) else data['invoice_date'],
+            "invoice_date": data['invoice_date'].strftime('%Y-%m-%d') if isinstance(data['invoice_date'], datetime) else data.get('invoice_date', ''),
             "invoice_no": data['invoice_no'],
 
             "po_no": data['po_no'],
@@ -273,6 +286,376 @@ async def get_sales_dashboard(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving sales data: {e}")
+
+
+@api_sales.get("/api-sales-report/", response_class=HTMLResponse)
+async def api_sales_report_template(request: Request,
+                                        username: str = Depends(get_current_user)):
+    role = mydb.login.find_one({"email_add":username})
+
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    if 'Sales' in roleAuthenticate['allowed_access']:
+
+
+        return templates.TemplateResponse("accounting/sales_report.html", 
+                                      {"request": request})
+
+    else:
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail= "Not Authorized ",
+            # headers={"WWW-Authenticate": "Basic"},
+        )
+
+@api_sales.get("/upload-sales-report/", response_class=HTMLResponse)
+async def upload_sales_report_template(request: Request,
+                                        username: str = Depends(get_current_user)):
+    role = mydb.login.find_one({"email_add":username})
+
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    if 'Sales' in roleAuthenticate['allowed_access']:
+
+
+        return templates.TemplateResponse("accounting/upload_sales_report.html", 
+                                      {"request": request})
+
+    else:
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail= "Not Authorized ",
+            # headers={"WWW-Authenticate": "Basic"},
+        )
+
+@api_sales.post("/upload-sales-report/")
+async def upload_sales_report(file: UploadFile = File(...), username: str = Depends(get_current_user)):
+    
+    role = mydb.login.find_one({"email_add": username})
+    if not role:
+        raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+            )
+
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    if not roleAuthenticate or 'Sales' not in roleAuthenticate['allowed_access']:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not Authorized",
+            )
+
+    try:
+        # Validate file extension
+        if not file.filename.endswith(('.xlsx', '.xls', '.csv')):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file format. Please upload an Excel file (.xlsx, .xls) or CSV file."
+            )
+
+        contents = await file.read()
+        if len(contents) == 0:
+            raise HTTPException(
+                status_code=400, 
+                detail="The file is empty"
+            )
+
+        # Parse Excel file
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        # Validate DataFrame
+        if df.empty:
+            raise HTTPException(
+                status_code=400, 
+                detail="The uploaded file contains no data"
+            )
+
+        # Convert numeric columns to float where possible
+        numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns
+        for col in numeric_columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+
+        # Replace infinite and NaN values with None
+        df = df.replace([float('inf'), float('-inf')], None)
+        df = df.where(df.notna(), None)
+        
+        # Get preview data with cleaned values
+        preview_data = []
+        for _, row in df.head(5).iterrows():
+            row_dict = {}
+            for col in df.columns:
+                val = row[col]
+                if val is None or (isinstance(val, float) and not -1e308 < val < 1e308):
+                    row_dict[col] = None
+                else:
+                    row_dict[col] = val
+            preview_data.append(row_dict)
+        
+        # Prepare response with status wrapper
+        column_info = {
+            "filename": file.filename,
+            "columns": list(df.columns),
+            "row_count": len(df),
+            "preview": preview_data
+        }
+        
+        return {"status": "success", "data": column_info}
+
+    except pd.errors.EmptyDataError:
+        raise HTTPException(
+            status_code=400, 
+            detail="The file contains no data"
+        )
+    except pd.errors.ParserError as e:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Could not parse Excel file: {str(e)}"
+        )
+    except Exception as e:
+        print(f"Upload error: {str(e)}")  # Log the error server-side
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error processing file: {str(e)}"
+        )
+
+
+
+
+@api_sales.get("/download-sales-template/")
+async def download_sales_template(username: str = Depends(get_current_user)):
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    if 'Sales' in roleAuthenticate['allowed_access']:
+        try:
+            # Define the column headers based on the user's provided pattern
+            column_headers = [
+                'delivery_date',
+                'invoice_date',
+                'invoice_no',
+                'po_no',
+                'load_no',
+                'dr_no',
+                'customer',
+                'customer_id',
+                'category',
+                'terms',
+                'due_date',
+                'tax_type',
+                'amount'
+            ]
+
+            # Create an empty DataFrame with only the specified columns
+            df = pd.DataFrame(columns=column_headers)
+
+            # Create an in-memory Excel file
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, sheet_name='Sales')
+            output.seek(0)
+
+            return StreamingResponse(
+                output,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": "attachment; filename=sales_template.xlsx"}
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not Authorized",
+        )
+
+from fastapi import Form, File, UploadFile, Depends, HTTPException, status, Body
+import json
+
+class ImportRequest(BaseModel):
+    column_mapping: dict
+
+@api_sales.post("/import-sales-data/")
+async def import_sales_data(
+    file: UploadFile = File(...),
+    column_mapping: str = Form(...),
+    username: str = Depends(get_current_user)
+):
+    # 1. Authorization Check
+    role = mydb.login.find_one({"email_add": username})
+    if not role:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    if not roleAuthenticate or 'Sales' not in roleAuthenticate['allowed_access']:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not Authorized"
+        )
+    
+    # 2. Parse column_mapping
+    try:
+        mapping_data = json.loads(column_mapping)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid mapping format: {str(e)}")
+
+    # 3. Read and validate file
+    try:
+        contents = await file.read()
+        if len(contents) == 0:
+            raise HTTPException(status_code=400, detail="The file is empty")
+        df = pd.read_excel(io.BytesIO(contents))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error reading file: {str(e)}")
+
+    if df.empty:
+        raise HTTPException(status_code=400, detail="File contains no data")
+
+    # 4. Validate required fields are mapped
+    required_fields = ['delivery_date', 'invoice_date', 'invoice_no', 'customer', 'amount', 'due_date']
+    mapped_target_fields = list(mapping_data.values())
+    missing_fields = [field for field in required_fields if field not in mapped_target_fields]
+    if missing_fields:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing required fields in mapping: {', '.join(missing_fields)}"
+        )
+
+    try:
+        # 5. Rename columns based on mapping (Excel_column_name -> target_field_name)
+        # We need to reverse the mapping to rename from original Excel column names to our target field names
+        # mapping_data is {excel_col_name: target_field_name}
+        df = df.rename(columns=mapping_data)
+
+        # 6. Validate and convert date fields
+        date_fields = ['delivery_date', 'invoice_date', 'due_date']
+        for field in date_fields:
+            if field in df.columns:
+                df[field] = pd.to_datetime(df[field], errors='coerce')
+                if df[field].isna().any():
+                    invalid_dates_rows = df[df[field].isna()]
+                    first_invalid_row_index = invalid_dates_rows.index[0] + 2 # +2 for 0-based index and header row
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid date format in column '{field}' at row {first_invalid_row_index}. Please ensure dates are in a recognizable format."
+                    )
+
+        # 7. Validate amount field
+        if 'amount' in df.columns:
+            df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
+            if df['amount'].isna().any():
+                invalid_amounts_rows = df[df['amount'].isna()]
+                first_invalid_row_index = invalid_amounts_rows.index[0] + 2 # +2 for 0-based index and header row
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid numeric value in column 'amount' at row {first_invalid_row_index}. Please ensure all amounts are valid numbers."
+                )
+
+        # 8. Check for duplicate invoice numbers in the uploaded file
+        if 'invoice_no' in df.columns and df['invoice_no'].duplicated().any():
+            duplicate_invoices = df[df['invoice_no'].duplicated()]['invoice_no'].unique().tolist()
+            raise HTTPException(
+                status_code=400,
+                detail=f"Duplicate invoice numbers found in the uploaded file: {', '.join(map(str, duplicate_invoices))}"
+            )
+
+        # 9. Check for existing invoice numbers in database and gather details
+        existing_invoices_details = []
+        for invoice_no in df['invoice_no'].unique():
+            existing_record = mydb.sales.find_one({"invoice_no": invoice_no})
+            if existing_record:
+                existing_invoices_details.append({
+                    "invoice_no": invoice_no,
+                    "customer": existing_record.get('customer', 'N/A'),
+                    "invoice_date": existing_record.get('invoice_date').strftime('%Y-%m-%d') if existing_record.get('invoice_date') else 'N/A',
+                    "amount": existing_record.get('amount', 0),
+                    "existing_user": existing_record.get('user', 'N/A'),
+                    "date_created": existing_record.get('date_created').strftime('%Y-%m-%d %H:%M:%S') if existing_record.get('date_created') else 'N/A'
+                })
+        
+        if existing_invoices_details:
+            # Format the error message with detailed information
+            error_details = "\n".join([
+                f"Invoice No: {d['invoice_no']}\n"
+                f"- Customer: {d['customer']}\n"
+                f"- Invoice Date: {d['invoice_date']}\n"
+                f"- Amount: {d['amount']}\n"
+                f"- Created By: {d['existing_user']}\n"
+                f"- Created On: {d['date_created']}\n"
+                for d in existing_invoices_details
+            ])
+            
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": "The following invoices already exist in the database:",
+                    "existing_invoices": existing_invoices_details,
+                    "error_details": error_details
+                }
+            )
+
+        # 10. Prepare records for insertion
+        records = []
+        for _, row in df.iterrows():
+            record = row.where(pd.notna(row), None).to_dict()
+            record.update({
+                "user": username,
+                "date_created": datetime.now(timezone.utc),
+                "date_updated": datetime.now(timezone.utc)
+            })
+            records.append(record)
+
+        # 11. Insert records into MongoDB
+        result = mydb.sales.insert_many(records)
+
+        return {
+            "status": "success",
+            "message": f"Successfully imported {len(result.inserted_ids)} records",
+            "inserted_count": len(result.inserted_ids)
+        }
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error importing data: {str(e)}"
+        )
+
+@api_sales.get("/download-sales-report/")
+async def download_sales_report(username: str = Depends(get_current_user)):
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    if 'Sales' in roleAuthenticate['allowed_access']:
+        try:
+            # Query all sales data from MongoDB
+            sales_data = list(mydb.sales.find({}, {'_id': 0}))  # Exclude _id field
+            
+            # Convert to DataFrame
+            df = pd.DataFrame(sales_data)
+            
+            # Create an in-memory file
+            output = io.BytesIO()
+            
+            # Save as ODS file
+            df.to_excel(output, engine='openpyxl', index=False)
+            output.seek(0)
+            
+            return StreamingResponse(
+                output,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": "attachment; filename=SALES.xlsx"}
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not Authorized",
+        )
 
 
 

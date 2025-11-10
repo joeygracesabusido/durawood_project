@@ -10,3 +10,5 @@ strawberry-graphql
 gunicorn
 sqlmodel
 pymysql
+pandas
+openpyxl
