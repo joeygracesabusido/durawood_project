@@ -143,43 +143,113 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
 @api_sales.get("/api-get-sales/")
 async def get_sales(date_from: Optional[str] = None, date_to: Optional[str] = None, username: str = Depends(get_current_user)):
     try:
-        query = {}
-        if date_from and date_to:
-            query["invoice_date"] = {
-                "$gte": datetime.strptime(date_from, "%Y-%m-%d"),
-                "$lte": datetime.strptime(date_to, "%Y-%m-%d")
-            }
+        pipeline = []
         
-        result = mydb.sales.find(query).sort('date_updated', -1)
+        # Add $match stage for date range filtering if provided
+        if date_from and date_to:
+            pipeline.append({
+                "$match": {
+                    "invoice_date": {
+                        "$gte": datetime.strptime(date_from, "%Y-%m-%d"),
+                        "$lte": datetime.strptime(date_to, "%Y-%m-%d")
+                    }
+                }
+            })
+        
+        # Add $lookup to join with payment collection
+        pipeline += [
+            {
+                "$lookup": {
+                    "from": "payment",
+                    "let": { "invoice_no": "$invoice_no" },
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": "$invoice_no",
+                                "total_cash": { "$sum": "$cash_amount" },
+                                "total_2307": { "$sum": "$amount_2307" }
+                            }
+                        }
+                    ],
+                    "as": "payment_info"
+                }
+            },
+            {
+                "$addFields": {
+                    "total_cash": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+                    },
+                    "total_2307": {
+                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+                    },
+                    "amount": {
+                        "$ifNull": ["$amount", 0]
+                    }
+                }
+            },
+            {
+                "$addFields": {
+                    "balance": {
+                        "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+                    },
+                    "status": {
+                        "$cond": {
+                            "if": { "$gt": ["$due_date", None] },
+                            "then": {
+                                "$max": [{
+                                    "$divide": [{
+                                        "$subtract": [{ "$toLong": "$$NOW" }, { "$toLong": "$due_date" }]
+                                    }, 86400000]
+                                }, 0]
+                            },
+                            "else": None
+                        }
+                    }
+                }
+            },
+            {
+                "$sort": { "date_updated": -1 }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "id": { "$toString": "$_id" },
+                    "delivery_date": { 
+                        "$cond": {
+                            "if": { "$and": [{ "$ne": ["$delivery_date", None] }, { "$eq": [{ "$type": "$delivery_date" }, "date"] }] },
+                            "then": { "$dateToString": { "format": "%Y-%m-%d", "date": "$delivery_date" } },
+                            "else": ""
+                        }
+                    },
+                    "invoice_date": { "$dateToString": { "format": "%Y-%m-%d", "date": "$invoice_date" } },
+                    "invoice_no": 1,
+                    "po_no": 1,
+                    "load_no": 1,
+                    "dr_no": 1,
+                    "customer": 1,
+                    "customer_id": 1,
+                    "category": 1,
+                    "items": 1,
+                    "terms": 1,
+                    "due_date": { "$dateToString": { "format": "%Y-%m-%d", "date": "$due_date" } },
+                    "tax_type": 1,
+                    "amount": 1,
+                    "balance": 1,
+                    "status": 1,
+                    "user": 1,
+                    "date_updated": 1,
+                    "date_created": 1
+                }
+            }
+        ]
 
-        SalesData = [{
-            
-            "id": str(data['_id']),
-            "delivery_date": data['delivery_date'].strftime('%Y-%m-%d') if data.get('delivery_date') and isinstance(data['delivery_date'], datetime) else data.get('delivery_date', ''),
-            
-            "invoice_date": data['invoice_date'].strftime('%Y-%m-%d') if isinstance(data['invoice_date'], datetime) else data.get('invoice_date', ''),
-            "invoice_no": data['invoice_no'],
-
-            "po_no": data['po_no'],
-            "load_no": data['load_no'],
-            "dr_no": data['dr_no'],
-            "customer": data['customer'],
-            "customer_id": data['customer_id'],
-            "category": data['category'],
-            "items": data.get('items'),
-            "terms": data['terms'],
-            "due_date": data['due_date'].strftime('%Y-%m-%d') if isinstance(data['due_date'], datetime) else data['due_date'],
-            "tax_type": data['tax_type'],
-            "amount": data['amount'],
-            "user": data['user'],
-            "date_updated": data['date_updated'],
-            "date_created": data['date_created'],
-
-
-        } for data in result
-
-    ]
-        return SalesData
+        result = list(mydb.sales.aggregate(pipeline))
+        return result
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 

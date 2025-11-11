@@ -1,17 +1,16 @@
 
-from fastapi import APIRouter, Body, HTTPException, Depends, Request, Response, status
+from fastapi import APIRouter, Body, HTTPException, Depends, Request, Response, status, UploadFile, File, Form
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from typing import Union, List, Optional, Dict
 from pydantic import BaseModel
 from bson import ObjectId
+import io
+import pandas as pd
+import json
 
-
-
-
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from apps.authentication.authenticate_user import get_current_user
-
 
 from  apps.database.mongodb import create_mongo_client
 mydb = create_mongo_client()
@@ -73,6 +72,256 @@ async def api_collection_list_template(request: Request,
  
     return templates.TemplateResponse("accounting/payment_list.html", 
                                       {"request": request})
+
+@api_payment.get("/upload-collection/", response_class=HTMLResponse)
+async def upload_collection_template(request: Request,
+                                        username: str = Depends(get_current_user)):
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    if 'Payment' in roleAuthenticate['allowed_access']:
+        return templates.TemplateResponse("accounting/upload_collection.html", 
+                                      {"request": request})
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not Authorized",
+        )
+
+@api_payment.post("/upload-collection/")
+async def upload_collection_file(file: UploadFile = File(...), username: str = Depends(get_current_user)):
+    
+    role = mydb.login.find_one({"email_add": username})
+    if not role:
+        raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+            )
+
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    if not roleAuthenticate or 'Payment' not in roleAuthenticate['allowed_access']:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not Authorized",
+            )
+
+    try:
+        # Validate file extension
+        if not file.filename.endswith(('.xlsx', '.xls', '.csv')):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file format. Please upload an Excel file (.xlsx, .xls) or CSV file."
+            )
+
+        contents = await file.read()
+        if len(contents) == 0:
+            raise HTTPException(
+                status_code=400, 
+                detail="The file is empty"
+            )
+
+        # Parse Excel file
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        # Validate DataFrame
+        if df.empty:
+            raise HTTPException(
+                status_code=400, 
+                detail="The uploaded file contains no data"
+            )
+
+        # Convert numeric columns to float where possible
+        numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns
+        for col in numeric_columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+
+        # Replace infinite and NaN values with None
+        df = df.replace([float('inf'), float('-inf')], None)
+        df = df.where(df.notna(), None)
+        
+        # Get preview data with cleaned values
+        preview_data = []
+        for _, row in df.head(5).iterrows():
+            row_dict = {}
+            for col in df.columns:
+                val = row[col]
+                if val is None or (isinstance(val, float) and not -1e308 < val < 1e308):
+                    row_dict[col] = None
+                else:
+                    row_dict[col] = val
+            preview_data.append(row_dict)
+        
+        # Prepare response with status wrapper
+        column_info = {
+            "filename": file.filename,
+            "columns": list(df.columns),
+            "row_count": len(df),
+            "preview": preview_data
+        }
+        
+        return {"status": "success", "data": column_info}
+
+    except pd.errors.EmptyDataError:
+        raise HTTPException(
+            status_code=400, 
+            detail="The file contains no data"
+        )
+    except pd.errors.ParserError as e:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Could not parse Excel file: {str(e)}"
+        )
+    except Exception as e:
+        print(f"Upload error: {str(e)}")  # Log the error server-side
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error processing file: {str(e)}"
+        )
+
+@api_payment.post("/import-collection-data/")
+async def import_collection_data(
+    file: UploadFile = File(...),
+    column_mapping: str = Form(...),
+    username: str = Depends(get_current_user)
+):
+    role = mydb.login.find_one({"email_add": username})
+    if not role or 'Payment' not in mydb.roles.find_one({'role': role['role']})['allowed_access']:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not Authorized"
+        )
+    
+    try:
+        mapping_data = json.loads(column_mapping)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid mapping format: {str(e)}")
+
+    try:
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error reading file: {str(e)}")
+
+    if df.empty:
+        raise HTTPException(status_code=400, detail="File contains no data")
+
+    required_fields = ['date', 'customer', 'customer_id', 'invoice_no', 'cash_amount']
+    missing_fields = [field for field in required_fields if field not in mapping_data.values()]
+    if missing_fields:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing required fields: {', '.join(missing_fields)}"
+        )
+
+    try:
+        reverse_mapping = {v: k for k, v in mapping_data.items()}
+        df = df.rename(columns=reverse_mapping)
+
+        # Process dates
+        try:
+            df['date'] = pd.to_datetime(df['date'])
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid date format in date column: {str(e)}"
+            )
+
+        # Process amounts
+        try:
+            df['cash_amount'] = pd.to_numeric(df['cash_amount'])
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid numeric values in cash_amount column: {str(e)}"
+            )
+
+        # Optional amount field
+        if 'amount_2307' in df.columns:
+            try:
+                df['amount_2307'] = pd.to_numeric(df['amount_2307'])
+            except Exception:
+                pass
+
+        # Check for existing collection records by cr_no if available
+        if 'cr_no' in df.columns:
+            existing = []
+            for cr_no in df['cr_no'].unique():
+                if df['cr_no'].isnull().sum() == 0 and mydb.payment.find_one({"cr_no": cr_no}):
+                    existing.append(cr_no)
+            if existing:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Collection receipt numbers already exist: {', '.join(map(str, existing))}"
+                )
+
+        # Prepare and insert records
+        records = []
+        for _, row in df.iterrows():
+            record = row.where(pd.notnull(row), None).to_dict()
+            record.update({
+                'user': username,
+                'date_created': datetime.now(timezone.utc),
+                'date_updated': datetime.now(timezone.utc),
+                'payment_method': record.get('payment_method', 'Cash')
+            })
+            records.append(record)
+
+        result = mydb.payment.insert_many(records)
+
+        return {
+            "status": "success",
+            "message": f"Successfully imported {len(result.inserted_ids)} collection records"
+        }
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing import: {str(e)}"
+        )
+
+@api_payment.get("/download-collection-template/")
+async def download_collection_template(username: str = Depends(get_current_user)):
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    if 'Payment' in roleAuthenticate['allowed_access']:
+        try:
+            # Define the column headers based on the collection fields
+            column_headers = [
+                'date',
+                'customer',
+                'customer_id',
+                'invoice_no',
+                'cr_no',
+                'cash_amount',
+                'amount_2307',
+                'payment_method',
+                'remarks'
+            ]
+
+            # Create an empty DataFrame with only the specified columns
+            df = pd.DataFrame(columns=column_headers)
+
+            # Create an in-memory Excel file
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, sheet_name='Collections')
+            output.seek(0)
+
+            return StreamingResponse(
+                output,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": "attachment; filename=collection.xlsx"}
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not Authorized",
+        )
 
 @api_payment.get("/update-collection-transaction/{id}", response_class=HTMLResponse)
 async def api_collection_list_template(request: Request,

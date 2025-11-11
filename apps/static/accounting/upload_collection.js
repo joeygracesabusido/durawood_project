@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function () {
     const dragAndDropArea = document.querySelector('.drag-and-drop-area');
     const fileUpload = document.getElementById('file-upload');
@@ -7,11 +6,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const cancelBtn = document.querySelector('.cancel-btn');
     const uploadStep = document.getElementById('upload-step');
     const mappingStep = document.getElementById('mapping-step');
-    const resultsStep = document.getElementById('results-step');
     const progressSteps = document.querySelectorAll('.step');
     
     let uploadedFile = null;
-    let columnHeaders = [];
 
     // Trigger file input when upload button is clicked
     uploadBtn.addEventListener('click', () => {
@@ -52,12 +49,11 @@ document.addEventListener('DOMContentLoaded', function () {
         formData.append('file', files[0]);
 
         try {
-            const response = await fetch('/upload-sales-report/', {
+            const response = await fetch('/upload-collection/', {
                 method: 'POST',
                 body: formData,
-                credentials: 'same-origin', // Include cookies
+                credentials: 'same-origin',
                 headers: {
-                    // Don't set Content-Type header - browser will set it with boundary for multipart/form-data
                 }
             });
             
@@ -104,49 +100,98 @@ document.addEventListener('DOMContentLoaded', function () {
     // Handle next button click
     nextBtn.addEventListener('click', async () => {
         if (uploadedFile) {
-            uploadStep.classList.add('hidden');
-            mappingStep.classList.remove('hidden');
-            
-            // Update progress steps
-            progressSteps[0].classList.remove('active');
-            progressSteps[1].classList.add('active');
+            if (mappingStep.classList.contains('hidden')) {
+                // First click - Show mapping step
+                uploadStep.classList.add('hidden');
+                mappingStep.classList.remove('hidden');
+                progressSteps[0].classList.remove('active');
+                progressSteps[1].classList.add('active');
+                nextBtn.textContent = 'Import';
+                cancelBtn.textContent = 'Back';
+                await populateColumnHeaders();
+            } else {
+                // Second click - Perform import
+                try {
+                    // Collect mapping data
+                    const mapping = {};
+                    const requiredFields = ['date', 'customer', 'customer_id', 'invoice_no', 'cash_amount'];
+                    const selects = mappingStep.querySelectorAll('.mapping-select');
+                    
+                    selects.forEach(select => {
+                        if (select.value) {
+                            mapping[select.value] = select.getAttribute('name');
+                        }
+                    });
 
-            // Update button states
-            nextBtn.textContent = 'Import';
-            cancelBtn.textContent = 'Back';
-            
-            // Populate column headers in mapping dropdowns
-            await populateColumnHeaders();
+                    console.log('Mapping data:', mapping);
+
+                    // Check for missing required fields
+                    const mappedFields = Object.values(mapping);
+                    const missingFields = requiredFields.filter(field => !mappedFields.includes(field));
+
+                    if (missingFields.length > 0) {
+                        throw new Error(`Missing required fields: ${missingFields.join(', ')}. Please map all required fields marked with *`);
+                    }
+
+                    // Prepare form data
+                    const formData = new FormData();
+                    formData.append('file', uploadedFile);
+                    formData.append('column_mapping', JSON.stringify(mapping));
+
+                    // Send import request
+                    const response = await fetch('/import-collection-data/', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin'
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        if (error.detail && typeof error.detail === 'object') {
+                            throw error.detail;
+                        } else {
+                            throw new Error(error.detail || 'Import failed');
+                        }
+                    }
+
+                    const result = await response.json();
+                    showSuccess(result.message);
+                    
+                    // Move to final step
+                    progressSteps[1].classList.remove('active');
+                    progressSteps[2].classList.add('active');
+                    nextBtn.style.display = 'none';
+                    cancelBtn.textContent = 'Finish';
+
+                } catch (error) {
+                    showError(error.message);
+                }
+            }
         }
     });
 
     // Handle back/cancel button click
     cancelBtn.addEventListener('click', () => {
-        if (resultsStep.classList.contains('hidden')) {
-            if (mappingStep.classList.contains('hidden')) {
-                // We're on the first step - return to previous page
-                window.history.back();
-            } else {
-                // We're on the mapping step - go back to upload
-                mappingStep.classList.add('hidden');
-                uploadStep.classList.remove('hidden');
-                progressSteps[1].classList.remove('active');
-                progressSteps[0].classList.add('active');
-                nextBtn.textContent = 'Next';
-                cancelBtn.textContent = 'Cancel';
-                nextBtn.style.display = 'block';
-            }
+        if (mappingStep.classList.contains('hidden')) {
+            // We're on the first step - return to previous page
+            window.history.back();
         } else {
-            // We're on the results step - go back to collection list
-            window.location.href = '/sales/';
+            // We're on the mapping step - go back to upload
+            mappingStep.classList.add('hidden');
+            uploadStep.classList.remove('hidden');
+            progressSteps[1].classList.remove('active');
+            progressSteps[0].classList.add('active');
+            nextBtn.textContent = 'Next';
+            cancelBtn.textContent = 'Cancel';
+            nextBtn.style.display = 'block';
         }
     });
 
-    // Handle SALES.xlsx download (template without data)
-    const downloadSalesBtn = document.getElementById('download-sales');
-    if (downloadSalesBtn) {
-        downloadSalesBtn.addEventListener('click', () => {
-            window.location.href = '/download-sales-template/';
+    // Handle collection.xlsx download (template without data)
+    const downloadCollectionBtn = document.getElementById('download-collection');
+    if (downloadCollectionBtn) {
+        downloadCollectionBtn.addEventListener('click', () => {
+            window.location.href = '/download-collection-template/';
         });
     }
 
@@ -155,26 +200,24 @@ document.addEventListener('DOMContentLoaded', function () {
         const errorDiv = document.getElementById('error-message');
         let errorContent = '';
 
-        if (typeof error === 'object' && error.existing_invoices) {
-            // Handle detailed duplicate invoice error
+        if (typeof error === 'object' && error.existing_collections) {
             errorContent = `<p class="font-bold mb-2">${error.message}</p>`;
             errorContent += '<div class="mt-2 text-sm">';
-            error.existing_invoices.forEach(invoice => {
+            error.existing_collections.forEach(collection => {
                 errorContent += `
                     <div class="border-b border-red-200 py-2">
-                        <p><strong>Invoice No:</strong> ${invoice.invoice_no}</p>
-                        <p><strong>Customer:</strong> ${invoice.customer}</p>
-                        <p><strong>Invoice Date:</strong> ${invoice.invoice_date}</p>
-                        <p><strong>Amount:</strong> ${invoice.amount}</p>
-                        <p><strong>Created By:</strong> ${invoice.existing_user}</p>
-                        <p><strong>Created On:</strong> ${invoice.date_created}</p>
+                        <p><strong>CR No:</strong> ${collection.cr_no}</p>
+                        <p><strong>Invoice No:</strong> ${collection.invoice_no}</p>
+                        <p><strong>Customer:</strong> ${collection.customer}</p>
+                        <p><strong>Amount:</strong> ${collection.cash_amount}</p>
+                        <p><strong>Created By:</strong> ${collection.existing_user}</p>
+                        <p><strong>Created On:</strong> ${collection.date_created}</p>
                     </div>
                 `;
             });
             errorContent += '</div>';
-            errorContent += '<p class="mt-2 font-semibold">Please remove these invoices from your import file and try again.</p>';
+            errorContent += '<p class="mt-2 font-semibold">Please remove these collections from your import file and try again.</p>';
         } else {
-            // Handle regular error message
             errorContent = `<p>${error.toString()}</p>`;
         }
 
@@ -199,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const formData = new FormData();
             formData.append('file', uploadedFile);
             
-            const response = await fetch('/upload-sales-report/', {
+            const response = await fetch('/upload-collection/', {
                 method: 'POST',
                 body: formData,
                 credentials: 'same-origin'
@@ -216,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             
             const headers = data.data.columns;
-            console.log('Available columns:', headers); // Debug log
+            console.log('Available columns:', headers);
             
             // Get all select elements for mapping
             const selects = mappingStep.querySelectorAll('.mapping-select');
@@ -240,93 +283,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             
-            console.log('Mapping UI updated successfully'); // Debug log
+            console.log('Mapping UI updated successfully');
         } catch (error) {
-            console.error('Error populating headers:', error); // Debug log
+            console.error('Error populating headers:', error);
             showError(error.message);
         }
     }
-
-    // Handle Import button click
-    nextBtn.addEventListener('click', async () => {
-        if (uploadedFile) {
-            if (mappingStep.classList.contains('hidden')) {
-                // First click - Show mapping step
-                uploadStep.classList.add('hidden');
-                mappingStep.classList.remove('hidden');
-                progressSteps[0].classList.remove('active');
-                progressSteps[1].classList.add('active');
-                nextBtn.textContent = 'Import';
-                cancelBtn.textContent = 'Back';
-                await populateColumnHeaders();
-            } else {
-                // Second click - Perform import
-                try {
-                    // Collect mapping data
-                    const mapping = {};
-                    const requiredFields = ['delivery_date', 'invoice_date', 'invoice_no', 'customer', 'amount', 'due_date'];
-                    const selects = mappingStep.querySelectorAll('.mapping-select');
-                    
-                    selects.forEach(select => {
-                        if (select.value) {
-                            // Swap the mapping direction - map from Excel column to our field name
-                            mapping[select.value] = select.getAttribute('name');
-                        }
-                    });
-
-                    console.log('Mapping data:', mapping); // Debug log
-
-                    // Check for missing required fields
-                    const mappedFields = Object.values(mapping);
-                    const missingFields = requiredFields.filter(field => !mappedFields.includes(field));
-
-                    if (missingFields.length > 0) {
-                        throw new Error(`Missing required fields: ${missingFields.join(', ')}. Please map all required fields marked with *`);
-                    }
-
-                    // Prepare form data
-                    const formData = new FormData();
-                    formData.append('file', uploadedFile);
-                    
-                    // Add the mapping data as a string
-                    formData.append('column_mapping', JSON.stringify(mapping));
-
-                    // Send import request
-                    const response = await fetch('/import-sales-data/', {
-                        method: 'POST',
-                        body: formData,
-                        credentials: 'same-origin'
-                    });
-
-                    if (!response.ok) {
-                        const error = await response.json();
-                        if (error.detail && typeof error.detail === 'object') {
-                            throw error.detail;
-                        } else {
-                            throw new Error(error.detail || 'Import failed');
-                        }
-                    }
-
-                    const result = await response.json();
-                    showSuccess(result.message);
-                    
-                    // Move to final step
-                    mappingStep.classList.add('hidden');
-                    resultsStep.classList.remove('hidden');
-                    progressSteps[1].classList.remove('active');
-                    progressSteps[2].classList.add('active');
-                    
-                    // Update results message
-                    document.getElementById('results-detail').textContent = result.message;
-                    
-                    // Update button states
-                    nextBtn.style.display = 'none';
-                    cancelBtn.textContent = 'Finish';
-
-                } catch (error) {
-                    showError(error.message);
-                }
-            }
-        }
-    });
 });

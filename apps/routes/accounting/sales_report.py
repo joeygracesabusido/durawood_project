@@ -96,6 +96,9 @@ async def get_sales(username: str = Depends(get_current_user)):
                     },
                     "total_2307": {
                         "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+                    },
+                    "amount": {
+                        "$ifNull": ["$amount", 0]
                     }
                 }
             },
@@ -204,6 +207,9 @@ async def get_sales(
                     },
                     "total_2307": {
                         "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+                    },
+                    "amount": {
+                        "$ifNull": ["$amount", 0]
                     }
                 }
             },

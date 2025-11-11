@@ -1,11 +1,10 @@
-
 {% extends 'dashboard.html' %} {% block content %}
 <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
-<link rel="stylesheet" href="/static/accounting/upload_sales_report.css">
+<link rel="stylesheet" href="/static/accounting/upload_collection.css">
 
 <div id="main" class="main">
     <div class="pagetitle">
-        <h1>Invoices Import</h1>
+        <h1>Collections Import</h1>
     </div>
     <!-- End Page Title -->
 
@@ -50,8 +49,8 @@
                                     <p>You can download the sample file to obtain detailed information about the data fields used during the import.</p>
                                 </div>
                                 <div class="download-section mt-4">
-                                    <button id="download-sales" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                                        Download SALES.xlsx
+                                    <button id="download-collection" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                        Download collection.xlsx
                                     </button>
                                 </div>
                             </div>
@@ -75,54 +74,9 @@
                                 <div class="mapping-fields grid gap-4">
                                     <div class="mapping-field">
                                         <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">Delivery Date *</label>
+                                            <label class="text-gray-700">Date *</label>
                                         </div>
-                                        <select name="delivery_date" class="w-full p-2 border rounded mapping-select" required>
-                                            <option value="">Select column...</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="mapping-field">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">Invoice Date *</label>
-                                        </div>
-                                        <select name="invoice_date" class="w-full p-2 border rounded mapping-select" required>
-                                            <option value="">Select column...</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="mapping-field">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">Invoice No. *</label>
-                                        </div>
-                                        <select name="invoice_no" class="w-full p-2 border rounded mapping-select" required>
-                                            <option value="">Select column...</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="mapping-field">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">PO No.</label>
-                                        </div>
-                                        <select name="po_no" class="w-full p-2 border rounded mapping-select">
-                                            <option value="">Select column...</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="mapping-field">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">Load No.</label>
-                                        </div>
-                                        <select name="load_no" class="w-full p-2 border rounded mapping-select">
-                                            <option value="">Select column...</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="mapping-field">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">DR No.</label>
-                                        </div>
-                                        <select name="dr_no" class="w-full p-2 border rounded mapping-select">
+                                        <select name="date" class="w-full p-2 border rounded mapping-select" required>
                                             <option value="">Select column...</option>
                                         </select>
                                     </div>
@@ -138,72 +92,66 @@
 
                                     <div class="mapping-field">
                                         <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">Customer ID</label>
+                                            <label class="text-gray-700">Customer ID *</label>
                                         </div>
-                                        <select name="customer_id" class="w-full p-2 border rounded mapping-select">
+                                        <select name="customer_id" class="w-full p-2 border rounded mapping-select" required>
                                             <option value="">Select column...</option>
                                         </select>
                                     </div>
 
                                     <div class="mapping-field">
                                         <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">Category</label>
+                                            <label class="text-gray-700">Invoice No. *</label>
                                         </div>
-                                        <select name="category" class="w-full p-2 border rounded mapping-select">
+                                        <select name="invoice_no" class="w-full p-2 border rounded mapping-select" required>
                                             <option value="">Select column...</option>
                                         </select>
                                     </div>
 
                                     <div class="mapping-field">
                                         <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">Terms</label>
+                                            <label class="text-gray-700">CR No.</label>
                                         </div>
-                                        <select name="terms" class="w-full p-2 border rounded mapping-select">
+                                        <select name="cr_no" class="w-full p-2 border rounded mapping-select">
                                             <option value="">Select column...</option>
                                         </select>
                                     </div>
 
                                     <div class="mapping-field">
                                         <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">Due Date *</label>
+                                            <label class="text-gray-700">Cash Amount *</label>
                                         </div>
-                                        <select name="due_date" class="w-full p-2 border rounded mapping-select" required>
+                                        <select name="cash_amount" class="w-full p-2 border rounded mapping-select" required>
                                             <option value="">Select column...</option>
                                         </select>
                                     </div>
 
                                     <div class="mapping-field">
                                         <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">Tax Type</label>
+                                            <label class="text-gray-700">Amount 2307</label>
                                         </div>
-                                        <select name="tax_type" class="w-full p-2 border rounded mapping-select">
+                                        <select name="amount_2307" class="w-full p-2 border rounded mapping-select">
                                             <option value="">Select column...</option>
                                         </select>
                                     </div>
 
                                     <div class="mapping-field">
                                         <div class="flex justify-between items-center mb-2">
-                                            <label class="text-gray-700">Amount *</label>
+                                            <label class="text-gray-700">Payment Method</label>
                                         </div>
-                                        <select name="amount" class="w-full p-2 border rounded mapping-select" required>
+                                        <select name="payment_method" class="w-full p-2 border rounded mapping-select">
                                             <option value="">Select column...</option>
                                         </select>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Results Step -->
-                        <div id="results-step" class="step-content hidden">
-                            <div class="results-container">
-                                <div class="results-icon text-center mb-4">
-                                    <svg class="w-24 h-24 mx-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div id="results-message" class="text-center">
-                                    <h3 class="text-2xl font-bold text-green-600 mb-2">Import Successful!</h3>
-                                    <p id="results-detail" class="text-gray-600"></p>
+                                    <div class="mapping-field">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <label class="text-gray-700">Remarks</label>
+                                        </div>
+                                        <select name="remarks" class="w-full p-2 border rounded mapping-select">
+                                            <option value="">Select column...</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -217,6 +165,6 @@
             </div>
         </div>
     </section>
-    <script src="/static/accounting/upload_sales_report.js"></script>
+    <script src="/static/accounting/upload_collection.js"></script>
 </div>
 {% endblock %}
