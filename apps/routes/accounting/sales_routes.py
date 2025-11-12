@@ -727,5 +727,57 @@ async def download_sales_report(username: str = Depends(get_current_user)):
             detail="Not Authorized",
         )
 
+@api_sales.get("/api-autocomplete-vendor-customer/")
+async def autocomplete_vendor_customer(term: Optional[str] = None, username: str = Depends(get_current_user)):
+    """Autocomplete vendor/customer names from customers and previous sales"""
+    try:
+        results = []
+        search_term = term.strip().lower() if term else ""
+        
+        # Get unique customers from sales collection
+        customers = []
+        try:
+            customer_list = mydb.sales.distinct("customer")
+            # Filter out None and empty values
+            customers = [c for c in customer_list if c and str(c).strip()]
+        except Exception as e:
+            print(f"Error getting customers from sales: {e}")
+            customers = []
+        
+        # Get customer names from customer_profile collection
+        customer_profiles = []
+        try:
+            profiles = mydb.customer_profile.find({})
+            for profile in profiles:
+                if 'customer' in profile and profile['customer']:
+                    customer_name = str(profile['customer']).strip()
+                    if customer_name:
+                        customer_profiles.append(customer_name)
+        except Exception as e:
+            print(f"Error getting customers from customer_profile: {e}")
+            pass
+        
+        # Combine all customers and remove duplicates
+        all_customers = list(set(customers + customer_profiles))
+        
+        # Filter and sort by relevance
+        if search_term:
+            filtered = [c for c in all_customers if search_term in str(c).lower()]
+            # Sort by how close the match is (exact matches first)
+            filtered.sort(key=lambda x: (not str(x).lower().startswith(search_term), len(str(x)), str(x).lower()))
+        else:
+            filtered = sorted([str(c) for c in all_customers])
+        
+        # Return top 10 results
+        results = filtered[:10]
+        
+        return {
+            "suggestions": results
+        }
+        
+    except Exception as e:
+        print(f"Autocomplete error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 

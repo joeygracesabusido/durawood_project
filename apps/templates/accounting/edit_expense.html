@@ -1,0 +1,295 @@
+{% extends 'dashboard.html' %}
+{% block content %}
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/static/accounting/quickbooks_expense_form.css">
+</head>
+
+<div id="main" class="main">
+    <div class="pagetitle">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="page-header-title">Expense</h1>
+            <div>
+                <a href="/expense-list/" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                <button type="button" class="btn btn-outline-danger btn-sm ms-2" id="delete_btn">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="expense-form-container">
+            <form id="expense_form">
+                <!-- Header Section -->
+                <div class="form-header">
+                    <div class="header-left">
+                        <div class="form-group">
+                            <label class="form-label-small">Payee</label>
+                            <div class="payee-section">
+                                <div class="position-relative flex-grow-1">
+                                    <input type="text" class="form-control form-control-sm" id="payee" name="payee" placeholder="Search or type payee...">
+                                    <ul id="payee-suggestions" class="dropdown-menu w-100" style="display: none; position: absolute; max-height: 300px; overflow-y: auto; z-index: 1000;">
+                                    </ul>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="add_new_payee" title="Create new payee">
+                                    <i class="bi bi-plus"></i> New
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">Supplier</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label-small">Payment account</label>
+                            <select class="form-control form-control-sm" id="payment_account" name="payment_account" required>
+                                <option value="">Select Account</option>
+                                <option value="Bank Clearing Account">Bank Clearing Account</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Credit Card">Credit Card</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="header-right">
+                        <div class="amount-display">
+                            <div class="amount-label">AMOUNT</div>
+                            <div class="amount-value">₱<span id="total_amount">{{ expense.amount or 0 }}</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Section -->
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label class="form-label-small">Date</label>
+                        <input type="date" class="form-control form-control-sm" id="date" name="date" value="{{ expense.date }}" required>
+                    </div>
+                </div>
+
+                <!-- Expense Lines Table -->
+                <div class="expense-lines-section">
+                    <div class="section-title">Expense Details</div>
+                    <div class="table-responsive">
+                        <table class="expense-lines-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>CATEGORY</th>
+                                    <th>DESCRIPTION</th>
+                                    <th>AMOUNT</th>
+                                    <th>TAX</th>
+                                    <th>CUSTOMER</th>
+                                    <th>CLASS</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="expense_lines_table">
+                                <tr class="expense-line" data-line-id="1">
+                                    <td class="line-number">1</td>
+                                    <td>
+                                        <select class="form-control form-control-sm category-select" id="category" name="category" required>
+                                            <option value="{{ expense.category }}">{{ expense.category }}</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm description-input" name="description" placeholder="Description" value="{{ expense.description or '' }}">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm amount-input text-end" name="amount" placeholder="0.00" step="0.01" value="{{ expense.amount or 0 }}">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm tax-input text-end" name="tax" placeholder="0.00" step="0.01" value="0.00">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="customer" placeholder="Customer" value="">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="class" placeholder="Class" value="">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-link delete-line" title="Delete line">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="table-actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="add_line">
+                            <i class="bi bi-plus"></i> Add lines
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clear_lines">
+                            <i class="bi bi-arrow-counterclockwise"></i> Clear all lines
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Item Details Section -->
+                <div class="form-details-section">
+                    <div class="details-header">
+                        <button type="button" class="btn btn-link btn-sm" data-bs-toggle="collapse" data-bs-target="#itemDetails">
+                            <i class="bi bi-chevron-right"></i> Item details
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Memo and Attachments Section -->
+                <div class="form-group-row">
+                    <div class="form-group full-width">
+                        <label class="form-label-small">Memo</label>
+                        <textarea class="form-control form-control-sm" id="remarks" name="remarks" rows="3" placeholder="Add notes or memo">{{ expense.remarks or '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label class="form-label-small">Attachments</label>
+                        <div class="attachment-area">
+                            <input type="file" id="attachments" name="attachments" multiple style="display:none;">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="add_attachment">
+                                <i class="bi bi-paperclip"></i> Add attachment
+                            </button>
+                            <small class="text-muted d-block mt-2">Max file size: 20 MB</small>
+                            <div id="attachment_list" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Totals Section -->
+                <div class="totals-section">
+                    <div class="totals-row">
+                        <span class="totals-label">Subtotal</span>
+                        <span class="totals-value">₱<span id="subtotal">{{ expense.amount or 0 }}</span></span>
+                    </div>
+                    <div class="totals-row">
+                        <span class="totals-label">Total</span>
+                        <span class="totals-value total">₱<span id="total_display">{{ expense.amount or 0 }}</span></span>
+                    </div>
+                </div>
+
+                <!-- Tax Information -->
+                <div class="tax-info-section">
+                    <div class="form-group">
+                        <label class="form-label-small">Amounts are</label>
+                        <select class="form-control form-control-sm" id="tax_type">
+                            <option value="exclusive">Exclusive of Tax</option>
+                            <option value="inclusive">Inclusive of Tax</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label class="form-label-small">Status</label>
+                        <select class="form-control form-control-sm" id="status" name="status">
+                            <option value="Approved" {% if expense.status == 'Approved' %}selected{% endif %}>Approved</option>
+                            <option value="Pending" {% if expense.status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Rejected" {% if expense.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Buttons Section -->
+                <div class="form-buttons">
+                    <button type="reset" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Update Expense
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+
+<script src="/static/accounting/quickbooks_expense_form.js"></script>
+<script>
+    const expenseId = '{{ expense._id }}';
+    const isEditMode = true;
+    
+    $(document).ready(function() {
+        // Set payee value if exists
+        $('#payee').val("{{ expense.vendor or '' }}");
+        $('#payment_account').val("{{ expense.payment_method or 'Bank Clearing Account' }}");
+        $('#date').val('{{ expense.date }}');
+        $('#category').val('{{ expense.category }}');
+        
+        loadCategories();
+        loadPayees();
+        calculateTotals();
+        
+        // Delete button handler
+        $('#delete_btn').on('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to delete this expense?')) {
+                deleteExpense();
+            }
+        });
+
+        // Form submission for update
+        $('#expense_form').on('submit', function(e) {
+            e.preventDefault();
+            updateExpense();
+        });
+    });
+
+    function deleteExpense() {
+        $.ajax({
+            url: '/api-delete-expense/' + expenseId,
+            type: 'DELETE',
+            success: function() {
+                alert('✅ Expense deleted successfully!');
+                window.location.href = '/expense-list/';
+            },
+            error: function(error) {
+                alert('Error deleting expense: ' + (error.responseJSON?.detail || error.statusText));
+            }
+        });
+    }
+
+    function updateExpense() {
+        const formData = {
+            date: $('#date').val(),
+            category: $('#category').val(),
+            vendor: $('#payee').val() || '{{ expense.vendor }}',
+            description: $('input[name="description"]').val(),
+            amount: parseFloat($('input[name="amount"]').val()) || 0,
+            payment_method: $('#payment_account').val(),
+            reference_no: "{{ expense.reference_no or '' }}",
+            remarks: $('#remarks').val(),
+            status: $('#status').val()
+        };
+
+        if (!formData.date || !formData.category || formData.amount <= 0) {
+            alert('Please fill in all required fields');
+            return;
+        }
+
+        $.ajax({
+            url: '/api-update-expense/' + expenseId,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function() {
+                alert('✅ Expense updated successfully!');
+                window.location.href = '/expense-list/';
+            },
+            error: function(error) {
+                alert('Error updating expense: ' + (error.responseJSON?.detail || error.statusText));
+            }
+        });
+    }
+</script>
+
+{% endblock %}

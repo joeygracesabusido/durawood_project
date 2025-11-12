@@ -70,7 +70,7 @@ async def api_payment_template(request: Request,
 async def api_collection_list_template(request: Request,
                                         username: str = Depends(get_current_user)):
  
-    return templates.TemplateResponse("accounting/payment_list.html", 
+    return templates.TemplateResponse("accounting/payment_list_new.html", 
                                       {"request": request})
 
 @api_payment.get("/upload-collection/", response_class=HTMLResponse)

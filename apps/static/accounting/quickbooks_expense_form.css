@@ -1,0 +1,658 @@
+/* QuickBooks-Style Expense Form CSS */
+
+:root {
+    --primary-color: #0066cc;
+    --secondary-color: #f5f7fa;
+    --border-color: #d1d5db;
+    --text-color: #1a202c;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+}
+
+.expense-form-container {
+    width: 100%;
+    margin: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+}
+
+/* Form Header Section */
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 40px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-left {
+    flex: 1;
+    display: flex;
+    gap: 30px;
+}
+
+.header-left .form-group {
+    flex: 1;
+}
+
+.payee-section {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.payee-section select {
+    flex: 1;
+}
+
+.payee-section .btn {
+    white-space: nowrap;
+}
+
+.form-label-small {
+    display: block;
+    font-weight: 600;
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.form-control-sm {
+    height: 36px;
+    font-size: 14px;
+    border-color: var(--border-color);
+}
+
+.form-control-sm:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.amount-display {
+    text-align: right;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    color: white;
+    min-width: 200px;
+}
+
+.amount-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    margin-bottom: 5px;
+}
+
+.amount-value {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* Form Groups */
+.form-group-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    flex: 1;
+}
+
+.form-group.full-width {
+    flex: 1 1 100%;
+}
+
+/* Expense Lines Section */
+.expense-lines-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: var(--secondary-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    overflow: visible;
+}
+
+.section-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 15px;
+    color: var(--text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.expense-lines-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 6px;
+    overflow: visible;
+}
+
+.expense-lines-table thead {
+    background: #f3f4f6;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.expense-lines-table th {
+    padding: 12px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.expense-lines-table th:last-child {
+    text-align: center;
+}
+
+.expense-lines-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+    overflow: visible !important;
+    position: relative;
+}
+
+.expense-lines-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.expense-lines-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.line-number {
+    font-weight: 600;
+    color: #9ca3af;
+    width: 30px;
+    text-align: center;
+}
+
+/* Category Column - Wider */
+.expense-lines-table td:nth-child(2),
+.expense-lines-table th:nth-child(2) {
+    width: 200px;
+    min-width: 200px;
+}
+
+.category-select,
+.description-input,
+.amount-input,
+.tax-input {
+    font-size: 13px;
+}
+
+.text-end {
+    text-align: right;
+}
+
+.delete-line {
+    color: var(--danger-color);
+    text-decoration: none;
+    padding: 0;
+}
+
+.delete-line:hover {
+    color: var(--danger-color);
+    text-decoration: none;
+}
+
+.table-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Details Section */
+.form-details-section {
+    margin-bottom: 20px;
+}
+
+.details-header {
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.details-header .btn-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0;
+}
+
+.details-header .btn-link:hover {
+    text-decoration: underline;
+}
+
+/* Attachment Area */
+.attachment-area {
+    padding: 15px;
+    background: #f9fafb;
+    border: 2px dashed var(--border-color);
+    border-radius: 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.attachment-area:hover {
+    border-color: var(--primary-color);
+    background: rgba(0, 102, 204, 0.05);
+}
+
+#attachment_list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.attachment-item i {
+    margin-right: 8px;
+    color: #9ca3af;
+}
+
+.attachment-item .remove-attachment {
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    padding: 0;
+    font-size: 16px;
+}
+
+.attachment-item .remove-attachment:hover {
+    color: var(--danger-color);
+    opacity: 0.7;
+}
+
+/* Totals Section */
+.totals-section {
+    background: #f9fafb;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: right;
+}
+
+.totals-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 30px;
+}
+
+.totals-row:last-child {
+    margin-bottom: 0;
+    padding-top: 12px;
+    border-top: 2px solid var(--border-color);
+}
+
+.totals-label {
+    font-weight: 500;
+    color: #6b7280;
+    font-size: 14px;
+    min-width: 100px;
+}
+
+.totals-value {
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--text-color);
+    min-width: 120px;
+}
+
+.totals-value.total {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* Tax Info Section */
+.tax-info-section {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 25px;
+    align-items: flex-end;
+}
+
+.tax-info-section .form-group {
+    flex: 0 0 250px;
+}
+
+/* Form Buttons */
+.form-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 25px;
+    border-top: 1px solid var(--border-color);
+}
+
+.form-buttons .btn {
+    min-width: 140px;
+    padding: 10px 24px;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.form-buttons .btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-buttons .btn-primary:hover {
+    background: #0052a3;
+    border-color: #0052a3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.form-buttons .btn-outline-secondary {
+    color: #6b7280;
+    border-color: var(--border-color);
+}
+
+.form-buttons .btn-outline-secondary:hover {
+    background: #f9fafb;
+    border-color: var(--border-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .expense-form-container {
+        padding: 20px;
+    }
+
+    .form-header {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .header-left {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .header-right {
+        justify-content: flex-start;
+    }
+
+    .amount-display {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .expense-lines-table {
+        font-size: 12px;
+    }
+
+    .expense-lines-table th,
+    .expense-lines-table td {
+        padding: 8px 5px;
+    }
+
+    .form-buttons {
+        flex-direction: column;
+    }
+
+    .form-buttons .btn {
+        width: 100%;
+    }
+
+    .payee-section {
+        flex-direction: column;
+    }
+
+    .payee-section select,
+    .payee-section .btn {
+        width: 100%;
+    }
+
+    .totals-section {
+        text-align: left;
+    }
+
+    .totals-row {
+        justify-content: space-between;
+    }
+
+    .tax-info-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tax-info-section .form-group {
+        flex: 1 1 100%;
+    }
+}
+
+.table-responsive {
+    overflow: visible;
+}
+
+@media (max-width: 576px) {
+    .expense-lines-table {
+        display: block;
+    }
+
+    .form-group-row {
+        flex-direction: column;
+    }
+
+    .page-header-title {
+        font-size: 24px;
+    }
+
+    .amount-value {
+        font-size: 24px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .expense-form-container {
+        box-shadow: none;
+        border: 1px solid var(--border-color);
+    }
+
+    .form-buttons,
+    .table-actions,
+    .attachment-area {
+        display: none;
+    }
+
+    .expense-lines-table {
+        page-break-inside: avoid;
+    }
+}
+
+/* Animation */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.expense-line {
+    animation: slideIn 0.3s ease;
+}
+
+/* Validation Styles */
+.form-control.is-invalid,
+.form-control.is-invalid:focus {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-control.is-valid,
+.form-control.is-valid:focus {
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.invalid-feedback {
+    font-size: 12px;
+    color: var(--danger-color);
+    display: block;
+    margin-top: 5px;
+}
+
+/* Loading State */
+.is-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.2em;
+}
+
+/* Autocomplete Styles */
+.position-relative {
+    position: relative;
+}
+
+.flex-grow-1 {
+    flex: 1;
+}
+
+#payee-suggestions {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#payee-suggestions li {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+#payee-suggestions li:hover {
+    background-color: #e3f2fd;
+    color: var(--primary-color);
+}
+
+#payee-suggestions li.active {
+    background-color: #bbdefb;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+#payee-suggestions li.no-results {
+    padding: 12px;
+    text-align: center;
+    color: #9ca3af;
+    cursor: default;
+}
+
+#payee-suggestions li.no-results:hover {
+    background-color: transparent;
+}
+
+/* Customer Autocomplete Wrapper */
+.autocomplete-wrapper {
+    position: relative;
+    display: block;
+}
+
+/* Customer Suggestions Autocomplete */
+.customer-suggestions {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 9999;
+    min-width: 150px;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+}
+
+.customer-suggestions li {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-size: 13px;
+    color: var(--text-color);
+}
+
+.customer-suggestions li:hover {
+    background-color: #e3f2fd;
+    color: var(--primary-color);
+}
+
+.customer-suggestions li.active {
+    background-color: #bbdefb;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.customer-suggestions li.no-results {
+    padding: 8px 12px;
+    text-align: center;
+    color: #9ca3af;
+    cursor: default;
+    font-size: 13px;
+}
+
+.customer-suggestions li.no-results:hover {
+    background-color: transparent;
+}
+

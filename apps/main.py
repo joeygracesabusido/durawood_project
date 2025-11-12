@@ -17,9 +17,9 @@ from apps.routes.accounting.customer_profile_temp import api_customer_profile_te
 
 from apps.routes.accounting.sales_routes import api_sales
 
-
 from apps.routes.accounting.payment import api_payment
 
+from apps.routes.accounting.expense import api_expense
 
 from apps.routes.accounting.ar_aging import api_ar_aging_report
 
@@ -59,9 +59,9 @@ app.include_router(api_customer_profile, tags=['Customer/Vendor'])
 
 app.include_router(api_sales, tags=['Sales'])
 
-
 app.include_router(api_payment, tags=['Payment'])
 
+app.include_router(api_expense, tags=['Expense'])
 
 app.include_router(api_ar_aging_report, tags=['Aging Report'])
 

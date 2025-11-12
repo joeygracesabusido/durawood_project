@@ -3,7 +3,7 @@
 jQuery.noConflict();
 
 jQuery(document).ready(function($) {
-    // Initialize autocomplete on the element with ID "branch_name"
+    // Initialize autocomplete on the element with ID "customer"
     $(document).on('focus', '#customer', function() {
         $("#customer").autocomplete({
             source: function(request, response) {
@@ -13,10 +13,18 @@ jQuery(document).ready(function($) {
                     data: { term: request.term }, 
                     dataType: "json",               
                     success: function(data) {
-                        response(data);             
+                        // Convert the suggestions array to the format jQuery autocomplete expects
+                        var suggestions = data.suggestions.map(function(item) {
+                            return {
+                                label: item,
+                                value: item
+                            };
+                        });
+                        response(suggestions);             
                     },
                     error: function(err) {
                         console.error("Error fetching autocomplete data:", err);  // Log errors
+                        response([]);
                         // Optionally, provide user feedback about the error
                     }
                 });
@@ -25,12 +33,7 @@ jQuery(document).ready(function($) {
             select: function(event, ui) {
                 // Set the selected value in the input field
                 $("#customer").val(ui.item.value);
-                // Set the related field based on the selected item
-                $("#customer_id").val(ui.item.customer_vendor_id);
-                $("#category").val(ui.item.category)
-                $("#tax_type").val(ui.item.tax_type)
-
-
+                // Optionally, fetch additional customer details if needed
                 return false; // Prevent the default select action
             }
         });

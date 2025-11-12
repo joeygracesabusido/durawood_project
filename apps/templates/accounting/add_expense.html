@@ -1,0 +1,208 @@
+{% extends 'dashboard.html' %}
+{% block content %}
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/static/accounting/quickbooks_expense_form.css">
+</head>
+
+<div id="main" class="main">
+    <div class="pagetitle">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="page-header-title">Expense</h1>
+            <div>
+                <a href="/expense-list/" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+                <button type="button" id="copy_btn" class="btn btn-outline-secondary btn-sm ms-2" style="display:none;">
+                    <i class="bi bi-files"></i> Copy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="expense-form-container">
+            <form id="expense_form">
+                <!-- Header Section -->
+                <div class="form-header">
+                    <div class="header-left">
+                        <div class="form-group">
+                            <label class="form-label-small">Payee</label>
+                            <div class="payee-section">
+                                <div class="position-relative flex-grow-1">
+                                    <input type="text" class="form-control form-control-sm" id="payee" name="payee" placeholder="Search or type payee...">
+                                    <ul id="payee-suggestions" class="dropdown-menu w-100"></ul>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="add_new_payee" title="Create new payee">
+                                    <i class="bi bi-plus"></i> New
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">Supplier</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label-small">Payment account</label>
+                            <select class="form-control form-control-sm" id="payment_account" name="payment_account" required>
+                                <option value="">Select Account</option>
+                                <option value="Bank Clearing Account">Bank Clearing Account</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Credit Card">Credit Card</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="header-right">
+                        <div class="amount-display">
+                            <div class="amount-label">AMOUNT</div>
+                            <div class="amount-value">₱<span id="total_amount">0.00</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Section -->
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label class="form-label-small">Date</label>
+                        <input type="date" class="form-control form-control-sm" id="date" name="date" required>
+                    </div>
+                </div>
+
+                <!-- Expense Lines Table -->
+                <div class="expense-lines-section">
+                    <div class="section-title">Expense Details</div>
+                    <div class="table-responsive">
+                        <table class="expense-lines-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>CATEGORY</th>
+                                    <th>DESCRIPTION</th>
+                                    <th>AMOUNT</th>
+                                    <th>TAX</th>
+                                    <th>CUSTOMER</th>
+                                    <th>CLASS</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="expense_lines_table">
+                                <tr data-line-id="1">
+                                    <td class="line-number">1</td>
+                                    <td>
+                                        <select class="form-control form-control-sm category-select" name="category" required>
+                                            <option value="">Select...</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm description-input" name="description" placeholder="Description">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm amount-input text-end" name="amount" placeholder="0.00" step="0.01" value="0.00">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm tax-input text-end" name="tax" placeholder="0.00" step="0.01" value="0.00">
+                                    </td>
+                                    <td>
+                                        <div class="autocomplete-wrapper">
+                                            <input type="text" class="form-control form-control-sm customer-input" name="customer" placeholder="Customer">
+                                            <ul class="customer-suggestions dropdown-menu"></ul>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" name="class" placeholder="Class">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-link delete-line" title="Delete line">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="table-actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="add_line">
+                            <i class="bi bi-plus"></i> Add lines
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clear_lines">
+                            <i class="bi bi-arrow-counterclockwise"></i> Clear all lines
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Item Details Section -->
+                <div class="form-details-section">
+                    <div class="details-header">
+                        <button type="button" class="btn btn-link btn-sm" data-bs-toggle="collapse" data-bs-target="#itemDetails">
+                            <i class="bi bi-chevron-right"></i> Item details
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Memo and Attachments Section -->
+                <div class="form-group-row">
+                    <div class="form-group full-width">
+                        <label class="form-label-small">Memo</label>
+                        <textarea class="form-control form-control-sm" id="remarks" name="remarks" rows="3" placeholder="Add notes or memo"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label class="form-label-small">Attachments</label>
+                        <div class="attachment-area">
+                            <input type="file" id="attachments" name="attachments" multiple style="display:none;">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="add_attachment">
+                                <i class="bi bi-paperclip"></i> Add attachment
+                            </button>
+                            <small class="text-muted d-block mt-2">Max file size: 20 MB</small>
+                            <div id="attachment_list" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Totals Section -->
+                <div class="totals-section">
+                    <div class="totals-row">
+                        <span class="totals-label">Subtotal</span>
+                        <span class="totals-value">₱<span id="subtotal">0.00</span></span>
+                    </div>
+                    <div class="totals-row">
+                        <span class="totals-label">Total</span>
+                        <span class="totals-value total">₱<span id="total_display">0.00</span></span>
+                    </div>
+                </div>
+
+                <!-- Tax Information -->
+                <div class="tax-info-section">
+                    <div class="form-group">
+                        <label class="form-label-small">Amounts are</label>
+                        <select class="form-control form-control-sm" id="tax_type">
+                            <option value="exclusive">Exclusive of Tax</option>
+                            <option value="inclusive">Inclusive of Tax</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Buttons Section -->
+                <div class="form-buttons">
+                    <button type="reset" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Save Expense
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+
+<script src="/static/accounting/quickbooks_expense_form.js"></script>
+
+{% endblock %}
