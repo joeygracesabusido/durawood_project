@@ -16,6 +16,7 @@ class ExpenseBM(BaseModel):
     date_updated: Optional[datetime] = None
     attachments: Optional[List[str]] = None
     status: Optional[str] = "Approved"  # Approved, Pending, Rejected
+    tax_type: Optional[str] = None
 
     class Config:
         json_schema_extra = {
@@ -28,6 +29,7 @@ class ExpenseBM(BaseModel):
                 "payment_method": "Check",
                 "reference_no": "CHK-001",
                 "remarks": "Monthly office supplies",
-                "status": "Approved"
+                "status": "Approved",
+                "tax_type": "inclusive"
             }
         }

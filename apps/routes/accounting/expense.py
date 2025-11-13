@@ -92,6 +92,7 @@ async def get_expenses(
                 "reference_no": 1,
                 "remarks": 1,
                 "status": 1,
+                "tax_type": 1,
                 "user": 1,
                 "date_created": 1,
                 "date_updated": 1
@@ -123,6 +124,7 @@ async def add_expense(data: ExpenseBM, username: str = Depends(get_current_user)
             "reference_no": data.reference_no,
             "remarks": data.remarks,
             "status": data.status or "Approved",
+            "tax_type": data.tax_type,
             "user": username,
             "date_created": datetime.utcnow(),
             "date_updated": datetime.utcnow()
@@ -153,6 +155,7 @@ async def update_expense(expense_id: str, data: ExpenseBM, username: str = Depen
             "reference_no": data.reference_no,
             "remarks": data.remarks,
             "status": data.status or "Approved",
+            "tax_type": data.tax_type,
             "user": username,
             "date_updated": datetime.utcnow()
         }
@@ -302,6 +305,7 @@ async def upload_expenses(file: UploadFile = File(...), username: str = Depends(
                     "reference_no": row.get('reference_no'),
                     "remarks": row.get('remarks'),
                     "status": row.get('status', 'Approved'),
+                    "tax_type": row.get('tax_type'),
                     "user": username,
                     "date_created": datetime.utcnow(),
                     "date_updated": datetime.utcnow()

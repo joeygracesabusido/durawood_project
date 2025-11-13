@@ -1,16 +1,20 @@
 // QuickBooks-Style Expense Form JavaScript
 
 $(document).ready(function() {
+    const isEditMode = window.location.pathname.includes('/edit-expense/');
+
     // Initialize form
     initializeForm();
     loadCategories();
     loadPayees();
-    setDefaultDate();
+    if (!isEditMode) {
+        setDefaultDate();
+    }
     initPayeeAutocomplete();  // Initialize payee autocomplete
     initCustomerAutocomplete();  // Initialize customer autocomplete
 
     // Event Listeners
-    $(document).on('change', '.amount-input, .tax-input', function() {
+    $(document).on('change', '.amount-input, .tax-input, #tax_type', function() {
         calculateTotals();
     });
 
@@ -20,11 +24,12 @@ $(document).ready(function() {
     $(document).on('click', '#add_attachment', triggerFileInput);
     $(document).on('click', '.remove-attachment', removeAttachment);
 
-    $('#expense_form').on('submit', function(e) {
-        e.preventDefault();
-        submitExpenseForm();
-    });
-
+            if (!isEditMode) {
+                $('#expense_form').on('submit', function(e) {
+                    e.preventDefault();
+                    submitExpenseForm();
+                });
+            }
     $('#add_new_payee').on('click', function(e) {
         e.preventDefault();
         openAddPayeeModal();
@@ -33,14 +38,18 @@ $(document).ready(function() {
 
 // Initialize Form
 function initializeForm() {
-    const today = new Date().toISOString().split('T')[0];
-    $('#date').val(today);
+    if (!window.location.pathname.includes('/edit-expense/')) {
+        const today = new Date().toISOString().split('T')[0];
+        $('#date').val(today);
+    }
 }
 
 // Set Default Date to Today
 function setDefaultDate() {
-    const today = new Date().toISOString().split('T')[0];
-    $('#date').val(today);
+    if (!window.location.pathname.includes('/edit-expense/')) {
+        const today = new Date().toISOString().split('T')[0];
+        $('#date').val(today);
+    }
 }
 
 // Load Categories
@@ -439,25 +448,51 @@ function clearAllLines(e) {
     }
 }
 
+// Format Number with Thousands Separator and 2 Decimal Places
+function formatNumberWithThousandsSeparator(number) {
+    return parseFloat(number).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
 // Calculate Totals
 function calculateTotals() {
+    const taxType = $('#tax_type').val();
     let subtotal = 0;
     let totalTax = 0;
 
     $('#expense_lines_table tr').each(function() {
-        const amount = parseFloat($(this).find('.amount-input').val()) || 0;
-        const tax = parseFloat($(this).find('.tax-input').val()) || 0;
+        const row = $(this);
+        const amountInput = row.find('.amount-input');
+        const taxInput = row.find('.tax-input');
         
-        subtotal += amount;
-        totalTax += tax;
+        const amount = parseFloat(amountInput.val()) || 0;
+        let calculatedTax = 0;
+        let lineSubtotal = amount;
+
+        if (taxType === 'inclusive') {
+            // When inclusive, the amount entered is the total for the line.
+            // The line's subtotal (net amount) is amount / 1.12
+            lineSubtotal = amount / 1.12;
+            calculatedTax = lineSubtotal * 0.12;
+        } else { // 'exclusive'
+            // When exclusive, the amount entered is the subtotal for the line.
+            calculatedTax = amount * 0.12;
+        }
+
+        taxInput.val(calculatedTax.toFixed(2));
+
+        subtotal += lineSubtotal;
+        totalTax += calculatedTax;
     });
 
     const total = subtotal + totalTax;
 
     // Update display
-    $('#subtotal').text(subtotal.toFixed(2));
-    $('#total_amount').text(total.toFixed(2));
-    $('#total_display').text(total.toFixed(2));
+    $('#subtotal').text(formatNumberWithThousandsSeparator(subtotal));
+    $('#total_amount').text(formatNumberWithThousandsSeparator(total));
+    $('#total_display').text(formatNumberWithThousandsSeparator(total));
 }
 
 // File Input Triggers
@@ -566,7 +601,8 @@ function submitExpenseForm() {
             payment_method: 'Payment Account',
             reference_no: formData.payment_account,
             remarks: formData.remarks,
-            status: formData.status
+            status: formData.status,
+            tax_type: formData.tax_type
         }),
         success: function(response) {
             alert('✅ Expense saved successfully!');

@@ -222,8 +222,15 @@
         // Set payee value if exists
         $('#payee').val("{{ expense.vendor or '' }}");
         $('#payment_account').val("{{ expense.payment_method or 'Bank Clearing Account' }}");
-        $('#date').val('{{ expense.date }}');
+        
+        const dbDate = '{{ expense.date }}';
+        if (dbDate && dbDate.length >= 10) {
+            const formattedDate = dbDate.substring(0, 10);
+            $('#date').val(formattedDate);
+        }
+        
         $('#category').val('{{ expense.category }}');
+        $('#tax_type').val('{{ expense.tax_type or 'exclusive' }}');
         
         loadCategories();
         loadPayees();
@@ -268,7 +275,8 @@
             payment_method: $('#payment_account').val(),
             reference_no: "{{ expense.reference_no or '' }}",
             remarks: $('#remarks').val(),
-            status: $('#status').val()
+            status: $('#status').val(),
+            tax_type: $('#tax_type').val()
         };
 
         if (!formData.date || !formData.category || formData.amount <= 0) {
