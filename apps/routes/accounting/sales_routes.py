@@ -749,8 +749,8 @@ async def autocomplete_vendor_customer(term: Optional[str] = None, username: str
         try:
             profiles = mydb.customer_profile.find({})
             for profile in profiles:
-                if 'customer' in profile and profile['customer']:
-                    customer_name = str(profile['customer']).strip()
+                if 'bussiness_name' in profile and profile['bussiness_name']:
+                    customer_name = str(profile['bussiness_name']).strip()
                     if customer_name:
                         customer_profiles.append(customer_name)
         except Exception as e:

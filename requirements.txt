@@ -12,3 +12,4 @@ sqlmodel
 pymysql
 pandas
 openpyxl
+requests

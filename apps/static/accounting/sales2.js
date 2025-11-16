@@ -1,9 +1,53 @@
 
 // Use jQuery in noConflict mode
+// jQuery.noConflict();
+
+// jQuery(document).ready(function($) {
+//     // Initialize autocomplete on the element with ID "customer"
+//     $(document).on('focus', '#customer', function() {
+//         $("#customer").autocomplete({
+//             source: function(request, response) {
+//                 // AJAX call to fetch data for the autocomplete suggestions
+//                 $.ajax({
+//                     url: "/api-autocomplete-vendor-customer/", 
+//                     data: { term: request.term }, 
+//                     dataType: "json",               
+//                     success: function(data) {
+//                         // Convert the suggestions array to the format jQuery autocomplete expects
+//                         var suggestions = [];
+//                         if (data && Array.isArray(data.suggestions)) {
+//                             suggestions = data.suggestions.map(function(item) {3
+//                                 return {
+//                                     label: item,
+//                                     value: item
+//                                 };
+//                             });
+//                         }
+//                         response(suggestions);  
+                               
+//                     },
+//                     error: function(err) {
+//                         console.error("Error fetching autocomplete data:", err);  // Log errors
+//                         response([]);
+//                         // Optionally, provide user feedback about the error
+//                     }
+//                 });
+//             },
+//             minLength: 0,  // Minimum input length before triggering autocomplete
+//             select: function(event, ui) {
+//                 // Set the selected value in the input field
+//                 $("#customer").val(ui.item.value);
+//                 // Optionally, fetch additional customer details if needed
+//                 return false; // Prevent the default select action
+//             }
+//         });
+//     });
+// });
+
 jQuery.noConflict();
 
 jQuery(document).ready(function($) {
-    // Initialize autocomplete on the element with ID "customer"
+    // Initialize autocomplete on the element with ID "branch_name"
     $(document).on('focus', '#customer', function() {
         $("#customer").autocomplete({
             source: function(request, response) {
@@ -13,18 +57,10 @@ jQuery(document).ready(function($) {
                     data: { term: request.term }, 
                     dataType: "json",               
                     success: function(data) {
-                        // Convert the suggestions array to the format jQuery autocomplete expects
-                        var suggestions = data.suggestions.map(function(item) {
-                            return {
-                                label: item,
-                                value: item
-                            };
-                        });
-                        response(suggestions);             
+                        response(data);             
                     },
                     error: function(err) {
                         console.error("Error fetching autocomplete data:", err);  // Log errors
-                        response([]);
                         // Optionally, provide user feedback about the error
                     }
                 });
@@ -33,12 +69,19 @@ jQuery(document).ready(function($) {
             select: function(event, ui) {
                 // Set the selected value in the input field
                 $("#customer").val(ui.item.value);
-                // Optionally, fetch additional customer details if needed
+                // Set the related field based on the selected item
+                $("#customer_id").val(ui.item.customer_vendor_id);
+                $("#category").val(ui.item.category)
+                $("#tax_type").val(ui.item.tax_type)
+
+
                 return false; // Prevent the default select action
             }
         });
     });
 });
+
+
 
 //this function is for autocomplete of category
 
@@ -56,7 +99,16 @@ jQuery(document).ready(function($) {
                     data: { term: request.term }, 
                     dataType: "json",               
                     success: function(data) {
-                        response(data);             
+                        var suggestions = [];
+                        if (data && Array.isArray(data.suggestions)) {
+                            suggestions = data.suggestions.map(function(item) {
+                                return {
+                                    label: item,
+                                    value: item
+                                };
+                            });
+                        }
+                        response(suggestions);             
                     },
                     error: function(err) {
                         console.error("Error fetching autocomplete data:", err);  // Log errors
