@@ -708,10 +708,17 @@ async def get_list_customer_balance(
                 }
             },
             {
+                "$addFields": {
+                    "normalized_customer": { "$toLower": { "$trim": { "input": "$customer" } } }
+                }
+            },
+            {
                 "$group": {
-                    "_id": { "customer": "$customer", "customer_id": "$customer_id" },
+                    "_id": "$normalized_customer",
+                    "original_customer": { "$first": "$customer" }, # Keep original customer name for display
+                    "customer_id": { "$first": "$customer_id" }, # Take the first customer_id
                     "total_balance": { "$sum": "$balance" },
-                    "category": { "$first": "$category" }
+                    "category": { "$first": "$category" } # Take the first category
                 }
             },
         ]
@@ -728,7 +735,7 @@ async def get_list_customer_balance(
             {
                 "$project": {
                     "_id": 0,
-                    "customer": "$_id.customer",
+                    "customer": "$original_customer",
                     "customer_id": "$_id.customer_id",
                     "total_balance": 1,
                     "category": 1
