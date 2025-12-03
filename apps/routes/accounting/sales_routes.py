@@ -603,7 +603,7 @@ async def import_sales_data(
         date_fields = ['delivery_date', 'invoice_date', 'due_date']
         for field in date_fields:
             if field in df.columns:
-                df[field] = pd.to_datetime(df[field], errors='coerce')
+                df[field] = pd.to_datetime(df[field], errors='coerce', format='mixed')
                 if df[field].isna().any():
                     invalid_dates_rows = df[df[field].isna()]
                     first_invalid_row_index = invalid_dates_rows.index[0] + 2 # +2 for 0-based index and header row
@@ -634,10 +634,18 @@ async def import_sales_data(
         # 9. Check for existing invoice numbers in database and gather details
         existing_invoices_details = []
         for invoice_no in df['invoice_no'].unique():
-            existing_record = mydb.sales.find_one({"invoice_no": invoice_no})
+            if pd.isna(invoice_no):
+                continue
+            
+            if isinstance(invoice_no, float):
+                invoice_no_query = str(int(invoice_no))
+            else:
+                invoice_no_query = str(invoice_no)
+
+            existing_record = mydb.sales.find_one({"invoice_no": invoice_no_query})
             if existing_record:
                 existing_invoices_details.append({
-                    "invoice_no": invoice_no,
+                    "invoice_no": invoice_no_query,
                     "customer": existing_record.get('customer', 'N/A'),
                     "invoice_date": existing_record.get('invoice_date').strftime('%Y-%m-%d') if existing_record.get('invoice_date') else 'N/A',
                     "amount": existing_record.get('amount', 0),

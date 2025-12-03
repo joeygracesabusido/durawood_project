@@ -317,7 +317,7 @@
 - Build complete understanding through connections
 
 ### 5. **Use as Checklist**
-- Implementation doc has testing checklist
+- Implementation doc has a testing checklist
 - Quick Reference has validation rules
 - Use these to verify correctness
 

@@ -219,7 +219,7 @@ async def import_collection_data(
 
         # Process dates
         try:
-            df['date'] = pd.to_datetime(df['date'])
+            df['date'] = pd.to_datetime(df['date'], format='mixed')
         except Exception as e:
             raise HTTPException(
                 status_code=400,

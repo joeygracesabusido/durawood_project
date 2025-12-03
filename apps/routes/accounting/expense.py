@@ -296,7 +296,7 @@ async def upload_expenses(file: UploadFile = File(...), username: str = Depends(
         for index, row in df.iterrows():
             try:
                 expense_data = {
-                    "date": pd.to_datetime(row.get('date')),
+                    "date": pd.to_datetime(row.get('date'), format='mixed'),
                     "category": row.get('category'),
                     "vendor": row.get('vendor'),
                     "description": row.get('description'),
