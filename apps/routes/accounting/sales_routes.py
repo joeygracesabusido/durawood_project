@@ -78,6 +78,30 @@ async def api_chart_of_account_template(request: Request,
             detail= "Not Authorized ",
             # headers={"WWW-Authenticate": "Basic"},
         )
+    
+@api_sales.get("/sales-insert-template/", response_class=HTMLResponse)
+async def api_chart_of_account_template(request: Request,
+                                        username: str = Depends(get_current_user)):
+    role = mydb.login.find_one({"email_add":username})
+
+    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+
+    print(roleAuthenticate['allowed_access'])
+    
+
+    if 'Sales' in roleAuthenticate['allowed_access']:
+
+
+        return templates.TemplateResponse("accounting/sales_insert.html", 
+                                      {"request": request})
+
+    else:
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail= "Not Authorized ",
+            # headers={"WWW-Authenticate": "Basic"},
+        )
 
 
 
