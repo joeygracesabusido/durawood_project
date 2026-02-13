@@ -650,40 +650,49 @@ async def get_list_customer_balance(
     term: Optional[str] = None
 ):
     try:
-        sales_match = {}
+        # Initial match stage for filtering customers by name from the beginning
+        match_stage = {}
         if term:
-            sales_match["customer"] = {"$regex": term, "$options": "i"}
+            match_stage["customer_name"] = {"$regex": term, "$options": "i"}
 
+        # Date filtering for payments
         payment_match_conditions = {'$expr': {'$eq': ['$invoice_no', '$$invoice_no']}}
-
         if date_to:
             try:
                 date_to_dt = datetime.strptime(date_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
-                sales_match['invoice_date'] = {'$lte': date_to_dt}
-                payment_match_conditions = {
-                    '$and': [
-                        payment_match_conditions,
-                        {'date': {'$lte': date_to_dt}}
-                    ]
-                }
+                payment_match_conditions['$and'] = [
+                    payment_match_conditions,
+                    {'date': {'$lte': date_to_dt}}
+                ]
             except (ValueError, TypeError):
                 pass
 
+        # Main pipeline starting from customers
         pipeline = [
-            {"$match": sales_match},
+            {"$match": match_stage},  # Start with filtered customer list
+            {
+                "$lookup": {
+                    "from": "sales",
+                    "localField": "customer_name",
+                    "foreignField": "customer",
+                    "as": "sales_docs"
+                }
+            },
+            {"$unwind": "$sales_docs"},  # Unwind sales documents
+            {
+                "$replaceRoot": {"newRoot": "$sales_docs"}  # Promote sales docs to the top level
+            },
             {
                 "$lookup": {
                     "from": "payment",
-                    "let": { "invoice_no": "$invoice_no" },
+                    "let": {"invoice_no": "$invoice_no"},
                     "pipeline": [
-                        {
-                            "$match": payment_match_conditions
-                        },
+                        {"$match": payment_match_conditions},
                         {
                             "$group": {
-                                "_id": "$invoice_no",  # Group by invoice number
-                                "total_cash": { "$sum": "$cash_amount" },
-                                "total_2307": { "$sum": "$amount_2307" }
+                                "_id": "$invoice_no",
+                                "total_cash": {"$sum": "$cash_amount"},
+                                "total_2307": {"$sum": "$amount_2307"}
                             }
                         }
                     ],
@@ -692,50 +701,41 @@ async def get_list_customer_balance(
             },
             {
                 "$addFields": {
-                    "total_cash": {
-                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
-                    },
-                    "total_2307": {
-                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
-                    }
+                    "total_cash": {"$ifNull": [{"$arrayElemAt": ["$payment_info.total_cash", 0]}, 0]},
+                    "total_2307": {"$ifNull": [{"$arrayElemAt": ["$payment_info.total_2307", 0]}, 0]}
                 }
             },
             {
                 "$addFields": {
-                    "balance": {
-                        "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
-                    }
-                }
-            },
-            {
-                "$addFields": {
-                    "normalized_customer": { "$toLower": { "$trim": { "input": "$customer" } } }
+                    "balance": {"$subtract": ["$amount", {"$add": ["$total_cash", "$total_2307"]}]}
                 }
             },
             {
                 "$group": {
-                    "_id": "$normalized_customer",
-                    "original_customer": { "$first": "$customer" }, # Keep original customer name for display
-                    "customer_id": { "$first": "$customer_id" }, # Take the first customer_id
-                    "total_balance": { "$sum": "$balance" },
-                    "category": { "$first": "$category" } # Take the first category
+                    "_id": {"customer": "$customer", "customer_id": "$customer_id"},
+                    "total_balance": {"$sum": "$balance"},
+                    "category": {"$first": "$category"}
                 }
-            },
+            }
         ]
-
+        
+        # Balance filtering
         if balance_filter == "positive":
-            pipeline.append(
-                {"$match": {"total_balance": {"$gt": 0}}}
-            )
+            pipeline.append({"$match": {"total_balance": {"$gt": 0}}})
+        elif balance_filter == "zero":
+            pipeline.append({"$match": {"total_balance": {"$eq": 0}}})
+        elif balance_filter == "negative":
+            pipeline.append({"$match": {"total_balance": {"$lt": 0}}})
 
+        # Final projection
         pipeline.extend([
             {
-                "$sort": { "_id.customer": 1 }
+                "$sort": {"_id.customer": 1}
             },
             {
                 "$project": {
                     "_id": 0,
-                    "customer": "$original_customer",
+                    "customer": "$_id.customer",
                     "customer_id": "$_id.customer_id",
                     "total_balance": 1,
                     "category": 1
@@ -743,13 +743,12 @@ async def get_list_customer_balance(
             }
         ])
 
-        result = list(mydb.sales.aggregate(pipeline))
-        # print(list(mydb.sales.aggregate(pipeline)))
-
+        result = list(mydb.customer_profile.aggregate(pipeline))
         return result
 
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving customer balances: {e}")
+
 
 
 # this function is for Customer List of Transaction to Display to display

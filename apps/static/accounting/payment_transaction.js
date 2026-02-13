@@ -39,9 +39,8 @@ $(document).ready(function () {
     $("#customer_name").autocomplete({
         source: function (request, response) {
             $.ajax({
-                url: "/api-get-per-customer-balance",
+                url: "/api-autocomplete-customer-payment/",
                 data: {
-                    balance_filter: 'positive', // Only show customers with balance
                     term: request.term
                 },
                 success: function (data) {
@@ -72,29 +71,34 @@ $(document).ready(function () {
             url: "/api-get-transaction-history",
             data: { customer: customerName, balance_only: 'true' },
             success: function (data) {
-                console.log(data);
                 const transactions = Array.isArray(data) ? data : (data.transactions || []);
+                if (transactions.length === 0) {
+                    alert('The customer has no transactions.');
+                    $("#invoices_table tbody").empty();
+                    return;
+                }
+
                 let rows = '';
-                if (transactions.length > 0) {
-                    transactions.forEach(function(txn) {
-                        if (txn.type === 'Sales') {
-                            // Ensure invoice_no is present and use it as the checkbox value
-                            const invoiceNo = typeof txn.invoice_no !== 'undefined' ? String(txn.invoice_no) : '';
-                            rows += `
-                                <tr data-invoice-no="${invoiceNo}">
-                                    <td><input type="checkbox" class="invoice-checkbox" value="${invoiceNo}"></td>
-                                    <td>${new Date(txn.date).toLocaleDateString()}</td>
-                                    <td>${invoiceNo}</td>
-                                    <td>${formatNumber(txn.sales_amount)}</td>
-                                    <td>${formatNumber(txn.balance)}</td>
-                                    <td><input type="text" class="form-control payment-amount" disabled></td>
-                                </tr>
-                            `;
-                        }
-                    });
-                } else {
+                transactions.forEach(function(txn) {
+                    if (txn.type === 'Sales') {
+                        const invoiceNo = typeof txn.invoice_no !== 'undefined' ? String(txn.invoice_no) : '';
+                        rows += `
+                            <tr data-invoice-no="${invoiceNo}">
+                                <td><input type="checkbox" class="invoice-checkbox" value="${invoiceNo}"></td>
+                                <td>${new Date(txn.date).toLocaleDateString()}</td>
+                                <td>${invoiceNo}</td>
+                                <td>${formatNumber(txn.sales_amount)}</td>
+                                <td>${formatNumber(txn.balance)}</td>
+                                <td><input type="text" class="form-control payment-amount" disabled></td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                if (!rows) {
                     rows = '<tr><td colspan="6" class="text-center">No outstanding invoices</td></tr>';
                 }
+
                 $("#invoices_table tbody").html(rows);
                 $('#select_all_invoices').prop('checked', false);
                 $('#amount_received').text('₱0.00');
@@ -105,6 +109,7 @@ $(document).ready(function () {
             }
         });
     }
+
 
     $('#receive_full_amount').on('click', function(e) {
         e.preventDefault();

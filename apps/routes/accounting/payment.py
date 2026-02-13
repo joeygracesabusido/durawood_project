@@ -665,86 +665,71 @@ async def autocomplete_payment_balance(
     username: str = Depends(get_current_user)
 ):
     try:
-        match_stage = {
-            "$match": {
-                "balance": { "$gt": 0 }
+        # Pipeline to get total sales per customer
+        sales_pipeline = [
+            {
+                "$group": {
+                    "_id": "$customer",
+                    "total_sales": { "$sum": "$amount" }
+                }
             }
+        ]
+        
+        # Pipeline to get total payments per customer
+        payment_pipeline = [
+            {
+                "$group": {
+                    "_id": "$customer",
+                    "total_payment": { "$sum": { "$add": ["$cash_amount", "$amount_2307"] } }
+                }
+            }
+        ]
+
+        # Fetch sales and payment data
+        sales_data = list(mydb.sales.aggregate(sales_pipeline))
+        payment_data = list(mydb.payment.aggregate(payment_pipeline))
+
+        # Create dictionaries for easier lookup
+        sales_dict = {item['_id']: item['total_sales'] for item in sales_data}
+        payment_dict = {item['_id']: item['total_payment'] for item in payment_data}
+        
+        # Get all unique customers from both collections
+        all_customers = set(sales_dict.keys()) | set(payment_dict.keys())
+        
+        # Fetch customer details (customer_id)
+        customer_details = {
+            c['customer']: c['customer_id'] 
+            for c in mydb.customer_profile.find({}, {'customer': 1, 'customer_id': 1})
         }
 
-        # Optional term filter using regex (if provided)
-        if term:
-            match_stage["$match"]["$or"] = [
-                { "customer": { "$regex": term, "$options": "i" } },
-                { "invoice_no": { "$regex": term, "$options": "i" } }
-            ]
+        # Calculate balance for each customer
+        balance_data = []
+        for customer in all_customers:
+            sales = sales_dict.get(customer, 0)
+            payment = payment_dict.get(customer, 0)
+            balance = sales - payment
+            
+            # Apply term filter
+            if term and term.lower() not in customer.lower():
+                continue
+                
+            balance_data.append({
+                "customer": customer,
+                "customer_id": customer_details.get(customer, ""),
+                "total_balance": balance
+            })
 
-        pipeline = [
-            {
-                "$lookup": {
-                    "from": "payment",
-                    "let": { "invoice_no": "$invoice_no" },
-                    "pipeline": [
-                        {
-                            "$match": {
-                                "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
-                            }
-                        },
-                        {
-                            "$group": {
-                                "_id": "$invoice_no",
-                                "total_cash": { "$sum": "$cash_amount" },
-                                "total_2307": { "$sum": "$amount_2307" }
-                            }
-                        }
-                    ],
-                    "as": "payment_info"
-                }
-            },
-            {
-                "$addFields": {
-                    "total_cash": {
-                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
-                    },
-                    "total_2307": {
-                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
-                    }
-                }
-            },
-            {
-                "$addFields": {
-                    "balance": {
-                        "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
-                    }
-                }
-            },
-            match_stage,
-            {
-                "$project": {
-                    "_id": 0,
-                    "customer": 1,
-                    "customer_id": 1,
-                    "invoice_no": 1,
-                    "balance": 1
-                }
-            },
-            {
-                "$limit": 20  # Limit results to 20 matches for performance
-            }
-        ]
-
-        result = list(mydb.sales.aggregate(pipeline))
-
+        # Format the suggestions for the frontend
         suggestions = [
             {
-                "value": f"{item.get('customer', 'Unknown')} - Invoice: {item.get('invoice_no')} - Balance: {item.get('balance', 0):,.2f}",
-                "customer": item.get("customer"),
-                "customer_id": item.get("customer_id"),
-                "invoice_no": item.get("invoice_no"),
-                "balance": item.get("balance")
+                "label": f"{item['customer']} - {item['customer_id']} - Balance: {item['total_balance']:,.2f}",
+                "customer": item['customer'],
+                "customer_id": item['customer_id'],
+                "total_balance": item['total_balance']
             }
-            for item in result
+            for item in balance_data
         ]
-
+        
         return suggestions
 
     except Exception as e:
