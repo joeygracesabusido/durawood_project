@@ -8,8 +8,10 @@ pymongo==4.6.0
 python-multipart
 strawberry-graphql
 gunicorn
-sqlmodel
-pymysql
+#sqlmodel
+#pymysql
 pandas
 openpyxl
 requests
+redis
+httpx

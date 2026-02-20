@@ -107,7 +107,7 @@ async def api_chart_of_account_template(request: Request,
 
 
 @api_sales.post("/api-insert-sales/", response_model=None)
-async def create_sales_transaction(data: SalesBM, username: str = Depends(get_current_user)):
+async def create_sales_transaction(request: Request, data: SalesBM, username: str = Depends(get_current_user)):
 
     role = mydb.login.find_one({"email_add":username})
 
@@ -149,6 +149,19 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
             # Correct MongoDB insert operation
             mydb.sales.insert_one(insertData)
 
+            try:
+                redis_client = request.app.state.redis
+                # Clear all related cache keys
+                data_keys = redis_client.keys("sales_data_*")
+                sum_keys = redis_client.keys("sales_sum_*")
+                balance_keys = redis_client.keys("customer_balance_*")
+                ar_keys = ["ar_aging_report", "ar_sum"]
+                all_keys = data_keys + sum_keys + balance_keys + ar_keys
+                if all_keys:
+                    redis_client.delete(*all_keys)
+            except Exception as redis_err:
+                print(f"Redis error during cache invalidation: {redis_err}")
+
             return {"message": "Sales has been inserted successfully"}
 
         except Exception as e:
@@ -164,9 +177,132 @@ async def create_sales_transaction(data: SalesBM, username: str = Depends(get_cu
 
 
 
+# @api_sales.get("/api-get-sales/")
+# async def get_sales(date_from: Optional[str] = None, date_to: Optional[str] = None, username: str = Depends(get_current_user)):
+#     try:
+#         pipeline = []
+        
+#         # Add $match stage for date range filtering if provided
+#         if date_from and date_to:
+#             pipeline.append({
+#                 "$match": {
+#                     "invoice_date": {
+#                         "$gte": datetime.strptime(date_from, "%Y-%m-%d"),
+#                         "$lte": datetime.strptime(date_to, "%Y-%m-%d")
+#                     }
+#                 }
+#             })
+        
+#         # Add $lookup to join with payment collection
+#         pipeline += [
+#             {
+#                 "$lookup": {
+#                     "from": "payment",
+#                     "let": { "invoice_no": "$invoice_no" },
+#                     "pipeline": [
+#                         {
+#                             "$match": {
+#                                 "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
+#                             }
+#                         },
+#                         {
+#                             "$group": {
+#                                 "_id": "$invoice_no",
+#                                 "total_cash": { "$sum": "$cash_amount" },
+#                                 "total_2307": { "$sum": "$amount_2307" }
+#                             }
+#                         }
+#                     ],
+#                     "as": "payment_info"
+#                 }
+#             },
+#             {
+#                 "$addFields": {
+#                     "total_cash": {
+#                         "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+#                     },
+#                     "total_2307": {
+#                         "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+#                     },
+#                     "amount": {
+#                         "$ifNull": ["$amount", 0]
+#                     }
+#                 }
+#             },
+#             {
+#                 "$addFields": {
+#                     "balance": {
+#                         "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+#                     },
+#                     "status": {
+#                         "$cond": {
+#                             "if": { "$gt": ["$due_date", None] },
+#                             "then": {
+#                                 "$max": [{
+#                                     "$divide": [{
+#                                         "$subtract": [{ "$toLong": "$$NOW" }, { "$toLong": "$due_date" }]
+#                                     }, 86400000]
+#                                 }, 0]
+#                             },
+#                             "else": None
+#                         }
+#                     }
+#                 }
+#             },
+#             {
+#                 "$sort": { "date_updated": -1 }
+#             },
+#             {
+#                 "$project": {
+#                     "_id": 0,
+#                     "id": { "$toString": "$_id" },
+#                     "delivery_date": { 
+#                         "$cond": {
+#                             "if": { "$and": [{ "$ne": ["$delivery_date", None] }, { "$eq": [{ "$type": "$delivery_date" }, "date"] }] },
+#                             "then": { "$dateToString": { "format": "%Y-%m-%d", "date": "$delivery_date" } },
+#                             "else": ""
+#                         }
+#                     },
+#                     "invoice_date": { "$dateToString": { "format": "%Y-%m-%d", "date": "$invoice_date" } },
+#                     "invoice_no": 1,
+#                     "po_no": 1,
+#                     "load_no": 1,
+#                     "dr_no": 1,
+#                     "customer": 1,
+#                     "customer_id": 1,
+#                     "category": 1,
+#                     "items": 1,
+#                     "terms": 1,
+#                     "due_date": { "$dateToString": { "format": "%Y-%m-%d", "date": "$due_date" } },
+#                     "tax_type": 1,
+#                     "amount": 1,
+#                     "balance": 1,
+#                     "status": 1,
+#                     "user": 1,
+#                     "date_updated": 1,
+#                     "date_created": 1
+#                 }
+#             }
+#         ]
+
+#         result = list(mydb.sales.aggregate(pipeline))
+#         return result
+#     except Exception as e:
+#         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
+    
 @api_sales.get("/api-get-sales/")
-async def get_sales(date_from: Optional[str] = None, date_to: Optional[str] = None, username: str = Depends(get_current_user)):
+async def get_sales(request: Request, date_from: Optional[str] = None, date_to: Optional[str] = None, username: str = Depends(get_current_user)):
     try:
+        redis_client = request.app.state.redis
+        cache_key = f"sales_data_{date_from}_{date_to}"
+        
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                return json.loads(cached_data)
+        except Exception as redis_err:
+            print(f"Redis error during GET: {redis_err}")
+
         pipeline = []
         
         # Add $match stage for date range filtering if provided
@@ -266,19 +402,26 @@ async def get_sales(date_from: Optional[str] = None, date_to: Optional[str] = No
                     "balance": 1,
                     "status": 1,
                     "user": 1,
-                    "date_updated": 1,
-                    "date_created": 1
+                    "date_updated": { "$dateToString": { "format": "%Y-%m-%d %H:%M:%S", "date": "$date_updated" } },
+                    "date_created": { "$dateToString": { "format": "%Y-%m-%d %H:%M:%S", "date": "$date_created" } }
                 }
             }
         ]
 
         result = list(mydb.sales.aggregate(pipeline))
+        
+        try:
+            # Store in Redis for 1 hour (3600 seconds)
+            redis_client.setex(cache_key, 3600, json.dumps(result))
+        except Exception as redis_err:
+            print(f"Redis error during SET: {redis_err}")
+
         return result
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
 @api_sales.put("/api-update-sales/", response_model=None)
-async def update_customer_profile_api(profile_id: str, data: SalesBM,username: str = Depends(get_current_user)):
+async def update_customer_profile_api(request: Request, profile_id: str, data: SalesBM,username: str = Depends(get_current_user)):
     obj_id = ObjectId(profile_id)
 
     role = mydb.login.find_one({"email_add":username})
@@ -313,6 +456,20 @@ async def update_customer_profile_api(profile_id: str, data: SalesBM,username: s
                   
                 }
             result = mydb.sales.update_one({'_id': obj_id},{'$set': updateData})
+
+            try:
+                redis_client = request.app.state.redis
+                # Clear all related cache keys
+                data_keys = redis_client.keys("sales_data_*")
+                sum_keys = redis_client.keys("sales_sum_*")
+                balance_keys = redis_client.keys("customer_balance_*")
+                ar_keys = ["ar_aging_report", "ar_sum"]
+                all_keys = data_keys + sum_keys + balance_keys + ar_keys
+                if all_keys:
+                    redis_client.delete(*all_keys)
+            except Exception as redis_err:
+                print(f"Redis error during cache invalidation: {redis_err}")
+
             return {"message":"Sales Data Has been Updated"} 
         except Exception as e:
 
@@ -327,10 +484,21 @@ async def update_customer_profile_api(profile_id: str, data: SalesBM,username: s
 
 @api_sales.get("/api-get-sum-sales/")
 async def get_sales_dashboard(
+    request: Request,
     filter: str = "today", 
     username: str = Depends(get_current_user)
 ):
     try:
+        redis_client = request.app.state.redis
+        cache_key = f"sales_sum_{filter}"
+        
+        try:
+            cached_val = redis_client.get(cache_key)
+            if cached_val is not None:
+                return float(cached_val)
+        except Exception as redis_err:
+            print(f"Redis error during GET sum: {redis_err}")
+
         # Get current date and time
         now = datetime.utcnow()
 
@@ -375,6 +543,12 @@ async def get_sales_dashboard(
 
         # Calculate total amount
         total_amount = sum(sale.get("amount", 0) for sale in sales_cursor)
+
+        try:
+            # Cache the sum for 1 hour
+            redis_client.setex(cache_key, 3600, str(total_amount))
+        except Exception as redis_err:
+            print(f"Redis error during SET sum: {redis_err}")
 
         return total_amount
 
@@ -571,6 +745,7 @@ class ImportRequest(BaseModel):
 
 @api_sales.post("/import-sales-data/")
 async def import_sales_data(
+    request: Request,
     file: UploadFile = File(...),
     column_mapping: str = Form(...),
     username: str = Depends(get_current_user)
@@ -711,6 +886,19 @@ async def import_sales_data(
 
         # 11. Insert records into MongoDB
         result = mydb.sales.insert_many(records)
+
+        try:
+            redis_client = request.app.state.redis
+            # Clear all related cache keys
+            data_keys = redis_client.keys("sales_data_*")
+            sum_keys = redis_client.keys("sales_sum_*")
+            balance_keys = redis_client.keys("customer_balance_*")
+            ar_keys = ["ar_aging_report", "ar_sum"]
+            all_keys = data_keys + sum_keys + balance_keys + ar_keys
+            if all_keys:
+                redis_client.delete(*all_keys)
+        except Exception as redis_err:
+            print(f"Redis error during cache invalidation: {redis_err}")
 
         return {
             "status": "success",

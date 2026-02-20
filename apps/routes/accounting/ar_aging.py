@@ -3,6 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from typing import Union, List, Optional, Dict
 from pydantic import BaseModel
+import json
 #from bson import ObjectId
 
 # import pytz
@@ -34,8 +35,18 @@ async def get_apiTemplate_sales_report(request: Request,
                                       {"request": request})
 
 @api_ar_aging_report.get("/api-get-ar-aging-report")
-async def get_sales(username: str = Depends(get_current_user)):
+async def get_sales(request: Request, username: str = Depends(get_current_user)):
     try:
+        redis_client = request.app.state.redis
+        cache_key = "ar_aging_report"
+        
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                return json.loads(cached_data)
+        except Exception as redis_err:
+            print(f"Redis error during GET ar_aging: {redis_err}")
+
         today = datetime.combine(date.today(), datetime.min.time())  # Convert to datetime
 
         pipeline = [
@@ -105,14 +116,14 @@ async def get_sales(username: str = Depends(get_current_user)):
             {
                 "$project": {
                     "_id": 0,
-                    "invoice_date": 1,
+                    "invoice_date": { "$dateToString": { "format": "%Y-%m-%d", "date": "$invoice_date" } },
                     "category": 1,
                     "customer": 1,
                     "customer_id": 1,
                     "invoice_no": 1,
                     "tax_type": 1,
                     "terms": 1,
-                    "due_date": 1,
+                    "due_date": { "$dateToString": { "format": "%Y-%m-%d", "date": "$due_date" } },
                     "amount": 1,
                     "balance": 1,
                     "status": 1
@@ -121,6 +132,12 @@ async def get_sales(username: str = Depends(get_current_user)):
         ]
 
         result = list(mydb.sales.aggregate(pipeline))
+
+        try:
+            # Cache for 1 hour
+            redis_client.setex(cache_key, 3600, json.dumps(result))
+        except Exception as redis_err:
+            print(f"Redis error during SET ar_aging: {redis_err}")
 
         return result
 
@@ -135,8 +152,18 @@ async def get_sales(username: str = Depends(get_current_user)):
 
 
 @api_ar_aging_report.get("/api-get-sum-ar")
-async def get_sum_ar(username: str = Depends(get_current_user)):
+async def get_sum_ar(request: Request, username: str = Depends(get_current_user)):
     try:
+        redis_client = request.app.state.redis
+        cache_key = "ar_sum"
+        
+        try:
+            cached_val = redis_client.get(cache_key)
+            if cached_val is not None:
+                return float(cached_val)
+        except Exception as redis_err:
+            print(f"Redis error during GET ar_sum: {redis_err}")
+
         # Aggregate total sales amount
         sales_pipeline = [
             {
@@ -165,6 +192,12 @@ async def get_sum_ar(username: str = Depends(get_current_user)):
 
         # Compute balance
         balance = total_sales - (total_cash + total_2307)
+
+        try:
+            # Cache the sum for 1 hour
+            redis_client.setex(cache_key, 3600, str(balance))
+        except Exception as redis_err:
+            print(f"Redis error during SET ar_sum: {redis_err}")
 
         return balance
 
@@ -983,10 +1016,21 @@ async def get_transaction_history(
 
 @api_ar_aging_report.get("/api-get-per-customer-balance-with-params/")
 async def get_list_customer_balance(
+    request: Request,
     username: str = Depends(get_current_user), 
     customer: Optional[str] = None
 ):
     try:
+        redis_client = request.app.state.redis
+        cache_key = f"customer_balance_{customer}"
+        
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                return json.loads(cached_data)
+        except Exception as redis_err:
+            print(f"Redis error during GET customer balance: {redis_err}")
+
         pipeline = [
             {
                 "$lookup": {
@@ -1051,6 +1095,13 @@ async def get_list_customer_balance(
         ]
 
         result = list(mydb.sales.aggregate(pipeline))
+
+        try:
+            # Cache for 1 hour
+            redis_client.setex(cache_key, 3600, json.dumps(result))
+        except Exception as redis_err:
+            print(f"Redis error during SET customer balance: {redis_err}")
+
         return result
 
     except Exception as e:

@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
+from redis import Redis
+import httpx
+import json
 
 # from .routes.login import api
 # from .routes.admin import api
@@ -35,7 +38,21 @@ from apps.routes.roles import api_roles
 
 from fastapi.staticfiles import StaticFiles
 
+import os
+
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    redis_host = os.getenv("REDIS_HOST", "localhost")
+    app.state.redis = Redis(host=redis_host, port=6379, db=0)  
+    app.state.http_client = httpx.AsyncClient() 
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    app.state.redis.close()
+
+
 # app.mount("/static", StaticFiles(directory="apps/static"), name="static")
 app.mount("/static", StaticFiles(directory="apps/static"), name="static")
 

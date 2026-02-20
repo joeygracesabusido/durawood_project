@@ -180,6 +180,7 @@ async def upload_collection_file(file: UploadFile = File(...), username: str = D
 
 @api_payment.post("/import-collection-data/")
 async def import_collection_data(
+    request: Request,
     file: UploadFile = File(...),
     column_mapping: str = Form(...),
     username: str = Depends(get_current_user)
@@ -267,6 +268,17 @@ async def import_collection_data(
             records.append(record)
 
         result = mydb.payment.insert_many(records)
+
+        try:
+            redis_client = request.app.state.redis
+            data_keys = redis_client.keys("sales_data_*")
+            balance_keys = redis_client.keys("customer_balance_*")
+            ar_keys = ["ar_aging_report", "ar_sum"]
+            all_keys = data_keys + balance_keys + ar_keys
+            if all_keys:
+                redis_client.delete(*all_keys)
+        except Exception as redis_err:
+            print(f"Redis error during cache invalidation: {redis_err}")
 
         return {
             "status": "success",
@@ -372,7 +384,7 @@ async def api_collection_list_template(request: Request,
 
 
 @api_payment.post("/api-insert-payment/", response_model=None)
-async def create_sales_transaction(data: paymentBM, username: str = Depends(get_current_user)):
+async def create_sales_transaction(request: Request, data: paymentBM, username: str = Depends(get_current_user)):
     role = mydb.login.find_one({"email_add": username})
     roleAuthenticate = mydb.roles.find_one({'role': role['role']})
 
@@ -403,6 +415,17 @@ async def create_sales_transaction(data: paymentBM, username: str = Depends(get_
             # Correct MongoDB insert operation
             mydb.payment.insert_one(insertData)
 
+            try:
+                redis_client = request.app.state.redis
+                data_keys = redis_client.keys("sales_data_*")
+                balance_keys = redis_client.keys("customer_balance_*")
+                ar_keys = ["ar_aging_report", "ar_sum"]
+                all_keys = data_keys + balance_keys + ar_keys
+                if all_keys:
+                    redis_client.delete(*all_keys)
+            except Exception as redis_err:
+                print(f"Redis error during cache invalidation: {redis_err}")
+
             return {"message": "Payment has been inserted successfully"}
 
         except Exception as e:
@@ -415,7 +438,7 @@ async def create_sales_transaction(data: paymentBM, username: str = Depends(get_
 
 
 @api_payment.post("/api-insert-payment-batch/", response_model=None)
-async def create_payments_batch(data: List[paymentBM], username: str = Depends(get_current_user)):
+async def create_payments_batch(request: Request, data: List[paymentBM], username: str = Depends(get_current_user)):
     """Insert multiple payment documents in a single request.
 
     Expects a JSON array of paymentBM objects.
@@ -449,6 +472,17 @@ async def create_payments_batch(data: List[paymentBM], username: str = Depends(g
 
             # Insert all at once
             mydb.payment.insert_many(insert_docs)
+
+            try:
+                redis_client = request.app.state.redis
+                data_keys = redis_client.keys("sales_data_*")
+                balance_keys = redis_client.keys("customer_balance_*")
+                ar_keys = ["ar_aging_report", "ar_sum"]
+                all_keys = data_keys + balance_keys + ar_keys
+                if all_keys:
+                    redis_client.delete(*all_keys)
+            except Exception as redis_err:
+                print(f"Redis error during cache invalidation: {redis_err}")
 
             return {"message": f"{len(insert_docs)} payments have been inserted successfully"}
 
@@ -494,7 +528,7 @@ async def get_sales(username: str = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
 @api_payment.put("/api-update-payment/{id}", response_model=None)
-async def update_customer_profile_api(id: str, data: paymentBM,username: str = Depends(get_current_user)):
+async def update_customer_profile_api(request: Request, id: str, data: paymentBM,username: str = Depends(get_current_user)):
     obj_id = ObjectId(id)
     try:
 
@@ -514,6 +548,18 @@ async def update_customer_profile_api(id: str, data: paymentBM,username: str = D
               
             }
         result = mydb.payment.update_one({'_id': obj_id},{'$set': updateData})
+
+        try:
+            redis_client = request.app.state.redis
+            data_keys = redis_client.keys("sales_data_*")
+            balance_keys = redis_client.keys("customer_balance_*")
+            ar_keys = ["ar_aging_report", "ar_sum"]
+            all_keys = data_keys + balance_keys + ar_keys
+            if all_keys:
+                redis_client.delete(*all_keys)
+        except Exception as redis_err:
+            print(f"Redis error during cache invalidation: {redis_err}")
+
         return {"message":"Payment Data Has been Updated"} 
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
