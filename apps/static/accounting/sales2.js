@@ -155,7 +155,6 @@ $(document).ready(function() {
 //this function is for inserting Data and isUpdating
 
 
-getSales();
 let isUpdating = false;
 let sales_list = {};
 let selectedCustomer = null;
@@ -207,6 +206,12 @@ async function getCustomerBalance() {
                 "Content-Type": "application/json",
             },
         });
+
+        if (response.status === 401 || response.status === 403) {
+            alert("Authorization expired. Please login.");
+            window.location.href = "/login/";
+            return;
+        }
 
         if (response.ok) {
             const custBalance = await response.json();
@@ -272,6 +277,88 @@ async function getSales() {
     
   }
 }
+
+
+async function searchSales() {
+  const invoiceNo = $("#search_invoice_no").val().trim();
+  const customer = $("#search_customer").val().trim();
+
+  console.log("Searching for:", { invoiceNo, customer });
+
+  if (!invoiceNo && !customer) {
+    alert("Please enter at least one search criteria (Invoice No. or Customer Name)");
+    return;
+  }
+
+  try {
+    let url = "/api-search-sales/?";
+    if (invoiceNo) url += `invoice_no=${encodeURIComponent(invoiceNo)}`;
+    if (invoiceNo && customer) url += "&";
+    if (customer) url += `customer=${encodeURIComponent(customer)}`;
+
+    console.log("Fetching URL:", url);
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      alert("Authorization expired. Please login.");
+      window.location.href = "/login/";
+      return;
+    }
+
+    if (response.ok) {
+      sales_list = await response.json();
+      console.log("Search results:", sales_list);
+      console.log("Results count:", sales_list.length);
+      sales_list.sort((a, b) => new Date(b.date_updated) - new Date(a.date_updated));
+
+      $("#table_sales tbody").empty();
+      let i = 0;
+      sales_list.forEach((element) => {
+        console.log("Adding row:", element);
+        $("#table_sales tbody").append(makeBranchRow(i++, element));
+      });
+    } else {
+      console.log("Response not ok:", response.status);
+      const error = await response.json();
+      alert(`Error: ${error.detail}`);
+    }
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
+}
+
+
+function clearSearch(e) {
+  if (e) e.preventDefault();
+  $("#search_invoice_no").val("");
+  $("#search_customer").val("");
+  $("#table_sales tbody").empty();
+}
+
+
+$(document).ready(function() {
+  $("#btn_search_sales").on("click", function(e) {
+    e.preventDefault();
+    searchSales();
+  });
+  $("#btn_clear_search").on("click", function(e) {
+    e.preventDefault();
+    clearSearch();
+  });
+
+  $("#search_invoice_no, #search_customer").on("keypress", function(e) {
+    if (e.which === 13) {
+      searchSales();
+    }
+  });
+});
+
 
 
  function formatDate(value) {
@@ -432,10 +519,14 @@ async function saveOrUpdateCustomer() {
 				getCustomerBalance();
         // window.location.href = "/sales/";
        
-        getSales();  // Refresh branch list
 
       },
       error: function (xhr) {
+        if (xhr.status === 401 || xhr.status === 403) {
+            alert("Authorization expired. Please login.");
+            window.location.href = "/login/";
+            return;
+        }
         const errorDetail = xhr.responseJSON?.detail || "An error occurred";
         alert(`Error: ${errorDetail}`);
       },
@@ -455,9 +546,13 @@ alert(response.message);
         window.location.href = "/sales/";
         isUpdating = false;
         $("#btn_save_branch").text('Add');
-        getSales();  // Refresh branch list
       },
       error: function (xhr) {
+        if (xhr.status === 401 || xhr.status === 403) {
+            alert("Authorization expired. Please login.");
+            window.location.href = "/login/";
+            return;
+        }
         const errorDetail = xhr.responseJSON?.detail || "An error occurred";
         alert(`Error: ${errorDetail}`);
       },
@@ -466,43 +561,11 @@ alert(response.message);
 }
 
 $(document).ready(function () {
-  // Initial fetch of branch data
-  getSales();
-
   // // Handle save (add or update) button click
   $("#btn_save_branch").click(saveOrUpdateCustomer);
 
 });
 
-
-
-// this is for DataTable
-const initializeDataTable = () => {
-
-    new DataTable('#table_sales', {
-        layout: {
-            topStart: 'buttons'
-        },
-        buttons: ['copy',  {
-            extend: 'csv',
-            filename: 'Sales Transasction', // Cust wom name for the exported CSV file
-            title: 'Sales Transaction' // Optional: Title for the CSV file's content
-        }],
-        perPage: 10,
-        searchable: true,
-        sortable: true,
-
-        responsive: true,
-        scrollX: true,          // Enable horizontal scrolling if needed
-        autoWidth: false,       // Disable fixed width
-        scrollY: '450px',       // Set a specific height
-        scrollCollapse: true,
-        destroy: true // Destroy any existing DataTable instance
-
-
-    });
-
-    };
 
 
 $(document).ready(function() {

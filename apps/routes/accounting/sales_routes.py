@@ -1,6 +1,14 @@
 from fastapi import (
-    APIRouter, Body, HTTPException, Depends, Request, Response, 
-    status, UploadFile, File, Form
+    APIRouter,
+    Body,
+    HTTPException,
+    Depends,
+    Request,
+    Response,
+    status,
+    UploadFile,
+    File,
+    Form,
 )
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -12,13 +20,12 @@ import pandas as pd
 import json
 
 
-
-
 from datetime import datetime, timedelta, date, timezone
 from apps.authentication.authenticate_user import get_current_user
 
 
-from  apps.database.mongodb import create_mongo_client
+from apps.database.mongodb import create_mongo_client
+
 mydb = create_mongo_client()
 
 
@@ -27,14 +34,13 @@ templates = Jinja2Templates(directory="apps/templates")
 
 
 class SalesBM(BaseModel):
-
     delivery_date: datetime
     invoice_date: datetime
     invoice_no: str
     po_no: str
     load_no: str
     dr_no: str
-    customer: str 
+    customer: str
     customer_id: str
     items: str
     category: str
@@ -43,95 +49,88 @@ class SalesBM(BaseModel):
     tax_type: str
     amount: float
     user: Optional[str] = None
-    date_updated: datetime =  datetime.utcnow()
+    date_updated: datetime = datetime.utcnow()
     date_created: Optional[datetime] = datetime.utcnow()
+
 
 @api_sales.put("/add-new-column-sales/")
 async def add_new_column(username: str = Depends(get_current_user)):
     result = mydb.sales.update_many(
         {},
-        {"$set": {"items": "CEMENT"}}  # Add new field with a default value
+        {"$set": {"items": "CEMENT"}},  # Add new field with a default value
     )
     return {"modified_count": result.modified_count}
 
 
 @api_sales.get("/sales/", response_class=HTMLResponse)
-async def api_chart_of_account_template(request: Request,
-                                        username: str = Depends(get_current_user)):
-    role = mydb.login.find_one({"email_add":username})
+async def api_chart_of_account_template(
+    request: Request, username: str = Depends(get_current_user)
+):
+    role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
 
-    print(roleAuthenticate['allowed_access'])
-    
+    print(roleAuthenticate["allowed_access"])
 
-    if 'Sales' in roleAuthenticate['allowed_access']:
-
-
-        return templates.TemplateResponse("accounting/sales.html", 
-                                      {"request": request})
+    if "Sales" in roleAuthenticate["allowed_access"]:
+        return templates.TemplateResponse("accounting/sales.html", {"request": request})
 
     else:
-        
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail= "Not Authorized ",
+            detail="Not Authorized ",
             # headers={"WWW-Authenticate": "Basic"},
         )
-    
+
+
 @api_sales.get("/sales-insert-template/", response_class=HTMLResponse)
-async def api_chart_of_account_template(request: Request,
-                                        username: str = Depends(get_current_user)):
-    role = mydb.login.find_one({"email_add":username})
+async def api_chart_of_account_template(
+    request: Request, username: str = Depends(get_current_user)
+):
+    role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
 
-    print(roleAuthenticate['allowed_access'])
-    
+    print(roleAuthenticate["allowed_access"])
 
-    if 'Sales' in roleAuthenticate['allowed_access']:
-
-
-        return templates.TemplateResponse("accounting/sales_insert.html", 
-                                      {"request": request})
-
-    else:
-        
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail= "Not Authorized ",
-            # headers={"WWW-Authenticate": "Basic"},
+    if "Sales" in roleAuthenticate["allowed_access"]:
+        return templates.TemplateResponse(
+            "accounting/sales_insert.html", {"request": request}
         )
 
-
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not Authorized ",
+            # headers={"WWW-Authenticate": "Basic"},
+        )
 
 
 @api_sales.post("/api-insert-sales/", response_model=None)
-async def create_sales_transaction(request: Request, data: SalesBM, username: str = Depends(get_current_user)):
+async def create_sales_transaction(
+    request: Request, data: SalesBM, username: str = Depends(get_current_user)
+):
 
-    role = mydb.login.find_one({"email_add":username})
+    role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
 
-    if 'Sales' in roleAuthenticate['allowed_access']:
-
+    if "Sales" in roleAuthenticate["allowed_access"]:
         try:
             # Convert date and due_date to full datetime format
-            #date_datetime = datetime.strptime(str(data.date), "%Y-%m-%d")
-            #due_date_datetime = datetime.strptime(str(data.due_date), "%Y-%m-%d")
+            # date_datetime = datetime.strptime(str(data.date), "%Y-%m-%d")
+            # due_date_datetime = datetime.strptime(str(data.due_date), "%Y-%m-%d")
 
             # Ensure date_updated and date_created use current UTC timestamp
-            sales_collection = mydb['sales']
+            sales_collection = mydb["sales"]
             sales_collection.create_index("invoice_no", unique=True)
-            
-            
+
             insertData = {
-               
                 "delivery_date": data.delivery_date,
                 "invoice_date": data.invoice_date,
                 "invoice_no": data.invoice_no,
                 "po_no": data.po_no,
-                "load_no":data.load_no,
+                "load_no": data.load_no,
                 "dr_no": data.dr_no,
                 "customer": data.customer,
                 "customer_id": data.customer_id,
@@ -168,20 +167,18 @@ async def create_sales_transaction(request: Request, data: SalesBM, username: st
             raise HTTPException(status_code=400, detail=f"Error inserting sales: {e}")
 
     else:
-        
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail= "Not Authorized ",
+            detail="Not Authorized ",
             # headers={"WWW-Authenticate": "Basic"},
         )
-
 
 
 # @api_sales.get("/api-get-sales/")
 # async def get_sales(date_from: Optional[str] = None, date_to: Optional[str] = None, username: str = Depends(get_current_user)):
 #     try:
 #         pipeline = []
-        
+
 #         # Add $match stage for date range filtering if provided
 #         if date_from and date_to:
 #             pipeline.append({
@@ -192,7 +189,7 @@ async def create_sales_transaction(request: Request, data: SalesBM, username: st
 #                     }
 #                 }
 #             })
-        
+
 #         # Add $lookup to join with payment collection
 #         pipeline += [
 #             {
@@ -256,7 +253,7 @@ async def create_sales_transaction(request: Request, data: SalesBM, username: st
 #                 "$project": {
 #                     "_id": 0,
 #                     "id": { "$toString": "$_id" },
-#                     "delivery_date": { 
+#                     "delivery_date": {
 #                         "$cond": {
 #                             "if": { "$and": [{ "$ne": ["$delivery_date", None] }, { "$eq": [{ "$type": "$delivery_date" }, "date"] }] },
 #                             "then": { "$dateToString": { "format": "%Y-%m-%d", "date": "$delivery_date" } },
@@ -289,13 +286,19 @@ async def create_sales_transaction(request: Request, data: SalesBM, username: st
 #         return result
 #     except Exception as e:
 #         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
-    
+
+
 @api_sales.get("/api-get-sales/")
-async def get_sales(request: Request, date_from: Optional[str] = None, date_to: Optional[str] = None, username: str = Depends(get_current_user)):
+async def get_sales(
+    request: Request,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    username: str = Depends(get_current_user),
+):
     try:
         redis_client = request.app.state.redis
         cache_key = f"sales_data_{date_from}_{date_to}"
-        
+
         try:
             cached_data = redis_client.get(cache_key)
             if cached_data:
@@ -304,89 +307,113 @@ async def get_sales(request: Request, date_from: Optional[str] = None, date_to: 
             print(f"Redis error during GET: {redis_err}")
 
         pipeline = []
-        
+
         # Add $match stage for date range filtering if provided
         if date_from and date_to:
-            pipeline.append({
-                "$match": {
-                    "invoice_date": {
-                        "$gte": datetime.strptime(date_from, "%Y-%m-%d"),
-                        "$lte": datetime.strptime(date_to, "%Y-%m-%d")
+            pipeline.append(
+                {
+                    "$match": {
+                        "invoice_date": {
+                            "$gte": datetime.strptime(date_from, "%Y-%m-%d"),
+                            "$lte": datetime.strptime(date_to, "%Y-%m-%d"),
+                        }
                     }
                 }
-            })
-        
+            )
+
         # Add $lookup to join with payment collection
         pipeline += [
             {
                 "$lookup": {
                     "from": "payment",
-                    "let": { "invoice_no": "$invoice_no" },
+                    "let": {"invoice_no": "$invoice_no"},
                     "pipeline": [
-                        {
-                            "$match": {
-                                "$expr": { "$eq": ["$invoice_no", "$$invoice_no"] }
-                            }
-                        },
+                        {"$match": {"$expr": {"$eq": ["$invoice_no", "$$invoice_no"]}}},
                         {
                             "$group": {
                                 "_id": "$invoice_no",
-                                "total_cash": { "$sum": "$cash_amount" },
-                                "total_2307": { "$sum": "$amount_2307" }
+                                "total_cash": {"$sum": "$cash_amount"},
+                                "total_2307": {"$sum": "$amount_2307"},
                             }
-                        }
+                        },
                     ],
-                    "as": "payment_info"
+                    "as": "payment_info",
                 }
             },
             {
                 "$addFields": {
                     "total_cash": {
-                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_cash", 0] }, 0]
+                        "$ifNull": [
+                            {"$arrayElemAt": ["$payment_info.total_cash", 0]},
+                            0,
+                        ]
                     },
                     "total_2307": {
-                        "$ifNull": [{ "$arrayElemAt": ["$payment_info.total_2307", 0] }, 0]
+                        "$ifNull": [
+                            {"$arrayElemAt": ["$payment_info.total_2307", 0]},
+                            0,
+                        ]
                     },
-                    "amount": {
-                        "$ifNull": ["$amount", 0]
-                    }
+                    "amount": {"$ifNull": ["$amount", 0]},
                 }
             },
             {
                 "$addFields": {
                     "balance": {
-                        "$subtract": ["$amount", { "$add": ["$total_cash", "$total_2307"] }]
+                        "$subtract": [
+                            "$amount",
+                            {"$add": ["$total_cash", "$total_2307"]},
+                        ]
                     },
                     "status": {
                         "$cond": {
-                            "if": { "$gt": ["$due_date", None] },
+                            "if": {"$gt": ["$due_date", None]},
                             "then": {
-                                "$max": [{
-                                    "$divide": [{
-                                        "$subtract": [{ "$toLong": "$$NOW" }, { "$toLong": "$due_date" }]
-                                    }, 86400000]
-                                }, 0]
+                                "$max": [
+                                    {
+                                        "$divide": [
+                                            {
+                                                "$subtract": [
+                                                    {"$toLong": "$$NOW"},
+                                                    {"$toLong": "$due_date"},
+                                                ]
+                                            },
+                                            86400000,
+                                        ]
+                                    },
+                                    0,
+                                ]
                             },
-                            "else": None
+                            "else": None,
                         }
-                    }
+                    },
                 }
             },
-            {
-                "$sort": { "date_updated": -1 }
-            },
+            {"$sort": {"date_updated": -1}},
             {
                 "$project": {
                     "_id": 0,
-                    "id": { "$toString": "$_id" },
-                    "delivery_date": { 
+                    "id": {"$toString": "$_id"},
+                    "delivery_date": {
                         "$cond": {
-                            "if": { "$and": [{ "$ne": ["$delivery_date", None] }, { "$eq": [{ "$type": "$delivery_date" }, "date"] }] },
-                            "then": { "$dateToString": { "format": "%Y-%m-%d", "date": "$delivery_date" } },
-                            "else": ""
+                            "if": {
+                                "$and": [
+                                    {"$ne": ["$delivery_date", None]},
+                                    {"$eq": [{"$type": "$delivery_date"}, "date"]},
+                                ]
+                            },
+                            "then": {
+                                "$dateToString": {
+                                    "format": "%Y-%m-%d",
+                                    "date": "$delivery_date",
+                                }
+                            },
+                            "else": "",
                         }
                     },
-                    "invoice_date": { "$dateToString": { "format": "%Y-%m-%d", "date": "$invoice_date" } },
+                    "invoice_date": {
+                        "$dateToString": {"format": "%Y-%m-%d", "date": "$invoice_date"}
+                    },
                     "invoice_no": 1,
                     "po_no": 1,
                     "load_no": 1,
@@ -396,20 +423,32 @@ async def get_sales(request: Request, date_from: Optional[str] = None, date_to: 
                     "category": 1,
                     "items": 1,
                     "terms": 1,
-                    "due_date": { "$dateToString": { "format": "%Y-%m-%d", "date": "$due_date" } },
+                    "due_date": {
+                        "$dateToString": {"format": "%Y-%m-%d", "date": "$due_date"}
+                    },
                     "tax_type": 1,
                     "amount": 1,
                     "balance": 1,
                     "status": 1,
                     "user": 1,
-                    "date_updated": { "$dateToString": { "format": "%Y-%m-%d %H:%M:%S", "date": "$date_updated" } },
-                    "date_created": { "$dateToString": { "format": "%Y-%m-%d %H:%M:%S", "date": "$date_created" } }
+                    "date_updated": {
+                        "$dateToString": {
+                            "format": "%Y-%m-%d %H:%M:%S",
+                            "date": "$date_updated",
+                        }
+                    },
+                    "date_created": {
+                        "$dateToString": {
+                            "format": "%Y-%m-%d %H:%M:%S",
+                            "date": "$date_created",
+                        }
+                    },
                 }
-            }
+            },
         ]
 
         result = list(mydb.sales.aggregate(pipeline))
-        
+
         try:
             # Store in Redis for 1 hour (3600 seconds)
             redis_client.setex(cache_key, 3600, json.dumps(result))
@@ -420,27 +459,190 @@ async def get_sales(request: Request, date_from: Optional[str] = None, date_to: 
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Error retrieving profiles: {e}")
 
+
+@api_sales.get("/api-search-sales/")
+async def search_sales(
+    request: Request,
+    invoice_no: Optional[str] = None,
+    customer: Optional[str] = None,
+    username: str = Depends(get_current_user),
+):
+    try:
+        role = mydb.login.find_one({"email_add": username})
+        roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+
+        if "Sales" not in roleAuthenticate["allowed_access"]:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized"
+            )
+
+        print(f"Search called with invoice_no: {invoice_no}, customer: {customer}")
+
+        pipeline = []
+
+        # Add $match stage for search filters
+        if invoice_no or customer:
+            match_conditions = {}
+            if invoice_no:
+                match_conditions["invoice_no"] = {"$regex": invoice_no, "$options": "i"}
+            if customer:
+                match_conditions["customer"] = {"$regex": customer, "$options": "i"}
+            pipeline.append({"$match": match_conditions})
+
+        # Add $lookup to join with payment collection
+        pipeline += [
+            {
+                "$lookup": {
+                    "from": "payment",
+                    "let": {"invoice_no": "$invoice_no"},
+                    "pipeline": [
+                        {"$match": {"$expr": {"$eq": ["$invoice_no", "$$invoice_no"]}}},
+                        {
+                            "$group": {
+                                "_id": "$invoice_no",
+                                "total_cash": {"$sum": "$cash_amount"},
+                                "total_2307": {"$sum": "$amount_2307"},
+                            }
+                        },
+                    ],
+                    "as": "payment_info",
+                }
+            },
+            {
+                "$addFields": {
+                    "total_cash": {
+                        "$ifNull": [
+                            {"$arrayElemAt": ["$payment_info.total_cash", 0]},
+                            0,
+                        ]
+                    },
+                    "total_2307": {
+                        "$ifNull": [
+                            {"$arrayElemAt": ["$payment_info.total_2307", 0]},
+                            0,
+                        ]
+                    },
+                    "amount": {"$ifNull": ["$amount", 0]},
+                }
+            },
+            {
+                "$addFields": {
+                    "balance": {
+                        "$subtract": [
+                            "$amount",
+                            {"$add": ["$total_cash", "$total_2307"]},
+                        ]
+                    },
+                    "status": {
+                        "$cond": {
+                            "if": {"$gt": ["$due_date", None]},
+                            "then": {
+                                "$max": [
+                                    {
+                                        "$divide": [
+                                            {
+                                                "$subtract": [
+                                                    {"$toLong": "$$NOW"},
+                                                    {"$toLong": "$due_date"},
+                                                ]
+                                            },
+                                            86400000,
+                                        ]
+                                    },
+                                    0,
+                                ]
+                            },
+                            "else": None,
+                        }
+                    },
+                }
+            },
+            {"$sort": {"date_updated": -1}},
+            {
+                "$project": {
+                    "_id": 0,
+                    "id": {"$toString": "$_id"},
+                    "delivery_date": {
+                        "$cond": {
+                            "if": {
+                                "$and": [
+                                    {"$ne": ["$delivery_date", None]},
+                                    {"$eq": [{"$type": "$delivery_date"}, "date"]},
+                                ]
+                            },
+                            "then": {
+                                "$dateToString": {
+                                    "format": "%Y-%m-%d",
+                                    "date": "$delivery_date",
+                                }
+                            },
+                            "else": "",
+                        }
+                    },
+                    "invoice_date": {
+                        "$dateToString": {"format": "%Y-%m-%d", "date": "$invoice_date"}
+                    },
+                    "invoice_no": 1,
+                    "po_no": 1,
+                    "load_no": 1,
+                    "dr_no": 1,
+                    "customer": 1,
+                    "customer_id": 1,
+                    "category": 1,
+                    "items": 1,
+                    "terms": 1,
+                    "due_date": {
+                        "$dateToString": {"format": "%Y-%m-%d", "date": "$due_date"}
+                    },
+                    "tax_type": 1,
+                    "amount": 1,
+                    "balance": 1,
+                    "status": 1,
+                    "user": 1,
+                    "date_updated": {
+                        "$dateToString": {
+                            "format": "%Y-%m-%d %H:%M:%S",
+                            "date": "$date_updated",
+                        }
+                    },
+                    "date_created": {
+                        "$dateToString": {
+                            "format": "%Y-%m-%d %H:%M:%S",
+                            "date": "$date_created",
+                        }
+                    },
+                }
+            },
+        ]
+
+        result = list(mydb.sales.aggregate(pipeline))
+        print(f"Search result count: {len(result)}")
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Error searching sales: {e}")
+
+
 @api_sales.put("/api-update-sales/", response_model=None)
-async def update_customer_profile_api(request: Request, profile_id: str, data: SalesBM,username: str = Depends(get_current_user)):
+async def update_customer_profile_api(
+    request: Request,
+    profile_id: str,
+    data: SalesBM,
+    username: str = Depends(get_current_user),
+):
     obj_id = ObjectId(profile_id)
 
-    role = mydb.login.find_one({"email_add":username})
+    role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
 
-    
-
-    if 'Sales' in roleAuthenticate['allowed_access']:
-
+    if "Sales" in roleAuthenticate["allowed_access"]:
         try:
-
             updateData = {
-
                 "delivery_date": data.delivery_date,
                 "invoice_date": data.invoice_date,
                 "invoice_no": data.invoice_no,
                 "po_no": data.po_no,
-                "load_no":data.load_no,
+                "load_no": data.load_no,
                 "dr_no": data.dr_no,
                 "customer": data.customer,
                 "customer_id": data.customer_id,
@@ -452,10 +654,9 @@ async def update_customer_profile_api(request: Request, profile_id: str, data: S
                 "amount": data.amount,
                 "user": username,
                 "date_updated": datetime.utcnow(),
-                "date_created": datetime.utcnow(), 
-                  
-                }
-            result = mydb.sales.update_one({'_id': obj_id},{'$set': updateData})
+                "date_created": datetime.utcnow(),
+            }
+            result = mydb.sales.update_one({"_id": obj_id}, {"$set": updateData})
 
             try:
                 redis_client = request.app.state.redis
@@ -470,28 +671,25 @@ async def update_customer_profile_api(request: Request, profile_id: str, data: S
             except Exception as redis_err:
                 print(f"Redis error during cache invalidation: {redis_err}")
 
-            return {"message":"Sales Data Has been Updated"} 
+            return {"message": "Sales Data Has been Updated"}
         except Exception as e:
-
             raise HTTPException(status_code=500, detail=str(e))
     else:
-        
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail= "Not Authorized ",
+            detail="Not Authorized ",
             # headers={"WWW-Authenticate": "Basic"},
         )
 
+
 @api_sales.get("/api-get-sum-sales/")
 async def get_sales_dashboard(
-    request: Request,
-    filter: str = "today", 
-    username: str = Depends(get_current_user)
+    request: Request, filter: str = "today", username: str = Depends(get_current_user)
 ):
     try:
         redis_client = request.app.state.redis
         cache_key = f"sales_sum_{filter}"
-        
+
         try:
             cached_val = redis_client.get(cache_key)
             if cached_val is not None:
@@ -510,7 +708,9 @@ async def get_sales_dashboard(
             end_date = start_date + timedelta(days=1)
 
         elif filter == "week":
-            start_date = datetime(now.year, now.month, now.day) - timedelta(days=now.weekday())
+            start_date = datetime(now.year, now.month, now.day) - timedelta(
+                days=now.weekday()
+            )
             end_date = start_date + timedelta(days=7)
 
         elif filter == "month":
@@ -527,19 +727,20 @@ async def get_sales_dashboard(
         elif filter == "all":
             start_date = None
             end_date = None
-            
+
             sales_cursor = mydb.sales.find()
 
         else:
-            raise HTTPException(status_code=400, detail="Invalid filter. Use 'today', 'week', or 'month'.")
-
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid filter. Use 'today', 'week', or 'month'.",
+            )
 
         if filter != "all":
-
             # Query sales within the date range
-            sales_cursor = mydb.sales.find({
-                "invoice_date": {"$gte": start_date, "$lt": end_date}
-            })
+            sales_cursor = mydb.sales.find(
+                {"invoice_date": {"$gte": start_date, "$lt": end_date}}
+            )
 
         # Calculate total amount
         total_amount = sum(sale.get("amount", 0) for sale in sales_cursor)
@@ -557,98 +758,96 @@ async def get_sales_dashboard(
 
 
 @api_sales.get("/api-sales-report/", response_class=HTMLResponse)
-async def api_sales_report_template(request: Request,
-                                        username: str = Depends(get_current_user)):
-    role = mydb.login.find_one({"email_add":username})
+async def api_sales_report_template(
+    request: Request, username: str = Depends(get_current_user)
+):
+    role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
 
-    if 'Sales' in roleAuthenticate['allowed_access']:
-
-
-        return templates.TemplateResponse("accounting/sales_report.html", 
-                                      {"request": request})
+    if "Sales" in roleAuthenticate["allowed_access"]:
+        return templates.TemplateResponse(
+            "accounting/sales_report.html", {"request": request}
+        )
 
     else:
-        
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail= "Not Authorized ",
+            detail="Not Authorized ",
             # headers={"WWW-Authenticate": "Basic"},
         )
+
 
 @api_sales.get("/upload-sales-report/", response_class=HTMLResponse)
-async def upload_sales_report_template(request: Request,
-                                        username: str = Depends(get_current_user)):
-    role = mydb.login.find_one({"email_add":username})
+async def upload_sales_report_template(
+    request: Request, username: str = Depends(get_current_user)
+):
+    role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
 
-    if 'Sales' in roleAuthenticate['allowed_access']:
-
-
-        return templates.TemplateResponse("accounting/upload_sales_report.html", 
-                                      {"request": request})
+    if "Sales" in roleAuthenticate["allowed_access"]:
+        return templates.TemplateResponse(
+            "accounting/upload_sales_report.html", {"request": request}
+        )
 
     else:
-        
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail= "Not Authorized ",
+            detail="Not Authorized ",
             # headers={"WWW-Authenticate": "Basic"},
         )
 
+
 @api_sales.post("/upload-sales-report/")
-async def upload_sales_report(file: UploadFile = File(...), username: str = Depends(get_current_user)):
-    
+async def upload_sales_report(
+    file: UploadFile = File(...), username: str = Depends(get_current_user)
+):
+
     role = mydb.login.find_one({"email_add": username})
     if not role:
         raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found",
-            )
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
 
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
-    if not roleAuthenticate or 'Sales' not in roleAuthenticate['allowed_access']:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Not Authorized",
-            )
+    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    if not roleAuthenticate or "Sales" not in roleAuthenticate["allowed_access"]:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not Authorized",
+        )
 
     try:
         # Validate file extension
-        if not file.filename.endswith(('.xlsx', '.xls', '.csv')):
+        if not file.filename.endswith((".xlsx", ".xls", ".csv")):
             raise HTTPException(
                 status_code=400,
-                detail="Invalid file format. Please upload an Excel file (.xlsx, .xls) or CSV file."
+                detail="Invalid file format. Please upload an Excel file (.xlsx, .xls) or CSV file.",
             )
 
         contents = await file.read()
         if len(contents) == 0:
-            raise HTTPException(
-                status_code=400, 
-                detail="The file is empty"
-            )
+            raise HTTPException(status_code=400, detail="The file is empty")
 
         # Parse Excel file
         df = pd.read_excel(io.BytesIO(contents))
-        
+
         # Validate DataFrame
         if df.empty:
             raise HTTPException(
-                status_code=400, 
-                detail="The uploaded file contains no data"
+                status_code=400, detail="The uploaded file contains no data"
             )
 
         # Convert numeric columns to float where possible
-        numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns
+        numeric_columns = df.select_dtypes(include=["int64", "float64"]).columns
         for col in numeric_columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
+            df[col] = pd.to_numeric(df[col], errors="coerce")
 
         # Replace infinite and NaN values with None
-        df = df.replace([float('inf'), float('-inf')], None)
+        df = df.replace([float("inf"), float("-inf")], None)
         df = df.where(df.notna(), None)
-        
+
         # Get preview data with cleaned values
         preview_data = []
         for _, row in df.head(5).iterrows():
@@ -660,59 +859,50 @@ async def upload_sales_report(file: UploadFile = File(...), username: str = Depe
                 else:
                     row_dict[col] = val
             preview_data.append(row_dict)
-        
+
         # Prepare response with status wrapper
         column_info = {
             "filename": file.filename,
             "columns": list(df.columns),
             "row_count": len(df),
-            "preview": preview_data
+            "preview": preview_data,
         }
-        
+
         return {"status": "success", "data": column_info}
 
     except pd.errors.EmptyDataError:
-        raise HTTPException(
-            status_code=400, 
-            detail="The file contains no data"
-        )
+        raise HTTPException(status_code=400, detail="The file contains no data")
     except pd.errors.ParserError as e:
         raise HTTPException(
-            status_code=400, 
-            detail=f"Could not parse Excel file: {str(e)}"
+            status_code=400, detail=f"Could not parse Excel file: {str(e)}"
         )
     except Exception as e:
         print(f"Upload error: {str(e)}")  # Log the error server-side
-        raise HTTPException(
-            status_code=500, 
-            detail=f"Error processing file: {str(e)}"
-        )
-
-
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 
 @api_sales.get("/download-sales-template/")
 async def download_sales_template(username: str = Depends(get_current_user)):
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
 
-    if 'Sales' in roleAuthenticate['allowed_access']:
+    if "Sales" in roleAuthenticate["allowed_access"]:
         try:
             # Define the column headers based on the user's provided pattern
             column_headers = [
-                'delivery_date',
-                'invoice_date',
-                'invoice_no',
-                'po_no',
-                'load_no',
-                'dr_no',
-                'customer',
-                'customer_id',
-                'category',
-                'terms',
-                'due_date',
-                'tax_type',
-                'amount'
+                "delivery_date",
+                "invoice_date",
+                "invoice_no",
+                "po_no",
+                "load_no",
+                "dr_no",
+                "customer",
+                "customer_id",
+                "category",
+                "terms",
+                "due_date",
+                "tax_type",
+                "amount",
             ]
 
             # Create an empty DataFrame with only the specified columns
@@ -720,14 +910,16 @@ async def download_sales_template(username: str = Depends(get_current_user)):
 
             # Create an in-memory Excel file
             output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df.to_excel(writer, index=False, sheet_name='Sales')
+            with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                df.to_excel(writer, index=False, sheet_name="Sales")
             output.seek(0)
 
             return StreamingResponse(
                 output,
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={"Content-Disposition": "attachment; filename=sales_template.xlsx"}
+                headers={
+                    "Content-Disposition": "attachment; filename=sales_template.xlsx"
+                },
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -737,18 +929,21 @@ async def download_sales_template(username: str = Depends(get_current_user)):
             detail="Not Authorized",
         )
 
+
 from fastapi import Form, File, UploadFile, Depends, HTTPException, status, Body
 import json
 
+
 class ImportRequest(BaseModel):
     column_mapping: dict
+
 
 @api_sales.post("/import-sales-data/")
 async def import_sales_data(
     request: Request,
     file: UploadFile = File(...),
     column_mapping: str = Form(...),
-    username: str = Depends(get_current_user)
+    username: str = Depends(get_current_user),
 ):
     # 1. Authorization Check
     role = mydb.login.find_one({"email_add": username})
@@ -757,13 +952,12 @@ async def import_sales_data(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
-    if not roleAuthenticate or 'Sales' not in roleAuthenticate['allowed_access']:
+    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    if not roleAuthenticate or "Sales" not in roleAuthenticate["allowed_access"]:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not Authorized"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized"
         )
-    
+
     # 2. Parse column_mapping
     try:
         mapping_data = json.loads(column_mapping)
@@ -783,13 +977,22 @@ async def import_sales_data(
         raise HTTPException(status_code=400, detail="File contains no data")
 
     # 4. Validate required fields are mapped
-    required_fields = ['delivery_date', 'invoice_date', 'invoice_no', 'customer', 'amount', 'due_date']
+    required_fields = [
+        "delivery_date",
+        "invoice_date",
+        "invoice_no",
+        "customer",
+        "amount",
+        "due_date",
+    ]
     mapped_target_fields = list(mapping_data.values())
-    missing_fields = [field for field in required_fields if field not in mapped_target_fields]
+    missing_fields = [
+        field for field in required_fields if field not in mapped_target_fields
+    ]
     if missing_fields:
         raise HTTPException(
             status_code=400,
-            detail=f"Missing required fields in mapping: {', '.join(missing_fields)}"
+            detail=f"Missing required fields in mapping: {', '.join(missing_fields)}",
         )
 
     try:
@@ -799,43 +1002,49 @@ async def import_sales_data(
         df = df.rename(columns=mapping_data)
 
         # 6. Validate and convert date fields
-        date_fields = ['delivery_date', 'invoice_date', 'due_date']
+        date_fields = ["delivery_date", "invoice_date", "due_date"]
         for field in date_fields:
             if field in df.columns:
-                df[field] = pd.to_datetime(df[field], errors='coerce', format='mixed')
+                df[field] = pd.to_datetime(df[field], errors="coerce", format="mixed")
                 if df[field].isna().any():
                     invalid_dates_rows = df[df[field].isna()]
-                    first_invalid_row_index = invalid_dates_rows.index[0] + 2 # +2 for 0-based index and header row
+                    first_invalid_row_index = (
+                        invalid_dates_rows.index[0] + 2
+                    )  # +2 for 0-based index and header row
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Invalid date format in column '{field}' at row {first_invalid_row_index}. Please ensure dates are in a recognizable format."
+                        detail=f"Invalid date format in column '{field}' at row {first_invalid_row_index}. Please ensure dates are in a recognizable format.",
                     )
 
         # 7. Validate amount field
-        if 'amount' in df.columns:
-            df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
-            if df['amount'].isna().any():
-                invalid_amounts_rows = df[df['amount'].isna()]
-                first_invalid_row_index = invalid_amounts_rows.index[0] + 2 # +2 for 0-based index and header row
+        if "amount" in df.columns:
+            df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
+            if df["amount"].isna().any():
+                invalid_amounts_rows = df[df["amount"].isna()]
+                first_invalid_row_index = (
+                    invalid_amounts_rows.index[0] + 2
+                )  # +2 for 0-based index and header row
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Invalid numeric value in column 'amount' at row {first_invalid_row_index}. Please ensure all amounts are valid numbers."
+                    detail=f"Invalid numeric value in column 'amount' at row {first_invalid_row_index}. Please ensure all amounts are valid numbers.",
                 )
 
         # 8. Check for duplicate invoice numbers in the uploaded file
-        if 'invoice_no' in df.columns and df['invoice_no'].duplicated().any():
-            duplicate_invoices = df[df['invoice_no'].duplicated()]['invoice_no'].unique().tolist()
+        if "invoice_no" in df.columns and df["invoice_no"].duplicated().any():
+            duplicate_invoices = (
+                df[df["invoice_no"].duplicated()]["invoice_no"].unique().tolist()
+            )
             raise HTTPException(
                 status_code=400,
-                detail=f"Duplicate invoice numbers found in the uploaded file: {', '.join(map(str, duplicate_invoices))}"
+                detail=f"Duplicate invoice numbers found in the uploaded file: {', '.join(map(str, duplicate_invoices))}",
             )
 
         # 9. Check for existing invoice numbers in database and gather details
         existing_invoices_details = []
-        for invoice_no in df['invoice_no'].unique():
+        for invoice_no in df["invoice_no"].unique():
             if pd.isna(invoice_no):
                 continue
-            
+
             if isinstance(invoice_no, float):
                 invoice_no_query = str(int(invoice_no))
             else:
@@ -843,45 +1052,59 @@ async def import_sales_data(
 
             existing_record = mydb.sales.find_one({"invoice_no": invoice_no_query})
             if existing_record:
-                existing_invoices_details.append({
-                    "invoice_no": invoice_no_query,
-                    "customer": existing_record.get('customer', 'N/A'),
-                    "invoice_date": existing_record.get('invoice_date').strftime('%Y-%m-%d') if existing_record.get('invoice_date') else 'N/A',
-                    "amount": existing_record.get('amount', 0),
-                    "existing_user": existing_record.get('user', 'N/A'),
-                    "date_created": existing_record.get('date_created').strftime('%Y-%m-%d %H:%M:%S') if existing_record.get('date_created') else 'N/A'
-                })
-        
+                existing_invoices_details.append(
+                    {
+                        "invoice_no": invoice_no_query,
+                        "customer": existing_record.get("customer", "N/A"),
+                        "invoice_date": existing_record.get("invoice_date").strftime(
+                            "%Y-%m-%d"
+                        )
+                        if existing_record.get("invoice_date")
+                        else "N/A",
+                        "amount": existing_record.get("amount", 0),
+                        "existing_user": existing_record.get("user", "N/A"),
+                        "date_created": existing_record.get("date_created").strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
+                        if existing_record.get("date_created")
+                        else "N/A",
+                    }
+                )
+
         if existing_invoices_details:
             # Format the error message with detailed information
-            error_details = "\n".join([
-                f"Invoice No: {d['invoice_no']}\n"
-                f"- Customer: {d['customer']}\n"
-                f"- Invoice Date: {d['invoice_date']}\n"
-                f"- Amount: {d['amount']}\n"
-                f"- Created By: {d['existing_user']}\n"
-                f"- Created On: {d['date_created']}\n"
-                for d in existing_invoices_details
-            ])
-            
+            error_details = "\n".join(
+                [
+                    f"Invoice No: {d['invoice_no']}\n"
+                    f"- Customer: {d['customer']}\n"
+                    f"- Invoice Date: {d['invoice_date']}\n"
+                    f"- Amount: {d['amount']}\n"
+                    f"- Created By: {d['existing_user']}\n"
+                    f"- Created On: {d['date_created']}\n"
+                    for d in existing_invoices_details
+                ]
+            )
+
             raise HTTPException(
                 status_code=400,
                 detail={
                     "message": "The following invoices already exist in the database:",
                     "existing_invoices": existing_invoices_details,
-                    "error_details": error_details
-                }
+                    "error_details": error_details,
+                },
             )
 
         # 10. Prepare records for insertion
         records = []
         for _, row in df.iterrows():
             record = row.where(pd.notna(row), None).to_dict()
-            record.update({
-                "user": username,
-                "date_created": datetime.now(timezone.utc),
-                "date_updated": datetime.now(timezone.utc)
-            })
+            record.update(
+                {
+                    "user": username,
+                    "date_created": datetime.now(timezone.utc),
+                    "date_updated": datetime.now(timezone.utc),
+                }
+            )
             records.append(record)
 
         # 11. Insert records into MongoDB
@@ -903,41 +1126,39 @@ async def import_sales_data(
         return {
             "status": "success",
             "message": f"Successfully imported {len(result.inserted_ids)} records",
-            "inserted_count": len(result.inserted_ids)
+            "inserted_count": len(result.inserted_ids),
         }
 
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error importing data: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error importing data: {str(e)}")
+
 
 @api_sales.get("/download-sales-report/")
 async def download_sales_report(username: str = Depends(get_current_user)):
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
 
-    if 'Sales' in roleAuthenticate['allowed_access']:
+    if "Sales" in roleAuthenticate["allowed_access"]:
         try:
             # Query all sales data from MongoDB
-            sales_data = list(mydb.sales.find({}, {'_id': 0}))  # Exclude _id field
-            
+            sales_data = list(mydb.sales.find({}, {"_id": 0}))  # Exclude _id field
+
             # Convert to DataFrame
             df = pd.DataFrame(sales_data)
-            
+
             # Create an in-memory file
             output = io.BytesIO()
-            
+
             # Save as ODS file
-            df.to_excel(output, engine='openpyxl', index=False)
+            df.to_excel(output, engine="openpyxl", index=False)
             output.seek(0)
-            
+
             return StreamingResponse(
                 output,
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={"Content-Disposition": "attachment; filename=SALES.xlsx"}
+                headers={"Content-Disposition": "attachment; filename=SALES.xlsx"},
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -947,13 +1168,16 @@ async def download_sales_report(username: str = Depends(get_current_user)):
             detail="Not Authorized",
         )
 
+
 @api_sales.get("/api-autocomplete-vendor-customer/")
-async def autocomplete_vendor_customer(term: Optional[str] = None, username: str = Depends(get_current_user)):
+async def autocomplete_vendor_customer(
+    term: Optional[str] = None, username: str = Depends(get_current_user)
+):
     """Autocomplete vendor/customer names from customers and previous sales"""
     try:
         results = []
         search_term = term.strip().lower() if term else ""
-        
+
         # Get unique customers from sales collection
         customers = []
         try:
@@ -963,41 +1187,42 @@ async def autocomplete_vendor_customer(term: Optional[str] = None, username: str
         except Exception as e:
             print(f"Error getting customers from sales: {e}")
             customers = []
-        
+
         # Get customer names from customer_profile collection
         customer_profiles = []
         try:
             profiles = mydb.customer_profile.find({})
             for profile in profiles:
-                if 'bussiness_name' in profile and profile['bussiness_name']:
-                    customer_name = str(profile['bussiness_name']).strip()
+                if "bussiness_name" in profile and profile["bussiness_name"]:
+                    customer_name = str(profile["bussiness_name"]).strip()
                     if customer_name:
                         customer_profiles.append(customer_name)
         except Exception as e:
             print(f"Error getting customers from customer_profile: {e}")
             pass
-        
+
         # Combine all customers and remove duplicates
         all_customers = list(set(customers + customer_profiles))
-        
+
         # Filter and sort by relevance
         if search_term:
             filtered = [c for c in all_customers if search_term in str(c).lower()]
             # Sort by how close the match is (exact matches first)
-            filtered.sort(key=lambda x: (not str(x).lower().startswith(search_term), len(str(x)), str(x).lower()))
+            filtered.sort(
+                key=lambda x: (
+                    not str(x).lower().startswith(search_term),
+                    len(str(x)),
+                    str(x).lower(),
+                )
+            )
         else:
             filtered = sorted([str(c) for c in all_customers])
-        
+
         # Return top 10 results
         results = filtered[:10]
-        
-        return {
-            "suggestions": results
-        }
-        
+
+        return {"suggestions": results}
+
     except Exception as e:
         print(f"Autocomplete error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-
