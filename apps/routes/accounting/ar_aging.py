@@ -677,110 +677,165 @@ async def get_sales_report(request: Request,
 
 @api_ar_aging_report.get("/api-get-per-customer-balance")
 async def get_list_customer_balance(
+    request: Request,
     username: str = Depends(get_current_user), 
     balance_filter: Optional[str] = None,
     date_to: Optional[str] = None,
     term: Optional[str] = None
 ):
     try:
-        # Initial match stage for filtering customers by name from the beginning
-        match_stage = {}
-        if term:
-            match_stage["customer_name"] = {"$regex": term, "$options": "i"}
-
-        # Date filtering for payments
-        payment_match_conditions = {'$expr': {'$eq': ['$invoice_no', '$$invoice_no']}}
-        if date_to:
-            try:
-                date_to_dt = datetime.strptime(date_to, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
-                payment_match_conditions['$and'] = [
-                    payment_match_conditions,
-                    {'date': {'$lte': date_to_dt}}
-                ]
-            except (ValueError, TypeError):
-                pass
-
-        # Main pipeline starting from customers
-        pipeline = [
-            {"$match": match_stage},  # Start with filtered customer list
-            {
-                "$lookup": {
-                    "from": "sales",
-                    "localField": "customer_name",
-                    "foreignField": "customer",
-                    "as": "sales_docs"
-                }
-            },
-            {"$unwind": "$sales_docs"},  # Unwind sales documents
-            {
-                "$replaceRoot": {"newRoot": "$sales_docs"}  # Promote sales docs to the top level
-            },
-            {
-                "$lookup": {
-                    "from": "payment",
-                    "let": {"invoice_no": "$invoice_no"},
-                    "pipeline": [
-                        {"$match": payment_match_conditions},
-                        {
-                            "$group": {
-                                "_id": "$invoice_no",
-                                "total_cash": {"$sum": "$cash_amount"},
-                                "total_2307": {"$sum": "$amount_2307"}
-                            }
-                        }
-                    ],
-                    "as": "payment_info"
-                }
-            },
-            {
-                "$addFields": {
-                    "total_cash": {"$ifNull": [{"$arrayElemAt": ["$payment_info.total_cash", 0]}, 0]},
-                    "total_2307": {"$ifNull": [{"$arrayElemAt": ["$payment_info.total_2307", 0]}, 0]}
-                }
-            },
-            {
-                "$addFields": {
-                    "balance": {"$subtract": ["$amount", {"$add": ["$total_cash", "$total_2307"]}]}
-                }
-            },
-            {
-                "$group": {
-                    "_id": {"customer": "$customer", "customer_id": "$customer_id"},
-                    "total_balance": {"$sum": "$balance"},
-                    "category": {"$first": "$category"}
-                }
-            }
-        ]
+        redis_client = request.app.state.redis
+        cache_key = f"customer_balance:{term}:{balance_filter}:{date_to}"
         
-        # Balance filtering
-        if balance_filter == "positive":
-            pipeline.append({"$match": {"total_balance": {"$gt": 0}}})
-        elif balance_filter == "zero":
-            pipeline.append({"$match": {"total_balance": {"$eq": 0}}})
-        elif balance_filter == "negative":
-            pipeline.append({"$match": {"total_balance": {"$lt": 0}}})
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                return json.loads(cached_data)
+        except Exception as redis_err:
+            print(f"Redis error during GET customer_balance: {redis_err}")
 
-        # Final projection
-        pipeline.extend([
-            {
-                "$sort": {"_id.customer": 1}
-            },
-            {
-                "$project": {
-                    "_id": 0,
-                    "customer": "$_id.customer",
-                    "customer_id": "$_id.customer_id",
-                    "total_balance": 1,
-                    "category": 1
-                }
+        # Aggregate total sales per customer
+        sales_pipeline = [
+            {"$group": {"_id": "$customer", "total_sales": {"$sum": "$amount"}}}
+        ]
+        sales_data = list(mydb.sales.aggregate(sales_pipeline))
+        sales_dict = {item['_id']: item['total_sales'] for item in sales_data}
+
+        # Aggregate total payments per customer
+        payment_pipeline = [
+            {"$group": {"_id": "$customer", "total_payment": {"$sum": {"$add": ["$cash_amount", "$amount_2307"]}}}}
+        ]
+        payment_data = list(mydb.payment.aggregate(payment_pipeline))
+        payment_dict = {item['_id']: item['total_payment'] for item in payment_data}
+
+        # Get all unique customers from both sales and payment
+        all_customers = set(sales_dict.keys()) | set(payment_dict.keys())
+        
+        # Get customer details from customer_vendor_profile
+        customer_details = {
+            c['bussiness_name']: {
+                'customer_id': c.get('customer_vendor_id', ''),
+                'category': c.get('category', '')
             }
-        ])
+            for c in mydb.customer_vendor_profile.find({}, {"bussiness_name": 1, "customer_vendor_id": 1, "category": 1})
+        }
 
-        result = list(mydb.customer_profile.aggregate(pipeline))
+        # Calculate balance for each customer
+        result = []
+        for customer_name in all_customers:
+            # Apply term filter
+            if term and term.lower() not in customer_name.lower():
+                continue
+                
+            cust_info = customer_details.get(customer_name, {})
+            total_sales = sales_dict.get(customer_name, 0)
+            total_payment = payment_dict.get(customer_name, 0)
+            balance = total_sales - total_payment
+            
+            # Apply balance filter
+            if balance_filter == "positive" and balance <= 0:
+                continue
+            elif balance_filter == "zero" and balance != 0:
+                continue
+            elif balance_filter == "negative" and balance >= 0:
+                continue
+            
+            result.append({
+                "customer": customer_name,
+                "customer_id": cust_info.get('customer_id', ''),
+                "total_balance": balance,
+                "category": cust_info.get('category', '')
+            })
+
+        # Sort by customer name
+        result.sort(key=lambda x: x['customer'])
+
+        try:
+            redis_client.setex(cache_key, 3600, json.dumps(result))
+        except Exception as redis_err:
+            print(f"Redis error during SET customer_balance: {redis_err}")
+
         return result
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving customer balances: {e}")
+
+
+@api_ar_aging_report.get("/api-get-top-customer-balance")
+async def get_top_customer_balance(
+    request: Request,
+    username: str = Depends(get_current_user),
+    limit: int = 10
+):
+    try:
+        redis_client = request.app.state.redis
+        cache_key = f"top_customer_balance:{limit}"
+        
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                return json.loads(cached_data)
+        except Exception as redis_err:
+            print(f"Redis error during GET top_customer_balance: {redis_err}")
+
+        # Aggregate total sales per customer
+        sales_pipeline = [
+            {"$group": {"_id": "$customer", "total_sales": {"$sum": "$amount"}}}
+        ]
+        sales_data = list(mydb.sales.aggregate(sales_pipeline))
+        sales_dict = {item['_id']: item['total_sales'] for item in sales_data}
+
+        # Aggregate total payments per customer
+        payment_pipeline = [
+            {"$group": {"_id": "$customer", "total_payment": {"$sum": {"$add": ["$cash_amount", "$amount_2307"]}}}}
+        ]
+        payment_data = list(mydb.payment.aggregate(payment_pipeline))
+        payment_dict = {item['_id']: item['total_payment'] for item in payment_data}
+
+        # Get all unique customers from both sales and payment
+        all_customers = set(sales_dict.keys()) | set(payment_dict.keys())
+        
+        # Get customer details from customer_vendor_profile
+        customer_details = {
+            c['bussiness_name']: {
+                'customer_id': c.get('customer_vendor_id', ''),
+                'category': c.get('category', '')
+            }
+            for c in mydb.customer_vendor_profile.find({}, {"bussiness_name": 1, "customer_vendor_id": 1, "category": 1})
+        }
+
+        # Calculate balance for each customer
+        result = []
+        for customer_name in all_customers:
+            cust_info = customer_details.get(customer_name, {})
+            total_sales = sales_dict.get(customer_name, 0)
+            total_payment = payment_dict.get(customer_name, 0)
+            balance = total_sales - total_payment
+            
+            # Only include customers with positive balance
+            if balance > 0:
+                result.append({
+                    "customer": customer_name,
+                    "customer_id": cust_info.get('customer_id', ''),
+                    "total_balance": balance,
+                    "category": cust_info.get('category', '')
+                })
+
+        # Sort by balance descending (highest first)
+        result.sort(key=lambda x: x['total_balance'], reverse=True)
+        
+        # Apply limit
+        result = result[:limit]
+
+        try:
+            redis_client.setex(cache_key, 3600, json.dumps(result))
+        except Exception as redis_err:
+            print(f"Redis error during SET top_customer_balance: {redis_err}")
+
+        return result
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving top customer balances: {e}")
 
 
 

@@ -274,7 +274,9 @@ async def import_collection_data(
             data_keys = redis_client.keys("sales_data_*")
             balance_keys = redis_client.keys("customer_balance_*")
             ar_keys = ["ar_aging_report", "ar_sum"]
-            all_keys = data_keys + balance_keys + ar_keys
+            payment_list_keys = redis_client.keys("payment_list:*")
+            top_customer_keys = redis_client.keys("top_customer_balance:*")
+            all_keys = data_keys + balance_keys + ar_keys + payment_list_keys + top_customer_keys
             if all_keys:
                 redis_client.delete(*all_keys)
         except Exception as redis_err:
@@ -420,7 +422,8 @@ async def create_sales_transaction(request: Request, data: paymentBM, username: 
                 data_keys = redis_client.keys("sales_data_*")
                 balance_keys = redis_client.keys("customer_balance_*")
                 ar_keys = ["ar_aging_report", "ar_sum"]
-                all_keys = data_keys + balance_keys + ar_keys
+                payment_list_keys = redis_client.keys("payment_list:*")
+                all_keys = data_keys + balance_keys + ar_keys + payment_list_keys
                 if all_keys:
                     redis_client.delete(*all_keys)
             except Exception as redis_err:
@@ -478,7 +481,8 @@ async def create_payments_batch(request: Request, data: List[paymentBM], usernam
                 data_keys = redis_client.keys("sales_data_*")
                 balance_keys = redis_client.keys("customer_balance_*")
                 ar_keys = ["ar_aging_report", "ar_sum"]
-                all_keys = data_keys + balance_keys + ar_keys
+                payment_list_keys = redis_client.keys("payment_list:*")
+                all_keys = data_keys + balance_keys + ar_keys + payment_list_keys
                 if all_keys:
                     redis_client.delete(*all_keys)
             except Exception as redis_err:
@@ -554,7 +558,9 @@ async def update_customer_profile_api(request: Request, id: str, data: paymentBM
             data_keys = redis_client.keys("sales_data_*")
             balance_keys = redis_client.keys("customer_balance_*")
             ar_keys = ["ar_aging_report", "ar_sum"]
-            all_keys = data_keys + balance_keys + ar_keys
+            payment_list_keys = redis_client.keys("payment_list:*")
+            top_customer_keys = redis_client.keys("top_customer_balance:*")
+            all_keys = data_keys + balance_keys + ar_keys + payment_list_keys + top_customer_keys
             if all_keys:
                 redis_client.delete(*all_keys)
         except Exception as redis_err:
@@ -847,11 +853,22 @@ async def get_payment_dashboard(
 
 @api_payment.get("/api-get-payment-with-params/")
 async def get_sales(
+    request: Request,
     username: str = Depends(get_current_user),
     date_from: Optional[date] = None,
     date_to: Optional[date] = None
 ):
     try:
+        redis_client = request.app.state.redis
+        cache_key = f"payment_list:{date_from}:{date_to}"
+        
+        try:
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                return json.loads(cached_data)
+        except Exception as redis_err:
+            print(f"Redis error during GET payment_list: {redis_err}")
+
         # Build the filter based on the provided dates
         filter_conditions = {}
         if date_from:
@@ -880,6 +897,11 @@ async def get_sales(
             "date_created": data.get('date_created'),
             "payment_method": data.get('payment_method')
         } for data in result]
+
+        try:
+            redis_client.setex(cache_key, 3600, json.dumps(paymentData))
+        except Exception as redis_err:
+            print(f"Redis error during SET payment_list: {redis_err}")
 
         return paymentData
 

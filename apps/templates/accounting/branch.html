@@ -1,14 +1,7 @@
 {% extends 'dashboard.html' %} {% block content %}
 
-<div id="main" class="main">
   <div class="pagetitle">
     <h1>Branch</h1>
-    <!-- <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a >Home</a></li>
-          <li class="breadcrumb-item active">Dashboard</li>
-        </ol>
-      </nav> -->
   </div>
   <!-- End Page Title -->
 
@@ -21,48 +14,34 @@
 
             <!-- General Form Elements -->
             <form>
-              <div class="row mb-3">
-               
-                <div class="col-sm-9">
-                  <input type="text" id="id" class="form-control" hidden />
-                </div>
+              <input type="text" id="id" class="form-control form-control-sm" hidden />
+
+              <div class="form-group mb-3">
+                <label for="branchName" class="form-label-small">Branch Name</label>
+                <input type="text" id="branchName" class="form-control form-control-sm" />
               </div>
 
-
-              <div class="row mb-3">
-                <label for="inputText" class="col-sm-3 col-form-label"
-                  >Branch Name</label
-                >
-                <div class="col-sm-9">
-                  <input type="text" id="branchName" class="form-control" />
-                </div>
-              </div>
-
-              <div class="row mb-3">
-                <label for="inputPassword" class="col-sm-3 col-form-label"
-                  >Address</label
-                >
-                <div class="col-sm-9">
-                  <textarea
-                    class="form-control"
+              <div class="form-group mb-3">
+                <label for="branchAddress" class="form-label-small">Address</label>
+                <textarea
+                    class="form-control form-control-sm"
                     id="branchAddress"
                     style="height: 100px"
                   ></textarea>
-                </div>
               </div>
 
-              <div class="text-center">
+              <div class="text-center pt-3 border-t">
                 <button
                   type="button"
                   id="btn_save_branch"
-                  class="btn btn-primary"
+                  class="btn btn-primary btn-sm"
                 >
                   Add
                 </button>
                 <button
                   type="button"
                   id="btn_update_branch"
-                  class="btn btn-danger"
+                  class="btn btn-danger btn-sm"
                   style="display: none;"
                 >
                   Cancel
@@ -81,7 +60,7 @@
             <!-- General Form Elements -->
             <table
               id="table_branch"
-              class="table table-bordered"
+              class="table table-bordered table-sm"
               style="text-align: center"
             >
               <thead class="table-dark">
@@ -100,7 +79,5 @@
   </section>
 
   <script src="/static/accounting/branch.js"></script>
-</div>
-<!-- End #main -->
 
 {% endblock %}

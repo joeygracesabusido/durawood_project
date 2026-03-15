@@ -27,6 +27,8 @@ jQuery(document).ready(function($) {
                 $("#category").val(ui.item.category)
                 $("#tax_type").val(ui.item.tax_type)
 
+                // Fetch balance for selected customer
+                getCustomerBalance();
 
                 return false; // Prevent the default select action
             }
@@ -224,6 +226,11 @@ async function saveNewSale() {
 
 $(document).ready(function () {
   $("#btn_save_branch").click(saveNewSale);
+  
+  // Update balance when customer field loses focus
+  $("#customer").on("blur", function() {
+      getCustomerBalance();
+  });
 });
 
 
@@ -257,9 +264,14 @@ if (tax_type === 'Vatable') {
 
     const stringNumberNetOfVat = net_of_vat.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
     const stringNumberVat = vat.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+    const stringAmount = amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
 
     $('#net_of_vat').val(stringNumberNetOfVat);
     $('#vat').val(stringNumberVat);
+    
+    // Update big display and final total in new template
+    $('#display_amount').text(stringAmount);
+    $('#final_total').text(stringAmount);
 }
 
 

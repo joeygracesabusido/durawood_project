@@ -155,7 +155,8 @@ async def create_sales_transaction(
                 sum_keys = redis_client.keys("sales_sum_*")
                 balance_keys = redis_client.keys("customer_balance_*")
                 ar_keys = ["ar_aging_report", "ar_sum"]
-                all_keys = data_keys + sum_keys + balance_keys + ar_keys
+                top_customer_keys = redis_client.keys("top_customer_balance:*")
+                all_keys = data_keys + sum_keys + balance_keys + ar_keys + top_customer_keys
                 if all_keys:
                     redis_client.delete(*all_keys)
             except Exception as redis_err:
@@ -665,7 +666,8 @@ async def update_customer_profile_api(
                 sum_keys = redis_client.keys("sales_sum_*")
                 balance_keys = redis_client.keys("customer_balance_*")
                 ar_keys = ["ar_aging_report", "ar_sum"]
-                all_keys = data_keys + sum_keys + balance_keys + ar_keys
+                top_customer_keys = redis_client.keys("top_customer_balance:*")
+                all_keys = data_keys + sum_keys + balance_keys + ar_keys + top_customer_keys
                 if all_keys:
                     redis_client.delete(*all_keys)
             except Exception as redis_err:
