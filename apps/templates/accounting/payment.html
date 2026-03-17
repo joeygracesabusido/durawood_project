@@ -1,6 +1,25 @@
 {% extends 'dashboard.html' %}
 
+{% block css %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<style>
+.ui-autocomplete {
+    z-index: 99999 !important;
+    background: yellow !important;
+    background-color: yellow !important;
+}
+.ui-autocomplete .ui-menu-item {
+    background: yellow !important;
+    background-color: yellow !important;
+}
+</style>
+{% endblock %}
+
 {% block content %}
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+</head>
 
   <div class="pagetitle">
     <h1>Payment Transaction</h1>
