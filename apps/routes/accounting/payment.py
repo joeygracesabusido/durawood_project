@@ -778,21 +778,22 @@ async def autocomplete_payment_balance(
         # Get all unique customers from both collections
         all_customers = set(sales_dict.keys()) | set(payment_dict.keys())
 
-        # Fetch customer details (customer_id)
+        # Fetch customer details from customer_vendor_profile
         customer_details = {
-            c["customer"]: c["customer_id"]
-            for c in mydb.customer_profile.find({}, {"customer": 1, "customer_id": 1})
+            c["bussiness_name"]: c["customer_vendor_id"]
+            for c in mydb.customer_vendor_profile.find({}, {"bussiness_name": 1, "customer_vendor_id": 1})
         }
 
         # Calculate balance for each customer
         balance_data = []
         for customer in all_customers:
+            if not customer: continue
             sales = sales_dict.get(customer, 0)
             payment = payment_dict.get(customer, 0)
             balance = sales - payment
 
             # Apply term filter
-            if term and term.lower() not in customer.lower():
+            if term and term.lower() not in str(customer).lower():
                 continue
 
             balance_data.append(
@@ -827,21 +828,29 @@ async def autocomplete_customer_invoices(
     term: Optional[str] = None, username: str = Depends(get_current_user)
 ):
     try:
-        # Get all invoices with customer info
-        invoice_pipeline = [
-            {"$project": {"customer": 1, "invoice_no": 1, "amount": 1, "date": 1}}
-        ]
+        # Optimization: Filter by term in the query if provided
+        query = {}
+        if term:
+            query = {
+                "$or": [
+                    {"customer": {"$regex": term, "$options": "i"}},
+                    {"invoice_no": {"$regex": term, "$options": "i"}}
+                ]
+            }
 
         invoices = list(
             mydb.sales.find(
-                {}, {"customer": 1, "invoice_no": 1, "amount": 1, "date": 1}
-            )
+                query, {"customer": 1, "invoice_no": 1, "amount": 1, "date": 1, "customer_id": 1}
+            ).limit(100)
         )
 
         # Get paid amounts per invoice
+        found_invoice_nos = [inv.get("invoice_no") for inv in invoices if inv.get("invoice_no")]
+        
         payment_by_invoice = {}
-        for payment in mydb.payment.find():
-            if payment.get("invoice_no"):
+        if found_invoice_nos:
+            payments = list(mydb.payment.find({"invoice_no": {"$in": found_invoice_nos}}))
+            for payment in payments:
                 inv_no = payment.get("invoice_no")
                 payment_by_invoice[inv_no] = (
                     payment_by_invoice.get(inv_no, 0)
@@ -849,37 +858,16 @@ async def autocomplete_customer_invoices(
                     + payment.get("amount_2307", 0)
                 )
 
-        # Get customer details
-        customer_details = {
-            c["customer"]: c["customer_id"]
-            for c in mydb.customer_profile.find({}, {"customer": 1, "customer_id": 1})
-        }
-
         # Build invoice list with balance
         invoice_list = []
         for inv in invoices:
             invoice_no = inv.get("invoice_no", "")
-            if not invoice_no:
-                continue
-
             customer = inv.get("customer", "")
-            if not customer:
-                continue
+            customer_id = inv.get("customer_id", "")
 
             sales_amount = inv.get("amount", 0)
             paid_amount = payment_by_invoice.get(invoice_no, 0)
             balance = sales_amount - paid_amount
-
-            # Apply term filter on customer or invoice
-            search_term = term.lower() if term else ""
-            if (
-                search_term
-                and search_term not in customer.lower()
-                and search_term not in invoice_no.lower()
-            ):
-                continue
-
-            customer_id = customer_details.get(customer, "")
 
             invoice_list.append(
                 {
@@ -891,7 +879,7 @@ async def autocomplete_customer_invoices(
             )
 
         # Sort by customer name
-        invoice_list.sort(key=lambda x: x["customer"])
+        invoice_list.sort(key=lambda x: str(x.get("customer", "")))
 
         return invoice_list
 

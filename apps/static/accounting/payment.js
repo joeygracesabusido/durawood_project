@@ -1,42 +1,66 @@
 jQuery(document).ready(function($) {
-    // Initialize autocomplete immediately
-    $("#customer").autocomplete({
-        source: function(request, response) {
-            $.ajax({
-                url: "/api-autocomplete-customer-invoices/", 
-                data: { term: request.term }, 
-                dataType: "json",               
-                success: function(data) {             
-                    var suggestions = data.map(function(item) {
-                        return {
-                            label: item.customer + " - " + item.invoice_no + " - ₱" + item.balance.toLocaleString(),
-                            value: item.customer,
-                            customer_id: item.customer_id,
-                            invoice_no: item.invoice_no,
-                            balance: item.balance
-                        };
-                    });
-                    response(suggestions);
-                },
-                error: function(err) {
-                    console.error("Error fetching autocomplete data:", err);
+    function initCustomerAutocomplete() {
+        if ($("#customer").data("ui-autocomplete")) {
+            return;
+        }
+        
+        $("#customer").autocomplete({
+            appendTo: ".autocomplete-wrapper",
+            source: function(request, response) {
+                $.ajax({
+                    url: "/api-autocomplete-customer-invoices/", 
+                    data: { term: request.term }, 
+                    dataType: "json",               
+                    success: function(data) {             
+                        console.log("Autocomplete data:", data);
+                        var suggestions = data.map(function(item) {
+                            var balance = parseFloat(item.balance) || 0;
+                            return {
+                                label: (item.customer || 'Unknown') + " - " + (item.invoice_no || 'N/A') + " - ₱" + balance.toLocaleString('en-US', {minimumFractionDigits: 2}),
+                                value: item.customer,
+                                customer_id: item.customer_id,
+                                invoice_no: item.invoice_no,
+                                balance: balance
+                            };
+                        });
+                        response(suggestions);
+                    },
+                    error: function(err) {
+                        console.error("Error fetching autocomplete data:", err);
+                    }
+                });
+            },
+            minLength: 2,
+            autoFocus: true,
+            position: { my: "left top", at: "left bottom", collision: "none" },
+            open: function() {
+                $(this).autocomplete("widget").css({
+                    "width": ($(this).parent().width()) + "px",
+                    "z-index": 100000
+                });
+            },
+            select: function(event, ui) {
+                $("#customer").val(ui.item.value);
+                $("#customer_id").val(ui.item.customer_id);
+                $("#invoice_no").val(ui.item.invoice_no);
+                $("#balance").val(ui.item.balance.toLocaleString('en-US', {minimumFractionDigits: 2}));
+                
+                // Get customer summary balance
+                if (typeof window.getCustomerBalance === 'function') {
+                    window.getCustomerBalance();
                 }
-            });
-        },
-        minLength: 1,
-        open: function(event, ui) {
-            $(".ui-autocomplete").css({
-                "z-index": 99999,
-                "background": "yellow",
-                "background-color": "yellow"
-            });
-        },
-        select: function(event, ui) {
-            $("#customer").val(ui.item.value);
-            $("#customer_id").val(ui.item.customer_id);
-            $("#invoice_no").val(ui.item.invoice_no);
-            $("#balance").val(ui.item.balance.toLocaleString());
-            return false;
+                return false;
+            }
+        });
+    }
+
+    // Initialize once
+    initCustomerAutocomplete();
+
+    // Trigger search if user clicks on field
+    $("#customer").on("focus", function() {
+        if ($(this).val().length >= 2) {
+            $(this).autocomplete("search", $(this).val());
         }
     });
 
