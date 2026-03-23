@@ -512,6 +512,13 @@
             </a>
           </li> -->
         <!-- End Blank Page Nav -->
+
+        <li class="nav-item">
+          <a class="nav-link main-link" href="/">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Logout</span>
+          </a>
+        </li>
       </ul>
     </aside>
     <!-- End Sidebar-->
@@ -602,6 +609,13 @@
         document.getElementById("side-menu").style.width = "0";
         document.getElementById("main").style.marginLeft = "0";
         window.location.assign("/dashboard/");
+      }
+
+      function logout() {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("token");
+        sessionStorage.clear();
+        window.location.href = "/login/";
       }
     </script>
 
