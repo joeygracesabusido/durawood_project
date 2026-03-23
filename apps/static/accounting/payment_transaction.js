@@ -80,7 +80,7 @@ $(document).ready(function () {
 
                 let rows = '';
                 transactions.forEach(function(txn) {
-                    if (txn.type === 'Sales') {
+                    if (txn.type === 'Sales' && txn.balance > 0) {
                         const invoiceNo = typeof txn.invoice_no !== 'undefined' ? String(txn.invoice_no) : '';
                         rows += `
                             <tr data-invoice-no="${invoiceNo}">
