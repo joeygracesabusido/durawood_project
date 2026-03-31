@@ -48,20 +48,38 @@ $(document).ready(function () {
   // Render transactions table to desired format
   function fetchTransactionHistory(customer, dateFrom, dateTo) {
     const balanceOnly = $('#balanceOnly').is(':checked');
+    const searchRef = $('#searchRef').val().trim().toLowerCase();
+    console.log('Search ref:', searchRef);
+    
     let url = `/api-get-transaction-history?customer=${encodeURIComponent(customer)}`;
     if (dateFrom) url += `&date_from=${encodeURIComponent(dateFrom)}`;
     if (dateTo) url += `&date_to=${encodeURIComponent(dateTo)}`;
     if (balanceOnly) url += `&balance_only=true`;
 
-    console.log('Fetching transaction history with URL:', url); // Add this line
+    console.log('Fetching transaction history with URL:', url);
 
     $.ajax({
       url,
       type: 'GET',
       success: function (data) {
+        console.log('Received data, items count:', Array.isArray(data) ? data.length : (data.transactions || []).length);
+        
         // Support old API (array) and new API ({ beginning_balance, transactions })
         const beginningBalance = Array.isArray(data) ? 0 : (data.beginning_balance || 0);
-        const list = Array.isArray(data) ? data : (data.transactions || []);
+        let list = Array.isArray(data) ? data : (data.transactions || []);
+        console.log('List before filter:', list.length, 'searchRef:', searchRef);
+        
+        // Filter by search reference (client-side)
+        if (searchRef) {
+          list = list.filter(item => {
+            const invoiceNo = (item.invoice_no || '').toLowerCase();
+            const crNo = (item.cr_no || '').toLowerCase();
+            const remarks = (item.remarks || '').toLowerCase();
+            return invoiceNo.includes(searchRef) || crNo.includes(searchRef) || remarks.includes(searchRef);
+          });
+          console.log('List after filter:', list.length);
+        }
+
         const debitsOnly = $('#debitsOnly').is(':checked');
         let rows = '';
         let netCumulative = beginningBalance || 0;      // debits - credits
@@ -121,13 +139,12 @@ $(document).ready(function () {
               `;
             } else {
               const parts = [];
-              if (item.invoice_no) parts.push(`${item.invoice_no}`);
-              if (item.cr_no) parts.push(`Ref ${item.cr_no}`);
+              if (item.invoice_no) parts.push(`Inv: ${item.invoice_no}`);
+              if (item.cr_no) parts.push(`CR: ${item.cr_no}`);
+              if (item.remarks) parts.push(`Ref: ${item.remarks}`);
               if (item.payment_method) parts.push(item.payment_method);
-              const dOnly = formatDateOnly(item.date);
-              if (dOnly) parts.push(dOnly);
               referenceHtml = `
-                <div class="text-gray-400">Payment: ${parts.join(' / ')}</div>
+                <div class="text-gray-400">Payment: ${parts.join(' | ')}</div>
               `;
             }
 
@@ -181,6 +198,26 @@ $(document).ready(function () {
   // Always call fetchTransactionHistory on load
   populateCustomerHeader(customer);
   fetchTransactionHistory(customer);
+
+  // Search on typing (debounced)
+  let searchTimeout;
+  $('#searchRef').on('keyup', function () {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(function () {
+      const dateFrom = $('#dateFrom').val();
+      const dateTo = $('#dateTo').val();
+      fetchTransactionHistory(customer, dateFrom, dateTo);
+    }, 300);
+  });
+
+  // Clear search
+  $('#searchRef').on('keydown', function (e) {
+    if (e.key === 'Escape' || (e.key === 'Backspace' && !$(this).val())) {
+      const dateFrom = $('#dateFrom').val();
+      const dateTo = $('#dateTo').val();
+      fetchTransactionHistory(customer, dateFrom, dateTo);
+    }
+  });
 
   // Apply date range filter
   $('#applyFilter').on('click', function () {
