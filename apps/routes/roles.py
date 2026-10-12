@@ -4,13 +4,14 @@ from fastapi.responses import HTMLResponse
 from typing import Union, List, Optional, Dict
 from pydantic import BaseModel
 from bson import ObjectId
+from bson.errors import InvalidId
 
 from  apps.database.mongodb import create_mongo_client
 mydb = create_mongo_client()
 
 
 
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from apps.authentication.authenticate_user import get_current_user
 
 api_roles = APIRouter()
@@ -27,16 +28,16 @@ async def get_sales_report(request: Request,
 
     role = mydb.login.find_one({"email_add":username})
 
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({'role': (role or {}).get("role")})
 
-    print(roleAuthenticate['allowed_access'])
+    print((roleAuthenticate.get("allowed_access") or []))
     
 
-    if 'Allowed Roles' in roleAuthenticate['allowed_access']:
+    if 'Allowed Roles' in (roleAuthenticate.get("allowed_access") or []):
 
 
 
-        return templates.TemplateResponse("accounting/roles.html", 
+        return templates.TemplateResponse(request, "accounting/roles.html", 
                                       {"request": request})
 
     else:
@@ -52,16 +53,18 @@ async def get_sales_report(request: Request,
 
 @api_roles.post("/api-insert-roles/", response_model=None)
 async def create_sales_transaction(data: rolesBM, username: str = Depends(get_current_user)):
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+    if not roleAuthenticate or "Allowed Roles" not in (roleAuthenticate.get("allowed_access") or []):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
     try:
 
-        role_collection = mydb['roles']
-        role_collection.create_index("role", unique=True)
         insertData = {
            
             "role": data.role,
             "allowed_access": data.allowed_access,
-            "date_updated": datetime.utcnow(),
-            "date_created": datetime.utcnow(),
+            "date_updated": datetime.now(timezone.utc),
+            "date_created": datetime.now(timezone.utc),
         }
 
         # Correct MongoDB insert operation
@@ -77,12 +80,12 @@ async def get_get(username: str = Depends(get_current_user)):
 
     role = mydb.login.find_one({"email_add":username})
 
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({'role': (role or {}).get("role")})
 
-    #print(roleAuthenticate['allowed_access'])
+    #print((roleAuthenticate.get("allowed_access") or []))
     
 
-    # if 'Allowed Roles' in roleAuthenticate['allowed_access']:
+    # if 'Allowed Roles' in (roleAuthenticate.get("allowed_access") or []):
 
 
     try:
@@ -117,16 +120,19 @@ async def get_get(username: str = Depends(get_current_user)):
 
 @api_roles.put("/api-update-role/{profile_id}", response_model=None)
 async def update_customer_profile_api(profile_id: str, data: rolesBM,username: str = Depends(get_current_user)):
-    obj_id = ObjectId(profile_id)
+    try:
+        obj_id = ObjectId(profile_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid id")
 
     role = mydb.login.find_one({"email_add":username})
 
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({'role': (role or {}).get("role")})
 
-    print(roleAuthenticate['allowed_access'])
+    print((roleAuthenticate.get("allowed_access") or []))
     
 
-    if 'Allowed Roles' in roleAuthenticate['allowed_access']:
+    if 'Allowed Roles' in (roleAuthenticate.get("allowed_access") or []):
 
         try:
 
@@ -134,7 +140,7 @@ async def update_customer_profile_api(profile_id: str, data: rolesBM,username: s
 
                 "role": data.role,
                 "allowed_access": data.allowed_access,
-                "date_updated": datetime.utcnow(),
+                "date_updated": datetime.now(timezone.utc),
                          
                   
                 }

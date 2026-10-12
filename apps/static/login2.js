@@ -12,11 +12,15 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    const search_url = `/api-login/?username1=${username}&password1=${password}`;
-    console.log(`Fetching from URL: ${search_url}`);
+    const search_url = `/api-login/`;
+    console.log(`Posting to URL: ${search_url}`);
 
     try {
-      const response = await fetch(search_url);
+      const response = await fetch(search_url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username1: username, password1: password}),
+      });
       const data = await response.json();
 
       console.log(data);

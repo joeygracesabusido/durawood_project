@@ -12,7 +12,8 @@ mydb = create_mongo_client()
 #from apps.views.sign_up_views import UserViews
 
 
-JWT_SECRET = 'myjwtsecret'
+import os
+JWT_SECRET = os.getenv("JWT_SECRET", "myjwtsecret")  # shortcut: set JWT_SECRET env in prod and rotate; changing it logs everyone out
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -44,10 +45,9 @@ def get_current_user(request:Request):
 
             else:
 
-                user = mydb.login.find_one({"username": username})
-                #user = UserViews.get_user_for_login(username=username)
+                user = mydb.login.find_one({"email_add": username})
 
-                if user == [] :
+                if not user or user.get("status") != "Approved":
                     raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail= "Not Authorized",
@@ -64,8 +64,7 @@ def get_current_user(request:Request):
             # headers={"WWW-Authenticate": "Basic"},
         )
 
-   
-
+    
 def get_current_user_details(request:Request):
 
     try :
@@ -94,10 +93,9 @@ def get_current_user_details(request:Request):
 
             else:
 
-                user = mydb.login.find_one({"username": username})
-                #user = UserViews.get_user_for_login(username=username)
+                user = mydb.login.find_one({"email_add": username})
 
-                if user == [] :
+                if not user or user.get("status") != "Approved":
                     raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail= "Not Authorized",

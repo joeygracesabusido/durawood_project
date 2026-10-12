@@ -8,6 +8,19 @@ from fastapi.security.utils import get_authorization_scheme_param
 from starlette.requests import Request
 from starlette.status import HTTP_401_UNAUTHORIZED
 
+import bcrypt
+
+
+def get_password_hash(password):
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def verify_password(password, hashed):
+    try:
+        return bcrypt.checkpw(password.encode(), hashed.encode())
+    except Exception:
+        return False
+
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2):
@@ -42,4 +55,4 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
                 )
             else:
                 return None
-        return  
+        return param

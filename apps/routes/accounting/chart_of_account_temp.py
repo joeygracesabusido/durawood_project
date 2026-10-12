@@ -19,5 +19,5 @@ templates = Jinja2Templates(directory="apps/templates")
 
 @api_chart_of_account_temp.get("/api-chart-of-account-temp/", response_class=HTMLResponse)
 async def api_chart_of_account_template(request: Request,username: str = Depends(get_current_user)):
-    return templates.TemplateResponse("accounting/chart_of_account.html", {"request": request})
+    return templates.TemplateResponse(request, "accounting/chart_of_account.html", {"request": request})
 

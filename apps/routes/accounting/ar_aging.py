@@ -14,7 +14,7 @@ from apps.database.mongodb import create_mongo_client
 mydb = create_mongo_client()
 
 
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from apps.authentication.authenticate_user import get_current_user
 # from apps.base_model.sales_bm import SalesBM
 # from apps.views.accounting.sales_views import SalesViews
@@ -33,8 +33,7 @@ async def get_apiTemplate_sales_report(
     request: Request, username: str = Depends(get_current_user)
 ):
 
-    return templates.TemplateResponse(
-        "accounting/ar_aging_report.html", {"request": request}
+    return templates.TemplateResponse(request, "accounting/ar_aging_report.html", {"request": request}
     )
 
 
@@ -50,10 +49,6 @@ async def get_sales(request: Request, username: str = Depends(get_current_user))
                 return json.loads(cached_data)
         except Exception as redis_err:
             print(f"Redis error during GET ar_aging: {redis_err}")
-
-        today = datetime.combine(
-            date.today(), datetime.min.time()
-        )  # Convert to datetime
 
         pipeline = [
             {
@@ -292,8 +287,7 @@ async def get_ar_report(username: str = Depends(get_current_user)):
 )
 async def get_sales_report(request: Request, username: str = Depends(get_current_user)):
 
-    return templates.TemplateResponse(
-        "accounting/ar_aging_per_category.html", {"request": request}
+    return templates.TemplateResponse(request, "accounting/ar_aging_per_category.html", {"request": request}
     )
 
 
@@ -429,7 +423,7 @@ async def get_ar_aging_per_category_dashboard(
         # Build date filter
         date_filter = {}
         if filter_type:
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             if filter_type == "today":
                 start_of_day = datetime(now.year, now.month, now.day)
                 end_of_day = start_of_day + timedelta(days=1)
@@ -577,7 +571,7 @@ async def get_ar_aging_per_category(
         # Build date filter
         date_filter = {}
         if filter_type:
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             if filter_type == "today":
                 start_of_day = datetime(now.year, now.month, now.day)
                 end_of_day = start_of_day + timedelta(days=1)
@@ -713,8 +707,7 @@ async def get_ar_aging_per_category(
 )
 async def get_sales_report(request: Request, username: str = Depends(get_current_user)):
 
-    return templates.TemplateResponse(
-        "accounting/customer_list_with_balance.html", {"request": request}
+    return templates.TemplateResponse(request, "accounting/customer_list_with_balance.html", {"request": request}
     )
 
 
@@ -913,8 +906,7 @@ async def get_temp_customer_transactions(
     request: Request, username: str = Depends(get_current_user)
 ):
 
-    return templates.TemplateResponse(
-        "accounting/customer_transaction.html", {"request": request}
+    return templates.TemplateResponse(request, "accounting/customer_transaction.html", {"request": request}
     )
 
 
@@ -1304,8 +1296,7 @@ async def get_temp_customer_transactions(
     request: Request, username: str = Depends(get_current_user)
 ):
 
-    return templates.TemplateResponse(
-        "accounting/customer_list_for_balance_details.html", {"request": request}
+    return templates.TemplateResponse(request, "accounting/customer_list_for_balance_details.html", {"request": request}
     )
 
 
@@ -1317,6 +1308,5 @@ async def get_temp_customer_transactions(
     request: Request, username: str = Depends(get_current_user)
 ):
 
-    return templates.TemplateResponse(
-        "accounting/customer_transaction_for_balance_details.html", {"request": request}
+    return templates.TemplateResponse(request, "accounting/customer_transaction_for_balance_details.html", {"request": request}
     )

@@ -25,7 +25,7 @@ templates = Jinja2Templates(directory="apps/templates")
 async def api_chart_of_account_template(request: Request,
                                         username: str = Depends(get_current_user)):
  
-    return templates.TemplateResponse("accounting/purchases.html", 
+    return templates.TemplateResponse(request, "accounting/purchases.html", 
                                       {"request": request})
 
 
@@ -127,14 +127,14 @@ async def api_sales_transaction(request: Request,
             PurchaseViews.insert_purchases_from_journal(customer_id=item,**entry)
          
         messeges = ["Data Has been Save"]
-        return templates.TemplateResponse("accounting/purchases.html", 
+        return templates.TemplateResponse(request, "accounting/purchases.html", 
                                                  {"request": request, "messeges": messeges})
 
 
     else:
         messeges = ["Debit and Credit Not Balanced"]
 
-    return templates.TemplateResponse("accounting/sales.html", 
+    return templates.TemplateResponse(request, "accounting/sales.html", 
                                       {"request": request, "messeges": messeges})
 
 

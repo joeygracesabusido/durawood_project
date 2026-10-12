@@ -20,19 +20,19 @@ templates = Jinja2Templates(directory="apps/templates")
 
 @api_payroll_temp.get("/api-payroll-temp/", response_class=HTMLResponse)
 async def api_ticketing(request: Request,username: str = Depends(get_current_user)):
-    return templates.TemplateResponse("payroll/add_employee.html", {"request": request})
+    return templates.TemplateResponse(request, "payroll/add_employee.html", {"request": request})
 
 @api_payroll_temp.get("/api-13th-month/", response_class=HTMLResponse)
 async def api_ticketing(request: Request,username: str = Depends(get_current_user)):
-    return templates.TemplateResponse("payroll/13thMonth.html", {"request": request})
+    return templates.TemplateResponse(request, "payroll/13thMonth.html", {"request": request})
 
 @api_payroll_temp.get("/api-payroll-1604-report/", response_class=HTMLResponse)
 async def api_ticketing(request: Request,username: str = Depends(get_current_user)):
-    return templates.TemplateResponse("payroll/1604_report.html", {"request": request})
+    return templates.TemplateResponse(request, "payroll/1604_report.html", {"request": request})
 
 @api_payroll_temp.get("/api-payroll-list/", response_class=HTMLResponse)
 async def api_ticketing(request: Request,username: str = Depends(get_current_user)):
-    return templates.TemplateResponse("payroll/payroll_list.html", {"request": request})
+    return templates.TemplateResponse(request, "payroll/payroll_list.html", {"request": request})
 
 @api_payroll_temp.get("/api-update-employee-temp/{id}", response_class=HTMLResponse)
 async def api_update_inventory_html(id: str, request: Request, username: str = Depends(get_current_user)):
@@ -75,7 +75,7 @@ async def api_update_inventory_html(id: str, request: Request, username: str = D
 
                 
                
-                return templates.TemplateResponse("payroll/update_employee.html", {"request": request,"employee_list_data":employee_list_data })
+                return templates.TemplateResponse(request, "payroll/update_employee.html", {"request": request,"employee_list_data":employee_list_data })
             else:
                 # Handle case where item with given id is not found (optional)
                 return JSONResponse(status_code=404, content={"message": "Employee item not found"})
@@ -89,13 +89,13 @@ async def api_update_inventory_html(id: str, request: Request, username: str = D
 
 @api_payroll_temp.get("/api-payroll-computation/", response_class=HTMLResponse)
 async def api_payroll_comp(request: Request,username: str = Depends(get_current_user)):
-    return templates.TemplateResponse("payroll/payroll_comp.html", {"request": request})
+    return templates.TemplateResponse(request, "payroll/payroll_comp.html", {"request": request})
 
 @api_payroll_temp.get("/api-payroll-comp2/", response_class=HTMLResponse)
 async def api_payroll_comp2(request: Request,username: str = Depends(get_current_user)):
-    return templates.TemplateResponse("payroll/payroll_comp2.html", {"request": request})
+    return templates.TemplateResponse(request, "payroll/payroll_comp2.html", {"request": request})
 
 @api_payroll_temp.get("/api-payroll-1601c-computation/", response_class=HTMLResponse)
 async def api_payroll_comp(request: Request,username: str = Depends(get_current_user)):
-    return templates.TemplateResponse("payroll/1601c_report.html", {"request": request})
+    return templates.TemplateResponse(request, "payroll/1601c_report.html", {"request": request})
 

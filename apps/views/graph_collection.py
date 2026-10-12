@@ -11,6 +11,8 @@ import re
 from  ..database.mongodb import create_mongo_client
 mydb = create_mongo_client()
 
+from .graphql_views import IsLoggedIn
+
 @strawberry.type
 class PaymentList:
     id: str
@@ -31,7 +33,7 @@ class PaymentList:
 @strawberry.type
 class Query:
     
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsLoggedIn])
     async def get_collection_list(
         self
     ) -> List[PaymentList]:

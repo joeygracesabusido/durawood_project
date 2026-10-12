@@ -26,7 +26,7 @@ templates = Jinja2Templates(directory="apps/templates")
 async def get_sales_report(request: Request,
                                         username: str = Depends(get_current_user)):
  
-    return templates.TemplateResponse("accounting/purchase_report.html", 
+    return templates.TemplateResponse(request, "accounting/purchase_report.html", 
                                       {"request": request})
 
 @api_purchase_report.get("/api-get-purchase-report/")

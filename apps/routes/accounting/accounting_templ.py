@@ -24,11 +24,11 @@ templates = Jinja2Templates(directory="apps/templates")
 
 @api_accounting_temp.get("/api-accounting-temp/", response_class=HTMLResponse)
 async def api_ticketing(request: Request):
-    return templates.TemplateResponse("accounting/insert_journal_entry.html", {"request": request})
+    return templates.TemplateResponse(request, "accounting/insert_journal_entry.html", {"request": request})
 
 @api_accounting_temp.get("/api-journal-entry-list-temp/", response_class=HTMLResponse)
 async def api_ticketing(request: Request,username: str = Depends(get_current_user)):
-    return templates.TemplateResponse("accounting/journal_entry_list.html", {"request": request})
+    return templates.TemplateResponse(request, "accounting/journal_entry_list.html", {"request": request})
 
 
 
@@ -148,14 +148,14 @@ async def insert_journal_entry(request: Request,username: str = Depends(get_curr
 
             except Exception as e:
                 messeges = [str(e)]
-                return templates.TemplateResponse("accounting/insert_journal_entry.html", 
+                return templates.TemplateResponse(request, "accounting/insert_journal_entry.html", 
                                                   {"request": request, "messeges": messeges})
 
         messeges = ["Data has been saved"]
     else:
         messeges = ["Debit and Credit Not Balanced"]
 
-    return templates.TemplateResponse("accounting/insert_journal_entry.html", 
+    return templates.TemplateResponse(request, "accounting/insert_journal_entry.html", 
                                       {"request": request, "messeges": messeges})
 
 
@@ -165,7 +165,7 @@ async def api_update_inventory_html(ref: str, request: Request, username: str = 
     try:
         
         # print(ref)
-        # return templates.TemplateResponse("accounting/insert_journal_entry.html", {"request": request})    
+        # return templates.TemplateResponse(request, "accounting/insert_journal_entry.html", {"request": request})    
         journal_entry = JournalEntryViews.get_journal_entry_by_ref(reference=ref)
         
         if journal_entry:
@@ -191,7 +191,7 @@ async def api_update_inventory_html(ref: str, request: Request, username: str = 
             #     if isinstance(entry['transdate'], date):
             #         entry['transdate'] = entry['transdate'].strftime('%Y-%m-%d')
             
-            return templates.TemplateResponse("accounting/journal_entry_update.html", {"request": request,"journal_data":journal_data })
+            return templates.TemplateResponse(request, "accounting/journal_entry_update.html", {"request": request,"journal_data":journal_data })
         else:
             # Handle case where item with given id is not found (optional)
             return JSONResponse(status_code=404, content={"message": "Inventory item not found"})
@@ -294,15 +294,15 @@ async def update_journal_entry(ref: str, request: Request, username: str = Depen
                     # print(entry)
                     JournalEntryViews.insert_journal_entry(**entry)
                 except Exception as e:
-                    return templates.TemplateResponse("accounting/journal_entry_update.html", 
+                    return templates.TemplateResponse(request, "accounting/journal_entry_update.html", 
                                                       {"request": request, "journal_data": journal_data, "messages": [str(e)]})
 
             messages = ["Data has been updated successfully"]
-            return templates.TemplateResponse("accounting/journal_entry_update.html", 
+            return templates.TemplateResponse(request, "accounting/journal_entry_update.html", 
                                                {"request": request, "journal_data": journal_data, "messages": messages})
         else:
             messages = ["Debit and credit totals do not balance"]
-            return templates.TemplateResponse("accounting/journal_entry_update.html", 
+            return templates.TemplateResponse(request, "accounting/journal_entry_update.html", 
                                                {"request": request, "journal_data": journal_data, "messages": messages})
             
     except Exception as e:
@@ -374,7 +374,7 @@ async def update_journal_entry(ref: str, request: Request, username: str = Depen
 #                     "user": username
 #                 })
 #             except ValueError:
-#                 return templates.TemplateResponse("accounting/journal_entry_update.html", {
+#                 return templates.TemplateResponse(request, "accounting/journal_entry_update.html", {
 #                     "request": request,
 #                     "journal_data": journal_data,
 #                     "messages": [f"Invalid number format at line {i + 1}."]
@@ -382,7 +382,7 @@ async def update_journal_entry(ref: str, request: Request, username: str = Depen
 
 #         # Validate totals
 #         if total_debit != total_credit:
-#             return templates.TemplateResponse("accounting/journal_entry_update.html", {
+#             return templates.TemplateResponse(request, "accounting/journal_entry_update.html", {
 #                 "request": request,
 #                 "journal_data": journal_data,
 #                 "messages": ["Debit and credit totals do not balance."]
@@ -394,14 +394,14 @@ async def update_journal_entry(ref: str, request: Request, username: str = Depen
 #             for entry in result:
 #                 JournalEntryViews.insert_journal_entry(**entry)
 #         except SQLAlchemyError as e:
-#             return templates.TemplateResponse("accounting/journal_entry_update.html", {
+#             return templates.TemplateResponse(request, "accounting/journal_entry_update.html", {
 #                 "request": request,
 #                 "journal_data": journal_data,
 #                 "messages": [f"Database error: {str(e)}"]
 #             })
 
 #         messages = ["Journal entry updated successfully."]
-#         return templates.TemplateResponse("accounting/journal_entry_update.html", {
+#         return templates.TemplateResponse(request, "accounting/journal_entry_update.html", {
 #             "request": request,
 #             "journal_data": result,
 #             "messages": messages

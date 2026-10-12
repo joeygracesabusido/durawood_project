@@ -19,6 +19,9 @@
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
 
      <style type="text/tailwindcss">
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
           @theme {
             --color-clifford: #da373d;
           }

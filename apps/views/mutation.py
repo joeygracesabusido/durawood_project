@@ -4,8 +4,8 @@ from typing import Optional,List
 from datetime import date, datetime
 
 
-#from  ..database.mongodb import create_mongo_client
-#mydb = create_mongo_client()
+from  ..database.mongodb import create_mongo_client
+mydb = create_mongo_client()
 
 
 @strawberry.input

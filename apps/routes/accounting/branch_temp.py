@@ -19,5 +19,5 @@ templates = Jinja2Templates(directory="apps/templates")
 
 @api_branch_temp.get("/branch/", response_class=HTMLResponse)
 async def api_ticketing(request: Request):
-    return templates.TemplateResponse("accounting/branch.html", {"request": request})
+    return templates.TemplateResponse(request, "accounting/branch.html", {"request": request})
 

@@ -4,6 +4,7 @@ from fastapi.responses import HTMLResponse
 from typing import Union, List, Optional, Dict
 from pydantic import BaseModel
 from bson import ObjectId
+from bson.errors import InvalidId
 
 from pymongo import ASCENDING
 
@@ -12,7 +13,7 @@ mydb = create_mongo_client()
 
 
 
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from apps.authentication.authenticate_user import get_current_user
 #from apps.base_model.customer_profile_bm import CustomerProfileBM
 #from apps.views.accounting.customer_profile_views import CustomerProfileViews
@@ -29,8 +30,8 @@ class CustomerProfileBM(BaseModel):
     category: str
     description: str
     user: Optional[str] = None
-    date_updated: datetime =  datetime.utcnow()
-    date_created:  datetime = datetime.utcnow()
+    date_updated: datetime =  datetime.now(timezone.utc)
+    date_created:  datetime = datetime.now(timezone.utc)
 
 
 
@@ -39,11 +40,11 @@ templates = Jinja2Templates(directory="apps/templates")
 
 @api_customer_profile.post("/api-insert-customer_profile/", response_model=None)
 async def create_customer_profile(data: CustomerProfileBM, username: str = Depends(get_current_user)):
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+    if not roleAuthenticate or "Payment" not in (roleAuthenticate.get("allowed_access") or []):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
     try:
-        customer_collection = mydb['customer_vendor_profile']
-        customer_collection.create_index("customer_vendor_id", unique=True)
-        customer_collection.create_index("bussiness_name", unique=True) 
- 
         dataInsert = {
 
             "customer_vendor_id": data.customer_vendor_id,
@@ -55,8 +56,8 @@ async def create_customer_profile(data: CustomerProfileBM, username: str = Depen
             "category": data.category,
             "description": data.description,
             "user": username,
-            "date_updated": data.date_updated,
-            "date_created": data.date_created,
+            "date_updated": datetime.now(timezone.utc),
+            "date_created": datetime.now(timezone.utc),
 
 
         }
@@ -96,7 +97,14 @@ async def get_customer(username: str = Depends(get_current_user)):
 
 @api_customer_profile.put("/api-update-customer-profile/", response_model=None)
 async def update_customer_profile_api(profile_id: str, data: CustomerProfileBM,username: str = Depends(get_current_user)):
-    obj_id = ObjectId(profile_id)
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+    if not roleAuthenticate or "Payment" not in (roleAuthenticate.get("allowed_access") or []):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
+    try:
+        obj_id = ObjectId(profile_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid id")
     try:
 
         updateData = {
@@ -109,10 +117,12 @@ async def update_customer_profile_api(profile_id: str, data: CustomerProfileBM,u
                 "category": data.category,
                 "description": data.description,
                 "user": username,
-                "date_updated": data.date_created,
+                "date_updated": datetime.now(timezone.utc),
 
             }
         result = mydb.customer_vendor_profile.update_one({'_id': obj_id},{'$set': updateData})
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Customer profile not found")
         return {"message":"Custome has been Updated"} 
     except Exception as e:
 

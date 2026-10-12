@@ -12,6 +12,23 @@ from  ..database.mongodb import create_mongo_client
 mydb = create_mongo_client()
 
 
+from apps.authentication.authenticate_user import get_current_user
+
+
+class IsLoggedIn(strawberry.BasePermission):
+    message = "Not Authorized"
+
+    def has_permission(self, source, info, **kwargs) -> bool:
+        ctx = info.context
+        request = ctx.get("request") if isinstance(ctx, dict) else getattr(ctx, "request", None)
+        if request is None:
+            return False
+        try:
+            get_current_user(request)
+            return True
+        except Exception:
+            return False
+
 
 
 @strawberry.type
@@ -19,7 +36,6 @@ class User:
     _id: str
     fullname: str
     email_add: str
-    password: str
     created: datetime
     status: str
     role: str
@@ -35,7 +51,7 @@ class CustomerBalance:
 @strawberry.type
 class Query:
 
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsLoggedIn])
     async def get_user(self) -> List[User]:
         userData = mydb.login.find()
 
@@ -43,7 +59,6 @@ class Query:
                 _id = str(i['_id']),
                 fullname = i['fullname'],
                 email_add = i['email_add'],
-                password = i['password'],
                 status = i['status'],
                 role = i['role'],
                 created = i['created']
@@ -53,10 +68,10 @@ class Query:
         ]
 
 
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsLoggedIn])
     async def autocomplete_user(self, serach_term:str) -> List[User]:
 
-        regex = re.compile(serach_term, re.IGNORECASE)
+        regex = re.compile(re.escape(serach_term), re.IGNORECASE)
 
         userData = mydb.login.find({'fullname': {'$regex': regex}})
 
@@ -64,7 +79,6 @@ class Query:
                 _id = str(i['_id']),
                 fullname = i['fullname'],
                 email_add = i['email_add'],
-                password = i['password'],
                 status = i['status'],
                 role = i['role'],
                 created = i['created']

@@ -9,7 +9,7 @@ from bson import ObjectId
 
 
 
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from apps.authentication.authenticate_user import get_current_user
 
 
@@ -26,8 +26,8 @@ class categoryBM(BaseModel):
     
     category: str
     user: Optional[str] = None
-    date_updated: datetime =  datetime.utcnow()
-    date_created: Optional[datetime] = datetime.utcnow()
+    date_updated: datetime =  datetime.now(timezone.utc)
+    date_created: Optional[datetime] = datetime.now(timezone.utc)
 
 
 
@@ -35,12 +35,12 @@ class categoryBM(BaseModel):
 async def api_payment_template(request: Request,
                                         username: str = Depends(get_current_user)):
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({'role': (role or {}).get("role")})
 
-    if 'Payment' in roleAuthenticate['allowed_access']:
+    if 'Payment' in (roleAuthenticate.get("allowed_access") or []):
  
 
-        return templates.TemplateResponse("accounting/category.html", 
+        return templates.TemplateResponse(request, "accounting/category.html", 
                                       {"request": request})
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -53,9 +53,9 @@ async def api_payment_template(request: Request,
 async def create_category_transaction(data: categoryBM, username: str = Depends(get_current_user)):
 
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({'role': (role or {}).get("role")})
 
-    if 'Category' in roleAuthenticate['allowed_access']:
+    if 'Category' in (roleAuthenticate.get("allowed_access") or []):
         
         try:
             category_coll = mydb['category']
@@ -65,8 +65,8 @@ async def create_category_transaction(data: categoryBM, username: str = Depends(
             
                 "category": data.category,
                 "user": username,
-                "date_updated": datetime.utcnow(),
-                "date_created": datetime.utcnow(),
+                "date_updated": datetime.now(timezone.utc),
+                "date_created": datetime.now(timezone.utc),
             }
 
             # Correct MongoDB insert operation
@@ -108,9 +108,9 @@ async def get_category(username: str = Depends(get_current_user)):
 async def update_category_api(id: str, data: categoryBM,username: str = Depends(get_current_user)):
     obj_id = ObjectId(id)
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({'role': (role or {}).get("role")})
 
-    if 'Category' in roleAuthenticate['allowed_access']:
+    if 'Category' in (roleAuthenticate.get("allowed_access") or []):
  
 
         try:

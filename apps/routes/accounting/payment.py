@@ -15,6 +15,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from typing import Union, List, Optional, Dict
 from pydantic import BaseModel
 from bson import ObjectId
+from bson.errors import InvalidId
 import io
 import pandas as pd
 import json
@@ -41,18 +42,9 @@ class paymentBM(BaseModel):
     amount_2307: Optional[float] = None
     remarks: Optional[str]
     user: Optional[str] = None
-    date_updated: datetime = datetime.utcnow()
-    date_created: Optional[datetime] = datetime.utcnow()
+    date_updated: datetime = datetime.now(timezone.utc)
+    date_created: Optional[datetime] = datetime.now(timezone.utc)
     payment_method: str
-
-
-@api_payment.put("/add-new-column-payment/")
-async def add_new_column(username: str = Depends(get_current_user)):
-    result = mydb.payment.update_many(
-        {},
-        {"$set": {"payment_method": "Cash"}},  # Add new field with a default value
-    )
-    return {"modified_count": result.modified_count}
 
 
 @api_payment.get("/payment/", response_class=HTMLResponse)
@@ -60,11 +52,10 @@ async def api_payment_template(
     request: Request, username: str = Depends(get_current_user)
 ):
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Payment" in roleAuthenticate["allowed_access"]:
-        return templates.TemplateResponse(
-            "accounting/payment.html", {"request": request}
+    if "Payment" in (roleAuthenticate.get("allowed_access") or []):
+        return templates.TemplateResponse(request, "accounting/payment.html", {"request": request}
         )
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -77,8 +68,7 @@ async def api_collection_list_template(
     request: Request, username: str = Depends(get_current_user)
 ):
 
-    return templates.TemplateResponse(
-        "accounting/payment_list_new.html", {"request": request}
+    return templates.TemplateResponse(request, "accounting/payment_list_new.html", {"request": request}
     )
 
 
@@ -87,11 +77,10 @@ async def upload_collection_template(
     request: Request, username: str = Depends(get_current_user)
 ):
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Payment" in roleAuthenticate["allowed_access"]:
-        return templates.TemplateResponse(
-            "accounting/upload_collection.html", {"request": request}
+    if "Payment" in (roleAuthenticate.get("allowed_access") or []):
+        return templates.TemplateResponse(request, "accounting/upload_collection.html", {"request": request}
         )
     else:
         raise HTTPException(
@@ -112,8 +101,8 @@ async def upload_collection_file(
             detail="User not found",
         )
 
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
-    if not roleAuthenticate or "Payment" not in roleAuthenticate["allowed_access"]:
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+    if not roleAuthenticate or "Payment" not in (roleAuthenticate.get("allowed_access") or []):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not Authorized",
@@ -190,10 +179,11 @@ async def import_collection_data(
     username: str = Depends(get_current_user),
 ):
     role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
     if (
         not role
         or "Payment"
-        not in mydb.roles.find_one({"role": role["role"]})["allowed_access"]
+        not in ((roleAuthenticate or {}).get("allowed_access") or [])
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized"
@@ -316,9 +306,9 @@ async def import_collection_data(
 @api_payment.get("/download-collection-template/")
 async def download_collection_template(username: str = Depends(get_current_user)):
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Payment" in roleAuthenticate["allowed_access"]:
+    if "Payment" in (roleAuthenticate.get("allowed_access") or []):
         try:
             # Define the column headers based on the collection fields
             column_headers = [
@@ -361,11 +351,14 @@ async def api_collection_list_template(
     request: Request, id: str, username: str = Depends(get_current_user)
 ):
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Update Payment" in roleAuthenticate["allowed_access"]:
+    if "Update Payment" in (roleAuthenticate.get("allowed_access") or []):
         # Convert id to ObjectId
-        obj_id = ObjectId(id)
+        try:
+            obj_id = ObjectId(id)
+        except InvalidId:
+            raise HTTPException(status_code=400, detail="Invalid id")
 
         # Query for the specific inventory item
         item = mydb.payment.find_one({"_id": obj_id})
@@ -390,8 +383,7 @@ async def api_collection_list_template(
                 "payment_method": item["payment_method"],
             }
 
-            return templates.TemplateResponse(
-                "accounting/collection_update.html",
+            return templates.TemplateResponse(request, "accounting/collection_update.html",
                 {"request": request, "collectionData": collectionData},
             )
         else:
@@ -410,9 +402,9 @@ async def create_sales_transaction(
     request: Request, data: paymentBM, username: str = Depends(get_current_user)
 ):
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Payment" in roleAuthenticate["allowed_access"]:
+    if "Payment" in (roleAuthenticate.get("allowed_access") or []):
         try:
             # Convert date and due_date to full datetime format
             # date_datetime = datetime.strptime(str(data.date), "%Y-%m-%d")
@@ -425,12 +417,12 @@ async def create_sales_transaction(
                 "customer_id": data.customer_id,
                 "cr_no": data.cr_no,
                 "invoice_no": data.invoice_no,
-                "cash_amount": data.cash_amount,
-                "amount_2307": data.amount_2307,
+                "cash_amount": round(data.cash_amount, 2),
+                "amount_2307": round(data.amount_2307, 2) if data.amount_2307 is not None else None,
                 "remarks": data.remarks,
                 "user": username,
-                "date_updated": datetime.utcnow(),
-                "date_created": datetime.utcnow(),
+                "date_updated": datetime.now(timezone.utc),
+                "date_created": datetime.now(timezone.utc),
                 "payment_method": data.payment_method,
             }
 
@@ -468,9 +460,9 @@ async def create_payments_batch(
     Expects a JSON array of paymentBM objects.
     """
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Payment" in roleAuthenticate["allowed_access"]:
+    if "Payment" in (roleAuthenticate.get("allowed_access") or []):
         try:
             if not isinstance(data, list) or len(data) == 0:
                 raise HTTPException(status_code=400, detail="No payment items provided")
@@ -484,12 +476,12 @@ async def create_payments_batch(
                     "customer_id": item.customer_id,
                     "cr_no": item.cr_no,
                     "invoice_no": item.invoice_no,
-                    "cash_amount": item.cash_amount,
-                    "amount_2307": item.amount_2307,
+                    "cash_amount": round(item.cash_amount, 2),
+                    "amount_2307": round(item.amount_2307, 2) if item.amount_2307 is not None else None,
                     "remarks": item.remarks,
                     "user": username,
-                    "date_updated": datetime.utcnow(),
-                    "date_created": datetime.utcnow(),
+                    "date_updated": datetime.now(timezone.utc),
+                    "date_created": datetime.now(timezone.utc),
                     "payment_method": item.payment_method,
                 }
                 insert_docs.append(insertData)
@@ -563,7 +555,14 @@ async def update_customer_profile_api(
     data: paymentBM,
     username: str = Depends(get_current_user),
 ):
-    obj_id = ObjectId(id)
+    try:
+        obj_id = ObjectId(id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid id")
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+    if not roleAuthenticate or "Payment" not in (roleAuthenticate.get("allowed_access") or []):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
     try:
         updateData = {
             "date": data.date,
@@ -571,14 +570,16 @@ async def update_customer_profile_api(
             "customer_id": data.customer_id,
             "cr_no": data.cr_no,
             "invoice_no": data.invoice_no,
-            "cash_amount": data.cash_amount,
-            "amount_2307": data.amount_2307,
+            "cash_amount": round(data.cash_amount, 2),
+            "amount_2307": round(data.amount_2307, 2) if data.amount_2307 is not None else None,
             "remarks": data.remarks,
             "user": username,
-            "date_updated": data.date_updated,
+            "date_updated": datetime.now(timezone.utc),
             "payment_method": data.payment_method,
         }
         result = mydb.payment.update_one({"_id": obj_id}, {"$set": updateData})
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Payment record not found")
 
         try:
             redis_client = request.app.state.redis
@@ -895,7 +896,7 @@ async def get_payment_dashboard(
 ):
     try:
         # Get current date and time
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         query = {}
         # Define date filter range
@@ -1022,6 +1023,5 @@ async def api_payment_transaction_template(
     request: Request, username: str = Depends(get_current_user)
 ):
 
-    return templates.TemplateResponse(
-        "accounting/payment_transaction.html", {"request": request}
+    return templates.TemplateResponse(request, "accounting/payment_transaction.html", {"request": request}
     )

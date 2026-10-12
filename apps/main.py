@@ -46,7 +46,16 @@ app = FastAPI()
 async def startup_event():
     redis_host = os.getenv("REDIS_HOST", "localhost")
     app.state.redis = Redis(host=redis_host, port=6379, db=0)  
-    app.state.http_client = httpx.AsyncClient() 
+    app.state.http_client = httpx.AsyncClient()
+    # unique indexes once here instead of on every insert request
+    from apps.database.mongodb import create_mongo_client
+    _mydb = create_mongo_client()
+    _mydb.sales.create_index("invoice_no", unique=True)
+    _mydb.customer_vendor_profile.create_index("customer_vendor_id", unique=True)
+    _mydb.customer_vendor_profile.create_index("bussiness_name", unique=True)
+    _mydb.login.create_index("email_add", unique=True)
+    _mydb.login.create_index("fullname", unique=True)
+    _mydb.roles.create_index("role", unique=True)
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -58,7 +67,7 @@ app.mount("/static", StaticFiles(directory="apps/static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = ["*"],
+    allow_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:1000,http://127.0.0.1:1000").split(","),
     allow_credentials = True,
     allow_methods = ["*"],
     allow_headers = ["*"],

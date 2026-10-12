@@ -15,6 +15,8 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from typing import Union, List, Optional, Dict
 from pydantic import BaseModel
 from bson import ObjectId
+from bson.errors import InvalidId
+from pymongo.errors import DuplicateKeyError
 import io
 import pandas as pd
 import json
@@ -49,17 +51,8 @@ class SalesBM(BaseModel):
     tax_type: str
     amount: float
     user: Optional[str] = None
-    date_updated: datetime = datetime.utcnow()
-    date_created: Optional[datetime] = datetime.utcnow()
-
-
-@api_sales.put("/add-new-column-sales/")
-async def add_new_column(username: str = Depends(get_current_user)):
-    result = mydb.sales.update_many(
-        {},
-        {"$set": {"items": "CEMENT"}},  # Add new field with a default value
-    )
-    return {"modified_count": result.modified_count}
+    date_updated: datetime = datetime.now(timezone.utc)
+    date_created: Optional[datetime] = datetime.now(timezone.utc)
 
 
 @api_sales.get("/sales/", response_class=HTMLResponse)
@@ -68,12 +61,12 @@ async def api_chart_of_account_template(
 ):
     role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    print(roleAuthenticate["allowed_access"])
+    print((roleAuthenticate.get("allowed_access") or []))
 
-    if "Sales" in roleAuthenticate["allowed_access"]:
-        return templates.TemplateResponse("accounting/sales.html", {"request": request})
+    if "Sales" in (roleAuthenticate.get("allowed_access") or []):
+        return templates.TemplateResponse(request, "accounting/sales.html", {"request": request})
 
     else:
         raise HTTPException(
@@ -89,13 +82,12 @@ async def api_chart_of_account_template(
 ):
     role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    print(roleAuthenticate["allowed_access"])
+    print((roleAuthenticate.get("allowed_access") or []))
 
-    if "Sales" in roleAuthenticate["allowed_access"]:
-        return templates.TemplateResponse(
-            "accounting/sales_insert.html", {"request": request}
+    if "Sales" in (roleAuthenticate.get("allowed_access") or []):
+        return templates.TemplateResponse(request, "accounting/sales_insert.html", {"request": request}
         )
 
     else:
@@ -113,18 +105,15 @@ async def create_sales_transaction(
 
     role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Sales" in roleAuthenticate["allowed_access"]:
+    if "Sales" in (roleAuthenticate.get("allowed_access") or []):
         try:
             # Convert date and due_date to full datetime format
             # date_datetime = datetime.strptime(str(data.date), "%Y-%m-%d")
             # due_date_datetime = datetime.strptime(str(data.due_date), "%Y-%m-%d")
 
             # Ensure date_updated and date_created use current UTC timestamp
-            sales_collection = mydb["sales"]
-            sales_collection.create_index("invoice_no", unique=True)
-
             insertData = {
                 "delivery_date": data.delivery_date,
                 "invoice_date": data.invoice_date,
@@ -139,7 +128,7 @@ async def create_sales_transaction(
                 "terms": data.terms,
                 "due_date": data.due_date,
                 "tax_type": data.tax_type,
-                "amount": data.amount,
+                "amount": round(data.amount, 2),
                 "user": username,
                 "date_updated": datetime.now(timezone.utc),
                 "date_created": datetime.now(timezone.utc),
@@ -470,9 +459,9 @@ async def search_sales(
 ):
     try:
         role = mydb.login.find_one({"email_add": username})
-        roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+        roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-        if "Sales" not in roleAuthenticate["allowed_access"]:
+        if "Sales" not in (roleAuthenticate.get("allowed_access") or []):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized"
             )
@@ -630,13 +619,16 @@ async def update_customer_profile_api(
     data: SalesBM,
     username: str = Depends(get_current_user),
 ):
-    obj_id = ObjectId(profile_id)
+    try:
+        obj_id = ObjectId(profile_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid id")
 
     role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Sales" in roleAuthenticate["allowed_access"]:
+    if "Sales" in (roleAuthenticate.get("allowed_access") or []):
         try:
             updateData = {
                 "delivery_date": data.delivery_date,
@@ -652,12 +644,13 @@ async def update_customer_profile_api(
                 "terms": data.terms,
                 "due_date": data.due_date,
                 "tax_type": data.tax_type,
-                "amount": data.amount,
+                "amount": round(data.amount, 2),
                 "user": username,
-                "date_updated": datetime.utcnow(),
-                "date_created": datetime.utcnow(),
+                "date_updated": datetime.now(timezone.utc),
             }
             result = mydb.sales.update_one({"_id": obj_id}, {"$set": updateData})
+            if result.matched_count == 0:
+                raise HTTPException(status_code=404, detail="Sales record not found")
 
             try:
                 redis_client = request.app.state.redis
@@ -674,6 +667,10 @@ async def update_customer_profile_api(
                 print(f"Redis error during cache invalidation: {redis_err}")
 
             return {"message": "Sales Data Has been Updated"}
+        except HTTPException:
+            raise
+        except DuplicateKeyError:
+            raise HTTPException(status_code=400, detail="Invoice number already exists")
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
     else:
@@ -700,7 +697,7 @@ async def get_sales_dashboard(
             print(f"Redis error during GET sum: {redis_err}")
 
         # Get current date and time
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # sales_cursor = 0
 
@@ -765,11 +762,10 @@ async def api_sales_report_template(
 ):
     role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Sales" in roleAuthenticate["allowed_access"]:
-        return templates.TemplateResponse(
-            "accounting/sales_report.html", {"request": request}
+    if "Sales" in (roleAuthenticate.get("allowed_access") or []):
+        return templates.TemplateResponse(request, "accounting/sales_report.html", {"request": request}
         )
 
     else:
@@ -786,11 +782,10 @@ async def upload_sales_report_template(
 ):
     role = mydb.login.find_one({"email_add": username})
 
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Sales" in roleAuthenticate["allowed_access"]:
-        return templates.TemplateResponse(
-            "accounting/upload_sales_report.html", {"request": request}
+    if "Sales" in (roleAuthenticate.get("allowed_access") or []):
+        return templates.TemplateResponse(request, "accounting/upload_sales_report.html", {"request": request}
         )
 
     else:
@@ -813,8 +808,8 @@ async def upload_sales_report(
             detail="User not found",
         )
 
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
-    if not roleAuthenticate or "Sales" not in roleAuthenticate["allowed_access"]:
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+    if not roleAuthenticate or "Sales" not in (roleAuthenticate.get("allowed_access") or []):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not Authorized",
@@ -886,9 +881,9 @@ async def upload_sales_report(
 @api_sales.get("/download-sales-template/")
 async def download_sales_template(username: str = Depends(get_current_user)):
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Sales" in roleAuthenticate["allowed_access"]:
+    if "Sales" in (roleAuthenticate.get("allowed_access") or []):
         try:
             # Define the column headers based on the user's provided pattern
             column_headers = [
@@ -954,8 +949,8 @@ async def import_sales_data(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
-    if not roleAuthenticate or "Sales" not in roleAuthenticate["allowed_access"]:
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+    if not roleAuthenticate or "Sales" not in (roleAuthenticate.get("allowed_access") or []):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized"
         )
@@ -1020,7 +1015,7 @@ async def import_sales_data(
 
         # 7. Validate amount field
         if "amount" in df.columns:
-            df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
+            df["amount"] = pd.to_numeric(df["amount"], errors="coerce").round(2)
             if df["amount"].isna().any():
                 invalid_amounts_rows = df[df["amount"].isna()]
                 first_invalid_row_index = (
@@ -1042,17 +1037,17 @@ async def import_sales_data(
             )
 
         # 9. Check for existing invoice numbers in database and gather details
+        invoice_nos = [
+            str(int(v)) if isinstance(v, float) else str(v)
+            for v in df["invoice_no"].unique() if not pd.isna(v)
+        ]
+        existing_records = {
+            r["invoice_no"]: r
+            for r in mydb.sales.find({"invoice_no": {"$in": invoice_nos}})
+        } if invoice_nos else {}
         existing_invoices_details = []
-        for invoice_no in df["invoice_no"].unique():
-            if pd.isna(invoice_no):
-                continue
-
-            if isinstance(invoice_no, float):
-                invoice_no_query = str(int(invoice_no))
-            else:
-                invoice_no_query = str(invoice_no)
-
-            existing_record = mydb.sales.find_one({"invoice_no": invoice_no_query})
+        for invoice_no_query in invoice_nos:
+            existing_record = existing_records.get(invoice_no_query)
             if existing_record:
                 existing_invoices_details.append(
                     {
@@ -1140,9 +1135,9 @@ async def import_sales_data(
 @api_sales.get("/download-sales-report/")
 async def download_sales_report(username: str = Depends(get_current_user)):
     role = mydb.login.find_one({"email_add": username})
-    roleAuthenticate = mydb.roles.find_one({"role": role["role"]})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
 
-    if "Sales" in roleAuthenticate["allowed_access"]:
+    if "Sales" in (roleAuthenticate.get("allowed_access") or []):
         try:
             # Query all sales data from MongoDB
             sales_data = list(mydb.sales.find({}, {"_id": 0}))  # Exclude _id field

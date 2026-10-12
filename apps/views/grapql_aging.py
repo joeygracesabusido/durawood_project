@@ -11,6 +11,8 @@ import re
 from  ..database.mongodb import create_mongo_client
 mydb = create_mongo_client()
 
+from .graphql_views import IsLoggedIn
+
 @strawberry.type
 class CustomerBalance:
     customer: str
@@ -19,7 +21,7 @@ class CustomerBalance:
 @strawberry.type
 class Query:
     
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsLoggedIn])
     async def get_customer_balance(
         self,
         customer: Optional[str] = None

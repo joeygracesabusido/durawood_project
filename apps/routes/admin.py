@@ -4,19 +4,21 @@ from fastapi.responses import HTMLResponse
 from typing import Union, List, Optional
 from pydantic import BaseModel
 from bson import ObjectId
+from bson.errors import InvalidId
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 from  ..database.mongodb import create_mongo_client
 mydb = create_mongo_client()
 
 
-from ..authentication.utils import OAuth2PasswordBearerWithCookie
+from ..authentication.utils import OAuth2PasswordBearerWithCookie, get_password_hash, verify_password
 
 from jose import jwt
 
-JWT_SECRET = 'myjwtsecret'
+import os
+JWT_SECRET = os.getenv("JWT_SECRET", "myjwtsecret")  # shortcut: set JWT_SECRET env in prod and rotate; changing it logs everyone out
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -33,12 +35,6 @@ oauth_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="token")
 
 
 
-from passlib.context import CryptContext
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-from ..authentication.utils import OAuth2PasswordBearerWithCookie
 from  ..authentication.authenticate_user import get_current_user
 
 #from apps.views.sign_up_views import UserViews
@@ -50,7 +46,7 @@ class SignUpModel(BaseModel):
     fullname: str
     email_add: str
     password: str
-    created: datetime = datetime.utcnow()
+    created: datetime = datetime.now(timezone.utc)
     status: Optional[str] = None
     role: str
 
@@ -61,12 +57,6 @@ class UpdateUser(BaseModel):
     role: Optional[str] = None
 
 
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-
-  
 
 password1 = ""
 def authenticate_user(username, password):
@@ -85,7 +75,7 @@ def authenticate_user(username, password):
    
         if user:
             
-            password_check = pwd_context.verify(password,password1)
+            password_check = verify_password(password,password1)
             
             return password_check
 
@@ -101,7 +91,7 @@ def authenticate_user(username, password):
 def create_access_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
 
-    expire = datetime.utcnow() + expires_delta
+    expire = datetime.now(timezone.utc) + expires_delta
 
     to_encode.update({"exp": expire})
 
@@ -124,7 +114,7 @@ def login(response:Response,form_data: OAuth2PasswordRequestForm = Depends()):
         expires_delta=access_token_expires,
     )
 
-    data = {"sub": username}
+    data = {"sub": username, "exp": datetime.now(timezone.utc) + access_token_expires}
     jwt_token = jwt.encode(data,JWT_SECRET,algorithm=ALGORITHM)
     response.set_cookie(key="access_token", value=f'Bearer {jwt_token}',httponly=True)
     
@@ -141,16 +131,11 @@ def sign_up(data: SignUpModel):
     """This function is for inserting """
     #,token: str = Depends(oauth_scheme)
 
-    login_collection = mydb['login']
-    login_collection.create_index("email_add", unique=True)
-    login_collection.create_index("fullname", unique=True)
-
-
     dataInsert = {
         "fullname": data.fullname,
         "email_add": data.email_add,
         "password": get_password_hash(data.password),
-        "status": data.status,
+        "status": "Pending",  # client cannot self-approve; an admin sets Approved later
         "role": data.role,
         "created": data.created
     }
@@ -158,9 +143,12 @@ def sign_up(data: SignUpModel):
     return {"message": "User has been saved"}
 
 @api.get('/users-list/')
-async def get_user_list(token: str = Depends(oauth_scheme)):
+async def get_user_list(username: str = Depends(get_current_user)):
     try:
-        print(token)
+        role = mydb.login.find_one({"email_add": username})
+        roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+        if not roleAuthenticate or "Allowed Roles" not in (roleAuthenticate.get("allowed_access") or []):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
         result = mydb.login.find().sort("fullname", -1)
         
 
@@ -179,9 +167,8 @@ async def get_user_list(token: str = Depends(oauth_scheme)):
 
         return user_data
 
-        
-       
-        
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -189,10 +176,13 @@ async def get_user_list(token: str = Depends(oauth_scheme)):
 @api.put("/api-update-user/{id}")
 async def api_update_employee(id: str,
                                data: UpdateUser,
-                               username: str = Depends(oauth_scheme)):
+                               username: str = Depends(get_current_user)):
     
     try:
-    
+            role = mydb.login.find_one({"email_add": username})
+            roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+            if not roleAuthenticate or "Allowed Roles" not in (roleAuthenticate.get("allowed_access") or []):
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
 
             obj_id = ObjectId(id)
 
@@ -207,6 +197,10 @@ async def api_update_employee(id: str,
             result = mydb.login.update_one({'_id': obj_id}, {'$set': update_data})
 
             return ('Data has been Update')
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid id")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
   

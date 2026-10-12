@@ -1,5 +1,10 @@
 {% extends 'dashboard.html' %} {% block content %}
-<link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css">
+<script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+</style>
 <link rel="stylesheet" href="/static/accounting/upload_collection.css">
 
 <div class="pagetitle">

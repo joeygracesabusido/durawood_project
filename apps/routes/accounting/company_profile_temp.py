@@ -20,7 +20,7 @@ templates = Jinja2Templates(directory="apps/templates")
 
 # @api_company_profile_temp.get("/api-company-profile/", response_class=HTMLResponse)
 # async def api_ticketing(request: Request):
-#     return templates.TemplateResponse("accounting/company_profile.html", {"request": request})
+#     return templates.TemplateResponse(request, "accounting/company_profile.html", {"request": request})
 
 @api_company_profile_temp.get("/company_profile/", response_class=HTMLResponse)
 async def api_chart_of_account_template(request: Request,
@@ -29,6 +29,6 @@ async def api_chart_of_account_template(request: Request,
     profiles = CompanyProfileViews.company_profile()
     
     
-    return templates.TemplateResponse("accounting/company_profile.html", 
+    return templates.TemplateResponse(request, "accounting/company_profile.html", 
                                       {"request": request,"profiles": profiles})
 

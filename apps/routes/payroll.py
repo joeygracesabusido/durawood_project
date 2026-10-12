@@ -15,7 +15,7 @@ from decimal import Decimal
 # from apps.base_model.payroll_bm import EmployeeDetails
 
 
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from  ..authentication.authenticate_user import get_current_user
 
 
@@ -238,7 +238,7 @@ class Details13thMonth(BaseModel):
     last_name: str
     first_name: str
     amount: float
-    date_created: datetime = Field(default_factory=datetime.utcnow)
+    date_created: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class Details13thMonthUpdate(BaseModel):
     date: datetime = None

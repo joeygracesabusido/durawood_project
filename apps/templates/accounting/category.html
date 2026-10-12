@@ -17,6 +17,9 @@
   <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
      <style type="text/tailwindcss">
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
           @theme {
             --color-clifford: #da373d;
           }

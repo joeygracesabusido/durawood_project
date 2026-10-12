@@ -26,15 +26,15 @@ async def api_chart_of_account_template(request: Request,
                                         username: str = Depends(get_current_user)):
     role = mydb.login.find_one({"email_add":username})
 
-    roleAuthenticate = mydb.roles.find_one({'role': role['role']})
+    roleAuthenticate = mydb.roles.find_one({'role': (role or {}).get("role")})
 
-    print(roleAuthenticate['allowed_access'])
+    print((roleAuthenticate.get("allowed_access") or []))
     
 
-    if 'Sales' in roleAuthenticate['allowed_access']:
+    if 'Sales' in (roleAuthenticate.get("allowed_access") or []):
 
 
-        return templates.TemplateResponse("accounting/cash_transaction.html", 
+        return templates.TemplateResponse(request, "accounting/cash_transaction.html", 
                                       {"request": request})
 
     else:

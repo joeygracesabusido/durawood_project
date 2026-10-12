@@ -23,6 +23,6 @@ templates = Jinja2Templates(directory="apps/templates")
 async def api_chart_of_account_template(request: Request,
                                         username: str = Depends(get_current_user)):
  
-    return templates.TemplateResponse("accounting/balance_sheet.html", 
+    return templates.TemplateResponse(request, "accounting/balance_sheet.html", 
                                       {"request": request})
 

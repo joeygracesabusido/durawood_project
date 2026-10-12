@@ -21,4 +21,4 @@ templates = Jinja2Templates(directory="apps/templates")
 
 @api_trial_balance_temp.get("/api-trial-balance-temp/", response_class=HTMLResponse)
 async def get_trial_balance_temp(request: Request):
-    return templates.TemplateResponse("accounting/trial_balance.html", {"request": request,})
+    return templates.TemplateResponse(request, "accounting/trial_balance.html", {"request": request,})

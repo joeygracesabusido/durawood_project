@@ -4,11 +4,12 @@ from fastapi.responses import HTMLResponse
 from typing import Union, List, Optional
 from pydantic import BaseModel
 from bson import ObjectId
+from bson.errors import InvalidId
 
 from apps.database.mongodb import create_mongo_client
 mydb = create_mongo_client()
 
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from apps.authentication.authenticate_user import get_current_user
 from apps.base_model.expense_bm import ExpenseBM
 import io
@@ -22,12 +23,12 @@ templates = Jinja2Templates(directory="apps/templates")
 @api_expense.get("/expense-list/", response_class=HTMLResponse)
 async def expense_list_template(request: Request, username: str = Depends(get_current_user)):
     """Display expense list page"""
-    return templates.TemplateResponse("accounting/expense_list.html", {"request": request})
+    return templates.TemplateResponse(request, "accounting/expense_list.html", {"request": request})
 
 @api_expense.get("/add-expense/", response_class=HTMLResponse)
 async def add_expense_template(request: Request, username: str = Depends(get_current_user)):
     """Display add expense form"""
-    return templates.TemplateResponse("accounting/add_expense.html", {"request": request})
+    return templates.TemplateResponse(request, "accounting/add_expense.html", {"request": request})
 
 @api_expense.get("/edit-expense/{expense_id}", response_class=HTMLResponse)
 async def edit_expense_template(expense_id: str, request: Request, username: str = Depends(get_current_user)):
@@ -41,10 +42,12 @@ async def edit_expense_template(expense_id: str, request: Request, username: str
         
         expense['_id'] = str(expense['_id'])
         
-        return templates.TemplateResponse("accounting/edit_expense.html", {
+        return templates.TemplateResponse(request, "accounting/edit_expense.html", {
             "request": request,
             "expense": expense
         })
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid id")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -113,21 +116,25 @@ async def get_expenses(
 @api_expense.post("/api-add-expense/")
 async def add_expense(data: ExpenseBM, username: str = Depends(get_current_user)):
     """Add new expense"""
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+    if not roleAuthenticate or "Payment" not in (roleAuthenticate.get("allowed_access") or []):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
     try:
         expense_data = {
             "date": data.date,
             "category": data.category,
             "vendor": data.vendor,
             "description": data.description,
-            "amount": float(data.amount),
+            "amount": round(float(data.amount), 2),
             "payment_method": data.payment_method,
             "reference_no": data.reference_no,
             "remarks": data.remarks,
             "status": data.status or "Approved",
             "tax_type": data.tax_type,
             "user": username,
-            "date_created": datetime.utcnow(),
-            "date_updated": datetime.utcnow()
+            "date_created": datetime.now(timezone.utc),
+            "date_updated": datetime.now(timezone.utc)
         }
         
         result = mydb.expenses.insert_one(expense_data)
@@ -142,6 +149,10 @@ async def add_expense(data: ExpenseBM, username: str = Depends(get_current_user)
 @api_expense.put("/api-update-expense/{expense_id}")
 async def update_expense(expense_id: str, data: ExpenseBM, username: str = Depends(get_current_user)):
     """Update existing expense"""
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+    if not roleAuthenticate or "Payment" not in (roleAuthenticate.get("allowed_access") or []):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
     try:
         obj_id = ObjectId(expense_id)
         
@@ -150,14 +161,14 @@ async def update_expense(expense_id: str, data: ExpenseBM, username: str = Depen
             "category": data.category,
             "vendor": data.vendor,
             "description": data.description,
-            "amount": float(data.amount),
+            "amount": round(float(data.amount), 2),
             "payment_method": data.payment_method,
             "reference_no": data.reference_no,
             "remarks": data.remarks,
             "status": data.status or "Approved",
             "tax_type": data.tax_type,
             "user": username,
-            "date_updated": datetime.utcnow()
+            "date_updated": datetime.now(timezone.utc)
         }
         
         result = mydb.expenses.update_one(
@@ -169,12 +180,18 @@ async def update_expense(expense_id: str, data: ExpenseBM, username: str = Depen
             raise HTTPException(status_code=404, detail="Expense not found")
         
         return {"message": "Expense updated successfully"}
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid id")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_expense.delete("/api-delete-expense/{expense_id}")
 async def delete_expense(expense_id: str, username: str = Depends(get_current_user)):
     """Delete expense"""
+    role = mydb.login.find_one({"email_add": username})
+    roleAuthenticate = mydb.roles.find_one({"role": (role or {}).get("role")})
+    if not roleAuthenticate or "Payment" not in (roleAuthenticate.get("allowed_access") or []):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not Authorized")
     try:
         obj_id = ObjectId(expense_id)
         
@@ -184,6 +201,8 @@ async def delete_expense(expense_id: str, username: str = Depends(get_current_us
             raise HTTPException(status_code=404, detail="Expense not found")
         
         return {"message": "Expense deleted successfully"}
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid id")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -300,15 +319,15 @@ async def upload_expenses(file: UploadFile = File(...), username: str = Depends(
                     "category": row.get('category'),
                     "vendor": row.get('vendor'),
                     "description": row.get('description'),
-                    "amount": float(row.get('amount', 0)),
+                    "amount": round(float(row.get('amount', 0)), 2),
                     "payment_method": row.get('payment_method'),
                     "reference_no": row.get('reference_no'),
                     "remarks": row.get('remarks'),
                     "status": row.get('status', 'Approved'),
                     "tax_type": row.get('tax_type'),
                     "user": username,
-                    "date_created": datetime.utcnow(),
-                    "date_updated": datetime.utcnow()
+                    "date_created": datetime.now(timezone.utc),
+                    "date_updated": datetime.now(timezone.utc)
                 }
                 
                 mydb.expenses.insert_one(expense_data)
